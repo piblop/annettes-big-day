@@ -31,6 +31,7 @@ body{min-height:100vh;display:flex;justify-content:center;font-family:'Pixelify 
 @keyframes toast{0%{opacity:0;transform:translateY(-1cqw)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
 #fade{position:absolute;inset:0;background:var(--ink);opacity:0;pointer-events:none;transition:opacity .3s;z-index:8}
 #fade.on{opacity:1}
+#np{position:absolute;left:1.6cqw;top:1.6cqw;max-width:56cqw;background:rgba(35,29,51,.72);color:#fff;font-size:2.5cqw;line-height:1.2;padding:.6cqw 1.4cqw;border-radius:1cqw;pointer-events:none;z-index:5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dialog{position:absolute;left:2.5cqw;right:2.5cqw;bottom:2.5cqw;min-height:15cqw;padding:3.6cqw 4.5cqw 3cqw;background:var(--paper);border:.7cqw solid var(--ink);box-shadow:.9cqw .9cqw 0 var(--ink);line-height:1.35}
 .dialog p{margin:0}
 .dialog .tag{position:absolute;left:3cqw;top:-3.8cqw;padding:.3cqw 1.8cqw;background:var(--sun);border:.6cqw solid var(--ink);font-weight:700;font-size:3cqw}
@@ -79,11 +80,12 @@ body{min-height:100vh;display:flex;justify-content:center;font-family:'Pixelify 
 .hp em{font-style:normal;width:5cqw}
 .hp i{flex:1;height:1.9cqw;border:.4cqw solid var(--ink);background:#d7dce6;display:block}
 .hp b{display:block;height:100%;background:#3fae7c;transition:width .4s}
-.bpanel{position:absolute;left:0;right:0;bottom:0;height:21cqw;background:var(--ink);display:flex;gap:1.4cqw;padding:1.4cqw}
-.bmsg{flex:1;border:.5cqw solid #fff;color:#fff;padding:1.6cqw 2.4cqw;font-size:3.3cqw;line-height:1.3}
-.bmoves{flex:1.3;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1cqw;background:var(--paper);padding:1cqw}
-.bmoves .opt{min-height:0;padding:.4cqw 1.4cqw;font-size:2.9cqw;gap:0}
-.bmoves .opt small{font-size:1.9cqw}
+.bpanel{position:absolute;left:0;right:0;bottom:0;height:30cqw;background:var(--ink);display:flex;gap:1.4cqw;padding:1.4cqw}
+.bmsg{flex:1;border:.5cqw solid #fff;color:#fff;padding:1.6cqw 2.4cqw;font-size:3.1cqw;line-height:1.3;font-family:Figtree,sans-serif}
+.bmoves{flex:1.35;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1cqw;background:var(--paper);padding:1cqw}
+.bmoves .opt{min-height:0;padding:.5cqw 1cqw;font-size:2.3cqw;line-height:1.08;gap:.2cqw;font-family:Figtree,sans-serif;overflow:hidden}
+.bmoves .opt span{font-weight:700}
+.bmoves .opt small{font-size:1.8cqw;line-height:1.05}
 .big{position:absolute;left:0;right:0;top:5cqw;text-align:center;font-size:8.4cqw;line-height:1;font-weight:700;color:#fff;text-shadow:.7cqw .7cqw 0 var(--ink);padding:0 4cqw}
 .finbtn{position:absolute;left:50%;top:23cqw;transform:translateX(-50%);align-items:center}
 .credits{position:absolute;inset:0;background:var(--ink);color:#fff;overflow:hidden;text-align:center}
@@ -132,6 +134,7 @@ button:focus-visible{outline:3px solid #3d7be0;outline-offset:3px}
       <canvas id="game" width="240" height="160" aria-label="Game screen"></canvas>
       <div id="ui" aria-live="polite"></div>
       <div id="toasts"></div>
+      <div id="np" hidden></div>
       <div id="fade"></div>
     </div>
     <div id="pad">
@@ -165,6 +168,12 @@ const CONFIG = {
   dinnerSpot: "The Botanist, Kirribilli",
   catchphrase: "Say less.",
   radio: ["Tupac", "J. Cole", "Kendrick Lamar"],
+  // Song titles shown as "now playing" (naming songs, not reproducing lyrics).
+  radioBars: {
+    "Tupac": ["California Love", "Changes", "Dear Mama", "Keep Ya Head Up"],
+    "J. Cole": ["No Role Modelz", "Middle Child", "Work Out", "She Knows"],
+    "Kendrick Lamar": ["HUMBLE.", "Alright", "DNA.", "Money Trees"]
+  },
   drinks: [
     { n: "Pina colada", d: "Her go-to. Extra pineapple." },
     { n: "Red wine", d: "A big glass of shiraz" },
@@ -180,7 +189,7 @@ const CONFIG = {
   lunches: [
     { n: "Tonkotsu ramen", d: "That new ramen place everyone's on about." },
     { n: "Banh mi", d: "Crunchy, fresh and fast." },
-    { n: "Food from home", d: "Cosy leftovers, packed with love." }
+    { n: "Food from home", d: "Portuguese chicken and rice. Cosy and packed with love." }
   ],
   // Three inside jokes. Swap in your own.
   insideJokes: [
@@ -196,10 +205,9 @@ const CONFIG = {
   },
   // Paulo's finale speech. One line per dialogue box.
   finaleMessage: [
-    "Happy birthday, Annette.",
     "A PR at the gym, exec reports smashed, a good lunch, and now cocktails by the harbour. What a day.",
-    "[WRITE YOUR PERSONAL MESSAGE HERE]",
-    "I love you. Now, cake?"
+    "Happy birthday my Annette. I love you.",
+    "Now, cake? And let's enjoy the harbour bridge view!"
   ]
 };
 
@@ -220,7 +228,7 @@ function oval(cx, cy, rx, ry, fill, stroke) { ctx.beginPath(); ctx.ellipse(cx, c
 /* ---------------- sprites ---------------- */
 const BODY = [
   "...KTTTSSTTTK...", "..KSTTTTTTTTSK..", "..KSTtTTTTtTSK..", "..KSKTTTTTTKSK..",
-  "...KKSSSSSSKK...", "....KPPPPPPK....", "....KPPKKPPK....", "....KBBKKBBK....", "....KKK..KKK...."
+  "...KKbbbbbbKK...", "....KPPPPPPK....", "....KPPKKPPK....", "....KBBKKBBK....", "....KKK..KKK...."
 ];
 const girlPal = { K: INK, S: "#f9d1b0", s: "#e6a57f", R: "#f4a3a8", L: "#d9637a", E: "#3d7be0", H: "#f5d271", h: "#d8a441", T: "#ff6f91", t: "#c94a6e", P: "#2b2d42", p: "#1c1d2c", B: "#f4f6fb" };
 const HEAD_F = ["....KKKKKKKK....", "...KHHHHHHHHK...", "..KHHHHHHHHHHK..", "..KHhHHHHHHhHK..", "..KHhSSSSSShHK..", "..KHSSSSSSSSHK..", "..KHSEESSEESHK..", "..KHRSSSSSSRHK..", "..KHSSSLLSSSHK..", "..KHhKSSSSKhHK..", "..KHHKKSSKKHHK..",
@@ -239,9 +247,9 @@ const SPR = {
   annette_back_pants: { pal: girlPal, rows: HEAD_B.concat(LOWER.pants) },
   annette_back_crop: { pal: girlPal, rows: HEAD_B.concat(LOWER.crop) },
   annette_back_dress: { pal: girlPal, rows: HEAD_B.concat(LOWER.dress) },
-  paulo: { pal: { K: INK, S: "#eab98f", D: "#3a2a22", d: "#22160f", E: "#5a3a22", T: "#1f1a24", t: "#141019", P: "#3f6fb0", p: "#2d5088", B: "#f4f6fb" }, rows: ["................", "....KKKKKKKK....", "...KDDDDDDDDK...", "..KDDDdDDdDDDK..", "..KDSSSSSSSSDK..", "..KSSSSSSSSSSK..", "..KSSEESSEESSK..", "..KSSSSSSSSSSK..", "..KSSSSKKSSSSK..", "...KSSSSSSSSK...", "....KKSSSSKK...."].concat(BODY) },
+  paulo: { pal: { K: INK, S: "#eab98f", D: "#2a1d12", d: "#170f08", E: "#5a3a22", T: "#1f1a24", t: "#141019", P: "#3f6fb0", p: "#2d5088", B: "#f4f6fb", b: "#15121c" }, rows: ["................", "....KKKKKKKK....", "...KDDDDDDDDK...", "..KDDDdDDdDDDK..", "..KDSSSSSSSSDK..", "..KSSSSSSSSSSK..", "..KSSEESSEESSK..", "..KSSSSSSSSSSK..", "..KSSSSKKSSSSK..", "...KSSSSSSSSK...", "....KKSSSSKK...."].concat(BODY) },
   mum: { pal: { K: INK, S: "#f5cfae", R: "#eea0a0", L: "#c55a6c", E: "#6b4a32", M: "#4a3226", m: "#2f1f18", T: "#7fa383", t: "#5c7d60", P: "#5b5566", p: "#433f4c", B: "#f4f6fb" }, rows: ["................", "....KKKKKKKK....", "...KMMMMMMMMK...", "..KMMMmMMmMMMK..", "..KMMSSSSSSMMK..", "..KMSSSSSSSSMK..", "..KMSEESSEESMK..", "..KMRSSSSSSRMK..", "..KMSSSLLSSSMK..", "..KMKSSSSSSKMK..", "..KKKKSSSSKKKK..", "...KTTTSSTTTK...", "..KTTTTTTTTTTK..", "..KTTtTTTTtTTK..", "..KSKTTTTTTKSK..", "...KKTTTTTTKK...", "....KPPPPPPK....", "....KPPKKPPK....", "....KBBKKBBK....", "....KKK..KKK...."] },
-  luca: { pal: { K: INK, G: "#e3a54c", g: "#b87a2e", N: INK, R: "#f28b9b" }, rows: ["..........KKKK..", ".........KGgGGK.", "........KGGGGGGK", "........KgGKGGGK", "...KK...KGGGGGNK", "..KGGK..KgGGGRK.", ".KGgGGKKKGGGGK..", ".KGGKGGGGGGGGgK.", "..KK.KGgGGGgGGK.", ".....KGGGGGGGGK.", ".....KgGGgGGgGK.", ".....KGK.KGKGK..", ".....KGK.KGKGK..", ".....KKK.KKKKK.."] },
+  luca: { pal: { K: INK, A: "#e0a866", g: "#b3763a", C: "#f7e6c8", W: "#ffffff", N: INK, R: "#f28b9b" }, rows: ["....gAAAAAAg....", "..ggAAAAAAAAgg..", "..gAACAAAACAAg..", "..gAWKAAAAKWAg..", "..gAAAAAAAAAAg..", "..gAAAACCAAAAg..", "..gAAAANNAAAAg..", "..gAAAARRAAAAg..", "...gAAAAAAAAg...", "...CAAAAAAAAC...", "..gAAAAAAAAAAg..", "..gAAAAAAAAAAg..", "...gAAg..gAAg...", "....KK...KK....."] },
   corolla: { pal: { K: INK, C: "#2f6fd1", c: "#1f4d99", V: "#cdeaf7", A: "#a7b0bf", Y: "#ffd966", R: "#e2554f" }, rows: ["........KKKKKKKK........", ".......KVVVKVVVVK.......", "......KVVVVKVVVVVK......", "..KKKKCCCCCCCCCCCCKKKK..", ".KCCCCCCCCCCCCCCCCCCCCK.", "KYCCCCCCCCKCCCCCCCCCCRK.", "KCCCCCCCCCKCCCCCCCCCCCK.", "KcccKKKccccccccccKKKcccK", ".KcKAAAKccccccccKAAAKcK.", "..KKAKAK........KAKAK...", "....KKK..........KKK...."] },
   dumbbell: { pal: { K: INK, X: "#3a3d5c", A: "#a7b0bf", a: "#6f7788" }, rows: [".KK......KK.", "KXXK....KXXK", "KXXKAAAAKXXK", "KXXKaaaaKXXK", "KXXK....KXXK", ".KK......KK."] },
   cake: { pal: { K: INK, F: "#f7a8c4", W: "#ffffff", B: "#f3d9a8", Y: "#ffc53d", C: "#6ec3e8" }, rows: ["......YY......", "......CC......", "......CC......", "..KKKKKKKKKK..", ".KWWFWWFWWFWK.", ".KFFFFFFFFFFK.", ".KBBBBBBBBBBK.", ".KFFFFFFFFFFK.", ".KBBBBBBBBBBK.", "KKKKKKKKKKKKKK", "KWWWWWWWWWWWWK", ".KKKKKKKKKKKK."] },
@@ -375,6 +383,19 @@ $('#muteBtn').addEventListener('click', () => {
   $('#muteBtn').setAttribute('aria-pressed', String(muted));
 });
 
+/* now-playing lyric ticker (original homage lines, see CONFIG.radioBars) */
+let npI = 0;
+function nowPlaying() {
+  const np = $('#np'); if (!np) return;
+  // Lyrics only play in the room, the gym, or the car. The car shows them in the radio widget.
+  const inRoomOrGym = G.scene === 'map' && (G.mapId === 'bedroom' || G.mapId === 'gym');
+  const show = G.radioPick != null && G.mode !== 'dialog' && inRoomOrGym;
+  np.hidden = !show; if (!show) return;
+  const artist = CONFIG.radio[G.radioPick], bars = (CONFIG.radioBars || {})[artist] || [];
+  np.textContent = '♪ ' + artist + (bars.length ? ' · ' + bars[npI % bars.length] : '');
+}
+setInterval(() => { npI++; nowPlaying(); if (G.scene === 'drive' && G.drive && !G.drive.done) updateRadio(); }, 3600);
+
 /* ---------------- input ---------------- */
 const held = { up: false, down: false, left: false, right: false };
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
@@ -478,24 +499,25 @@ function fade(cb) {
 
 /* ---------------- maps ---------------- */
 const WALK = new Set(['.', 'h', 'D', '_']);
-const WALLOBJ = { bedroom: 'o', gym: 'm', office: 'w', botanist: 'F', beach: '' };
-const OBJ = { bedroom: 'wkvbxo', gym: 'rLbm', office: 'wpdY', botanist: 'Frtf', beach: 'upsJ' };
+const WALLOBJ = { bedroom: 'oG', gym: 'm', office: 'w', botanist: 'F', beach: '' };
+const OBJ = { bedroom: 'wkvbxoSG', gym: 'rLbm', office: 'wpdYZ', botanist: 'Frtf', beach: 'upsJ' };
 const MAPS = {
   bedroom: {
     theme: 'bedroom', title: 'Chapter 1: Wake up',
-    rows: ["#o#############", "#..ww.kk.vv.bb#", "#.........x.bb#", "#.............#", "#..x..........#", "#.............#", "#.......x.....#", "#.....h.......#", "#..M..........#", "######D########"],
+    rows: ["#o######GGGG###", "#..ww.kk.vv.bb#", "#.........x.bb#", "#........S....#", "#..x..........#", "#.............#", "#.......x.....#", "#.....h.......#", "#..M..........#", "######D########"],
     start: { x: 7, y: 5, dir: 'down' }, luca: { x: 8, y: 5 },
     npc: c => c === 'M' ? ['mum', {}] : null,
-    hints: () => [!F.outfit && 'w', !F.skincare && 'v', !F.mum && 'M'],
-    onEnter() { G.wearing = 'pj'; say(["It's the morning of Annette's birthday!", "Luca is already wagging at the foot of the bed.", "Get ready. Pick an outfit at the wardrobe and do your skincare at the vanity."]); },
-    doorOpen: () => F.outfit && F.skincare,
-    doorLocked: () => ({ n: 'Mum', t: "Not so fast! Outfit and skincare first, love." }),
+    hints: () => [!F.outfit && 'w', !F.skincare && 'v', !F.music && 'S', !F.mum && 'M'],
+    onEnter() { G.wearing = 'pj'; say(["It's the morning of Annette's birthday!", "Annette's phone buzzes on the nightstand.", { n: CONFIG.boyfriend, t: "Good morning my Annette, have the best day!!!! I love you ❤️" }, { n: CONFIG.name, t: "Love you too ❤️" }, "Luca is already wagging at the foot of the bed.", "Get ready. Pick an outfit, do your skincare, and put a playlist on at the speaker."]); },
+    doorOpen: () => F.outfit && F.skincare && F.music,
+    doorLocked: () => ({ n: 'Mum', t: "Not so fast! Outfit, skincare and some tunes first, love." }),
     onDoor() { G.wearing = 'gym'; fade(() => loadMap('gym')); },
     act: {
       w: () => outfitMenu(),
       v: () => F.skincare ? say("Skin is already glowing. No notes.") : skincareGame(),
+      S: () => musicMenu(),
       x: (tx, ty) => tidyItem(tx, ty),
-      k: () => secret('book'),
+      k: () => G.secrets.book ? say("Sooo many books! Thank goodness I have a Kobo.") : say(["Sooo many books! Thank goodness I have a Kobo."], () => secret('book')),
       o: () => secret('owl'),
       b: () => say("Tempting to crawl back in. But it's your birthday!"),
       M: () => talkMum()
@@ -522,16 +544,17 @@ const MAPS = {
   },
   office: {
     theme: 'office', title: 'Chapter 3: Work',
-    rows: ["#ww#ww#ww#ww###", "#............p#", "#.............#", "#.dd..dd..Y...#", "#..c...c......#", "#.............#", "#.dd..dd..dd..#", "#..c......c...#", "#.........h...#", "######D########"],
+    rows: ["#ww#ww#ww#ww###", "#............p#", "#.............#", "#.dd..dd..YZ..#", "#..c...c......#", "#.............#", "#.dd..dd..dd..#", "#..c......c...#", "#.........h...#", "######D########"],
     start: { x: 6, y: 8, dir: 'up' }, luca: { x: 7, y: 8 },
     npc: (c, x, y) => c === 'c' ? ((x + y) % 2 ? ['paulo', { D: '#6b4a32', T: '#7f93b3' }] : ['mum', { M: INK, T: '#c55a6c', P: '#3a3d5c' }]) : null,
-    hints: () => [!F.sorted && 'Y'],
-    onEnter() { G.wearing = G.outfit; say([CONFIG.company + ", Sydney CBD. Birthday balloons on the project coordinator's desk.", "File the reports at your desk, then you're free for lunch."]); },
-    doorOpen: () => F.sorted,
-    doorLocked: () => "Not yet. File the reports at your desk first.",
+    hints: () => [!F.sorted && 'Y', !F.officeBattle && 'Z'],
+    onEnter() { G.wearing = G.outfit; say([CONFIG.company + ", Sydney CBD. Birthday balloons on the project coordinator's desk.", "File the reports at your desk, then battle that inbox on the computer."]); },
+    doorOpen: () => F.sorted && F.officeBattle,
+    doorLocked: () => "Not yet. File the reports and beat the inbox first.",
     onDoor() { G.mode = 'busy'; say(["Project updates sent. Exec reports signed off.", "Clock off for lunch! Everyone's starving."], () => fade(() => lunchScene())); },
     act: {
       Y: () => F.sorted ? say("Reports filed. Not a single stray page.") : sortGame(),
+      Z: () => F.officeBattle ? say("Inbox zero. Beautiful.") : startBattle('inbox'),
       w: () => say("The harbour sparkles between the towers."),
       p: () => say("A desk plant, alive thanks to Annette's watering reminders."),
       d: () => say("A coworker's desk. Messier than Annette would ever allow."),
@@ -544,12 +567,12 @@ const MAPS = {
     start: { x: 6, y: 8, dir: 'up' }, luca: { x: 7, y: 8 },
     npc: c => c === 'n' ? ['paulo', { D: '#6b4a32', T: '#2f5d4a', P: INK }] : c === 'A' ? ['paulo', {}] : null,
     hints: () => [!F.drink && 'n', F.drink && 'A'],
-    onEnter() { G.wearing = 'dress'; say([CONFIG.dinnerSpot + ". Fairy lights, plants everywhere, harbour breeze.", "Annette's in her blue dress. Luca got a spot in the dog-friendly courtyard.", "Paulo waves from a table. Drinks first!"]); },
+    onEnter() { G.wearing = 'dress'; say([CONFIG.dinnerSpot + ". Fairy lights, plants everywhere, harbour breeze.", "Annette's in her blue dress. Luca got a spot in the dog-friendly courtyard.", { n: 'Paulo', t: "Wow! Look how beautiful your outfit is. Have you been working out? Someone's been training legs 😍" }]); },
     doorOpen: () => false,
     doorLocked: () => "Leaving? The night's just getting started.",
     act: {
       n: () => F.drink ? say({ n: 'Bartender', t: "Another round? Just say the word." }) : drinkMenu(),
-      A: () => F.drink ? dinnerMenu() : say({ n: 'Paulo', t: "There she is! Grab a drink from the bar first, birthday girl." }),
+      A: () => F.drink ? dinnerMenu() : say({ n: 'Paulo', t: "Let's get a drink first. We can get whateeeeeeeever you want! :D" }),
       F: () => secret('poster'),
       t: () => say("Candlelit tables. Very date night."),
       f: () => say("A giant fern. The Botanist takes the name seriously."),
@@ -630,8 +653,24 @@ function arrive() {
 function talkMum() {
   if (!F.mum) {
     F.mum = true; stat('happy', 10);
-    say([{ n: 'Mum', t: "Happy birthday, love! I can't believe how grown up you are." }, { n: 'Mum', t: "Luca's been waiting by your door since six." }, { n: 'Mum', t: "Have the best day. And drive Joanne safe!" }, { n: 'Annette', t: CONFIG.catchphrase }]);
-  } else say({ n: 'Mum', t: (!F.outfit || !F.skincare) ? "Outfit and skincare first, then off you go!" : "You look beautiful. Go get them!" });
+    say([{ n: 'Mum', t: "Happy birthday, love! I can't believe how grown up you are." }, { n: 'Mum', t: "Luca's been waiting by your door since six." }, { n: 'Mum', t: "Make yourself a flat white and relax by the big window before your big day." }, { n: 'Annette', t: CONFIG.catchphrase }], mumMenu);
+  } else mumMenu();
+}
+function mumMenu() {
+  if (F.relaxed) { say({ n: 'Mum', t: (!F.outfit || !F.skincare || !F.music) ? "Finish getting ready, then off you go!" : "You look beautiful. Go get them!" }); return; }
+  clearUI();
+  const p = el('div', 'panel', '<h2>Morning with Mum</h2><p class="sub">A quiet moment before the big day.</p><div class="grid2"></div>');
+  ui.append(p);
+  const btns = [
+    makeBtn('<span>Flat white & relax</span><small>Sit by the big window</small>', () => relaxByWindow()),
+    makeBtn('<span>Maybe later</span><small>Back to getting ready</small>', () => { clearUI(); G.mode = 'map'; })
+  ];
+  p.querySelector('.grid2').append(...btns);
+  setMenu(btns, { cols: 2, onBack: () => { clearUI(); G.mode = 'map'; } });
+}
+function relaxByWindow() {
+  F.relaxed = true; clearUI(); G.mode = 'busy'; stat('energy', 12, false); stat('happy', 8, false); sfx('heal');
+  say(["Annette makes a flat white and curls up by the big window.", "North Ryde is waking up outside. Luca rests his chin on her knee.", "A calm, happy start to the birthday.", { n: 'Mum', t: "There's my girl. Now go enjoy your day." }]);
 }
 function tidyItem(tx, ty) {
   G.map.tiles[ty][tx] = '.'; G.tidied++; sfx('good'); stat('tidy', 5);
@@ -652,7 +691,19 @@ function outfitMenu() {
   col.append(...btns);
   setMenu(btns, { start: Math.max(0, keys.indexOf(G.outfit)), onFocus: i => { px.clearRect(0, 0, 16, 20); px.drawImage(annetteSprite(false, keys[i]), 0, 0); }, onBack: () => { clearUI(); G.mode = 'map'; } });
 }
-const STEPS = ['Cleanser', 'Serum', 'Moisturiser', 'SPF'];
+function musicMenu() {
+  clearUI();
+  const p = el('div', 'panel', '<h2>Getting-ready playlist</h2><p class="sub">Put something on while you get ready.</p><div class="grid2"></div>');
+  ui.append(p);
+  const btns = CONFIG.radio.map((name, i) => makeBtn(`<span>${esc(name)}</span>`, () => {
+    G.radioPick = i; const first = !F.music; F.music = true; clearUI(); G.mode = 'map';
+    if (first) stat('happy', 5);
+    say([name + " it is. Volume up.", "Annette bops around the room while she gets ready. Luca joins in."]);
+  }));
+  p.querySelector('.grid2').append(...btns);
+  setMenu(btns, { cols: 2, onBack: () => { clearUI(); G.mode = 'map'; } });
+}
+const STEPS = ['Cleanser: La Roche-Posay', 'Serum: The Ordinary', 'Moisturiser: CeraVe', 'SPF: La Roche-Posay'];
 function skincareGame() {
   clearUI();
   let step = 0, miss = 0;
@@ -684,16 +735,31 @@ const LANES = [108, 134];
 function startDrive(theme, next, dest) {
   clearUI(); G.scene = 'drive'; G.mode = 'drive';
   setChapter('Driving to date night');
-  G.drive = { theme, next, dest, t: 0, dur: 8, lane: 1, y: LANES[1], cones: [], spawn: 1.4, hits: 0, scroll: 0, shake: 0, st: Math.floor(Math.random() * CONFIG.radio.length), done: false };
+  G.drive = { theme, next, dest, t: 0, dur: 8, lane: 1, y: LANES[1], cones: [], spawn: 1.4, slows: [], slowSpawn: 1.4, paused: false, hits: 0, scroll: 0, shake: 0, st: (G.radioPick != null ? G.radioPick : Math.floor(Math.random() * CONFIG.radio.length)), done: false };
   const r = el('div', 'radio', '<span class="rl">' + esc(CONFIG.car) + '\'s radio</span><span class="rs"></span>');
   const b = el('button', 'opt', 'Change station'); b.type = 'button';
   b.addEventListener('mousedown', e => e.preventDefault());
   b.addEventListener('click', () => { if (G.mode === 'drive') changeStation(); });
   r.append(b); ui.append(r);
-  ui.append(el('div', 'hint', 'Driving to ' + dest + '. Up and down to change lanes. Dodge the cones!'));
+  ui.append(el('div', 'hint', 'Driving to ' + dest + '. Up/down to change lanes. Dodge cones, honk at slow drivers!'));
   updateRadio(); music('drive');
 }
-function updateRadio() { const s = ui.querySelector('.rs'); if (s) s.textContent = 'Now playing: ' + CONFIG.radio[G.drive.st]; }
+const HONKS = ['YALLAH!', 'COME ON HABIBI!', 'THIS GUY!'];
+function honkPrompt(c) {
+  const d = G.drive; d.paused = true; G.mode = 'menu';
+  const p = el('div', 'panel'); p.style.inset = '30cqw 7cqw 3cqw';
+  p.innerHTML = '<h2>Slow driver ahead!</h2><p class="sub">Give them a honk. What does Annette yell?</p><div class="grid3"></div>';
+  ui.append(p);
+  const btns = HONKS.map(h => makeBtn('<span>' + esc(h) + '</span>', () => {
+    p.remove(); c.honked = true; c.spd = 150;
+    stat('happy', 4, false); sfx('good'); toast(h);
+    d.paused = false; G.mode = 'drive';
+  }));
+  btns.forEach(b => b.style.alignItems = 'center');
+  p.querySelector('.grid3').append(...btns);
+  setMenu(btns, { cols: 3 });
+}
+function updateRadio() { const s = ui.querySelector('.rs'); if (!s) return; const artist = CONFIG.radio[G.drive.st], bars = (CONFIG.radioBars || {})[artist] || []; s.textContent = 'Now playing: ' + artist + (bars.length ? ' · ' + bars[npI % bars.length] : ''); }
 function changeStation() { if (!G.drive || G.drive.done) return; G.drive.st = (G.drive.st + 1) % CONFIG.radio.length; sfx('blip'); updateRadio(); }
 function updateDrive(dt) {
   const d = G.drive; if (d.done) return;
@@ -811,9 +877,9 @@ const ENEMIES = {
     attacks: [["Reply-all storm", 14], ["URGENT!!!", 12], ["A meeting that could be an email", 10]],
     moves: [
       { n: 'Exec report', d: 'Big damage (Tidy)', f: b => hit(b, 28, 'tidy') },
-      { n: 'Say less', d: 'Ends the meeting (Happy)', f: b => '"' + CONFIG.catchphrase + '" ' + hit(b, 24, 'happy') },
-      { n: 'Skincare shield', d: 'Halve next attack', f: b => { b.shield = true; sfx('heal'); return 'A dewy glow surrounds Annette. Next attack is halved!'; } },
-      { n: 'Luca cuddle', d: 'Restore HP', f: b => { sfx('woof'); return heal(b, 30); } }
+      { n: 'Message from Paulo', d: 'Encouraging words (Happy)', f: b => '"You\'ve got this, my Annette. I love you." ' + hit(b, 30, 'happy') },
+      { n: 'Harry Potter Lore', d: 'Distract with lore (Happy)', f: b => 'Annette recites deep wizarding lore! ' + hit(b, 24, 'happy') },
+      { n: 'Did you see the Knicks game?', d: 'NBA diversion (restore HP)', f: b => { sfx('woof'); return '"Did you catch the Knicks game?" ' + heal(b, 30); } }
     ],
     win() { F.officeBattle = true; stat('tidy', 10); stat('happy', 10); say(["Inbox Overload was defeated!", "Inbox zero. The office applauds."]); }
   }
@@ -982,7 +1048,6 @@ function updateFinale(dt) {
     G.fxT = 0.5 + Math.random() * 0.4;
     const cx = 30 + Math.random() * 180, cy = 20 + Math.random() * 40, col = ['#ff6f91', '#ffd166', '#7fc8f8', '#ffffff', '#b9e1d6'][Math.floor(Math.random() * 5)];
     for (let i = 0; i < 26; i++) { const a = Math.PI * 2 * i / 26, s = 30 + Math.random() * 30; G.fx.push({ x: cx, y: cy, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1.2 + Math.random() * 0.5, c: col }); }
-    sfx('blip');
   }
   G.fx.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 30 * dt; p.life -= dt; });
   G.fx = G.fx.filter(p => p.life > 0);
@@ -1029,7 +1094,16 @@ function drawObject(th, c, X, Y, W, H) {
     case 'bedroom:k': { box(0, -8, W, H + 7, '#6b4a32'); const cols = ['#ff6f91', '#3d7be0', '#ffd166', '#3fae7c', '#c9b6f2', '#e2554f']; [-6, 1, 8].forEach((sy, si) => { for (let bx = 2, i = 0; bx < W - 3; bx += 3, i++) { const h = 4 + Math.floor(hsh(bx, si, 7) * 3); R(X + bx, Y + sy + (6 - h), 2, h, cols[(i + si) % cols.length]); } R(X + 1, Y + sy + 6, W - 2, 1, INK); }); break; }
     case 'bedroom:v': box(W / 2 - 6, -12, 12, 11, '#dff3ff'); R(X + W / 2 - 3, Y - 10, 2, 5, '#ffffff'); box(0, 1, W, H - 2, '#ffffff'); R(X + 2, Y + 7, W - 4, 1, '#d7dce6'); R(X + 4, Y - 3, 3, 4, '#ff9fb8'); R(X + 8, Y - 2, 3, 3, '#9fd0ff'); R(X + W - 8, Y - 3, 2, 4, '#c9b6f2'); R(X + W - 5, Y - 2, 3, 3, '#ffd166'); break;
     case 'bedroom:b': box(0, -8, W, 9, '#b07a4a'); box(0, -1, W, H, '#ff9fb8'); box(4, 1, W - 8, 8, '#ffffff'); R(X + 1, Y + 12, W - 2, 1, '#e27a98'); R(X + 6, Y + 18, 3, 3, '#ffffff'); R(X + 20, Y + 22, 3, 3, '#ffffff'); break;
-    case 'bedroom:x': { const v = Math.floor(hsh(X, Y, 3) * 3); if (v === 0) { box(4, 7, 8, 4, '#ffffff'); R(X + 5, Y + 8, 2, 2, '#ff9fb8'); } else if (v === 1) box(3, 4, 10, 8, '#c9b6f2'); else { box(4, 5, 8, 7, '#3d7be0'); R(X + 6, Y + 7, 4, 1, '#fff'); } break; }
+    case 'bedroom:x': { const v = Math.floor(hsh(X, Y, 3) * 3);
+      if (v === 0) { // dropped top / t-shirt
+        box(3, 6, 10, 6, '#ff9fb8'); box(1, 6, 3, 4, '#ff9fb8'); box(12, 6, 3, 4, '#ff9fb8'); R(X + 6, Y + 6, 4, 1, '#ffffff'); R(X + 5, Y + 9, 6, 1, '#e27a98'); }
+      else if (v === 1) { // jeans
+        box(3, 4, 10, 9, '#3d7be0'); R(X + 7, Y + 8, 2, 5, INK); R(X + 4, Y + 5, 8, 1, '#2a5aa0'); R(X + 5, Y + 6, 1, 1, '#ffd166'); }
+      else { // pair of shoes
+        box(2, 8, 5, 4, '#ffffff'); R(X + 2, Y + 11, 5, 1, INK); R(X + 3, Y + 9, 3, 1, '#ff6f91'); box(9, 8, 5, 4, '#ffffff'); R(X + 9, Y + 11, 5, 1, INK); R(X + 10, Y + 9, 3, 1, '#ff6f91'); }
+      break; }
+    case 'bedroom:G': { box(1, 1, W - 2, 13, '#bfe3ff'); R(X + 2, Y + 2, W - 4, 5, '#dff3ff'); R(X + 6, Y + 4, 7, 2, '#ffffff'); R(X + W - 16, Y + 7, 9, 2, '#ffffff'); R(X + 4, Y + 10, 5, 1, '#a8dc86'); R(X + W - 12, Y + 10, 6, 1, '#a8dc86'); for (let i = 16; i < W - 2; i += 16) R(X + i, Y + 1, 1, 13, INK); R(X + 1, Y + 6, W - 2, 1, INK); R(X + W / 2 - 1, Y + 1, 2, 13, INK); R(X, Y + 13, W, 2, '#b07a4a'); break; }
+    case 'bedroom:S': { box(2, 3, 12, 11, '#2b2d42'); R(X + 3, Y + 4, 3, 2, '#4d4764'); R(X + 10, Y + 4, 3, 2, '#4d4764'); oval(X + 6, Y + 10, 2.5, 2.5, '#8a93a6', INK); oval(X + 11, Y + 10, 2.5, 2.5, '#8a93a6', INK); R(X + 6, Y + 10, 1, 1, INK); R(X + 11, Y + 10, 1, 1, INK); if (!F.music) { R(X + 11, Y - 4, 1, 6, '#ff6f91'); R(X + 11, Y - 4, 4, 1, '#ff6f91'); R(X + 14, Y - 5, 1, 4, '#ff6f91'); R(X + 10, Y + 1, 2, 2, '#ff6f91'); } break; }
     case 'gym:m': box(0, 1, W, 12, '#cfe7ff'); for (let i = 4; i < W; i += 9) R(X + i, Y + 3, 2, 6, '#ffffff'); break;
     case 'gym:r': R(X + 3, Y - 10, 2, H + 8, '#8a93a6'); R(X + W - 5, Y - 10, 2, H + 8, '#8a93a6'); R(X, Y - 3, W, 2, INK); box(0, -7, 5, 10, '#ff6f91'); box(W - 5, -7, 5, 10, '#ff6f91'); R(X + 1, Y + H - 3, W - 2, 2, '#8a93a6'); break;
     case 'gym:L': box(0, -8, W, H + 7, '#6f8fb8'); for (let i = 8; i < W; i += 8) R(X + i, Y - 7, 1, H + 5, INK); for (let i = 0; i < W; i += 8) { R(X + i + 2, Y - 5, 4, 1, '#4f6f98'); R(X + i + 2, Y - 3, 4, 1, '#4f6f98'); R(X + i + 5, Y + 4, 1, 3, '#ffd166'); } break;
@@ -1108,13 +1182,20 @@ function renderFinale() {
   R(0, 0, 240, 30, '#141a3a'); R(0, 30, 240, 30, '#1c2346'); R(0, 60, 240, 30, '#28305c');
   for (let i = 0; i < 30; i++) if ((Math.floor(G.t * 2) + i) % 7) R(Math.floor(hsh(i, 9, 1) * 240), Math.floor(hsh(i, 8, 2) * 70), 1, 1, '#e9f3ff');
   G.fx.forEach(p => R(p.x, p.y, 2, 2, p.c));
-  // harbour and bridge silhouette
-  R(0, 90, 240, 26, '#27335e');
-  for (let i = 0; i < 16; i++) R(((i * 29 + G.t * 8) % 250) - 10, 94 + (i % 4) * 5, 8, 1, ['#ffd166', '#ff6f91', '#7fc8f8'][i % 3]);
-  ctx.strokeStyle = '#0d1230'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(150, 118, 58, Math.PI * 1.08, Math.PI * 1.92); ctx.stroke();
-  R(84, 86, 132, 3, '#0d1230'); R(86, 72, 6, 20, '#0d1230'); R(208, 72, 6, 20, '#0d1230');
-  for (let x = 100; x < 200; x += 8) R(x, 70 + Math.abs(x - 150) / 4, 1, 16 - Math.abs(x - 150) / 5, '#0d1230');
-  for (let i = 0; i < 12; i++) R(94 + i * 10, 85, 1, 1, '#ffd166');
+  // harbour water
+  R(0, 96, 240, 20, '#27335e');
+  for (let i = 0; i < 16; i++) R(((i * 29 + G.t * 8) % 250) - 10, 100 + (i % 4) * 4, 8, 1, ['#ffd166', '#ff6f91', '#7fc8f8'][i % 3]);
+  // Sydney Harbour Bridge - prominent lit silhouette (the coathanger)
+  const bx = 120, by = 100, span = 104, R2 = span - 8;
+  R(bx - span, by, span * 2, 5, '#39466e');            // deck
+  R(bx - span, by, span * 2, 1, '#5a6a9c');
+  R(bx - span + 3, by - 16, 9, 21, '#46527d'); R(bx + span - 12, by - 16, 9, 21, '#46527d'); // pylons
+  R(bx - span + 3, by - 16, 9, 3, '#6b78a8'); R(bx + span - 12, by - 16, 9, 3, '#6b78a8');
+  const archY = x => by - Math.round(Math.sqrt(Math.max(0, R2 * R2 - (x - bx) * (x - bx))) * 0.52);
+  ctx.strokeStyle = '#55628e'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(bx, by + 46, R2, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+  ctx.strokeStyle = '#6c7aa8'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(bx, by + 46, R2 - 3, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+  for (let x = bx - span + 16; x < bx + span - 14; x += 8) { const ay = archY(x); R(x, ay, 1, by - ay, '#46527d'); R(x, ay - 1, 1, 1, '#ffd166'); } // hangers + arch lights
+  for (let x = bx - span; x < bx + span; x += 7) R(x, by - 1, 1, 1, '#ffe9a8'); // deck lights
   // deck, fairy lights, table
   R(0, 116, 240, 44, '#6b4228'); for (let y = 120; y < 160; y += 6) R(0, y, 240, 1, '#5a3620');
   R(0, 112, 240, 4, '#2f5d4a');
@@ -1146,6 +1227,7 @@ function loop(now) {
   else if (G.scene === 'drive') updateDrive(dt);
   else if (G.scene === 'finale' || G.scene === 'credits') updateFinale(dt);
   if (G.mode === 'lift') updateLift(dt);
+  nowPlaying();
   ctx.clearRect(0, 0, 240, 160);
   if (G.scene === 'title') renderTitle();
   else if (G.scene === 'map') renderMap();
