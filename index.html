@@ -103,6 +103,9 @@ body{min-height:100vh;display:flex;justify-content:center;font-family:'Pixelify 
 .badge b{font-size:3.2cqw}
 .badge span{font-family:Figtree,sans-serif;font-size:2.3cqw;color:var(--muted)}
 .counts{display:flex;gap:3cqw;font-size:3cqw}
+.itemwrap{display:flex;justify-content:center;padding:1cqw 0}
+.itemimg{width:26cqw;height:auto;image-rendering:pixelated;background:#2b2540;border:.6cqw solid var(--ink);box-shadow:.6cqw .6cqw 0 var(--ink);padding:1.2cqw}
+.isub{text-align:center;font-family:Figtree,sans-serif;font-size:2.8cqw;color:var(--muted)}
 #pad{display:flex;justify-content:space-between;align-items:center;padding:4px 8px 6px;user-select:none;-webkit-user-select:none}
 #dpad{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px)}
 #dpad button{font-size:18px;background:var(--ink);color:#fff;border:none;cursor:pointer;touch-action:none}
@@ -178,16 +181,16 @@ const CONFIG = {
     "Kendrick Lamar": ["HUMBLE.", "Alright", "DNA.", "Money Trees"]
   },
   drinks: [
-    { n: "Pina colada", d: "Her go-to. Extra pineapple." },
-    { n: "Red wine", d: "A big glass of shiraz" },
-    { n: "Espresso martini", d: "Night-out fuel" },
-    { n: "Say-less spritz", d: "Bartender special. No questions." }
+    { n: "Espresso Martini", d: "Her night-out fuel" },
+    { n: "Passionfruit Margarita", d: "Tequila, passionfruit, lime" },
+    { n: "Aperol Spritz", d: "Aperol, prosecco, soda" },
+    { n: "Pina Colada", d: "Her go-to. Extra pineapple." }
   ],
   dishes: [
-    { n: "Steak frites", d: "Medium rare, obviously" },
-    { n: "Share plates", d: "A bit of everything" },
+    { n: "Wood-fired pizza", d: "Blistered and cheesy" },
+    { n: "Salt and pepper squid", d: "Crispy, with aioli" },
     { n: "Truffle fries", d: "Extra parmesan" },
-    { n: "Sticky date pudding", d: "Dessert first. It's a birthday." }
+    { n: "Charcuterie board", d: "A bit of everything" }
   ],
   lunches: [
     { n: "Tonkotsu ramen", d: "That new ramen place everyone's on about." },
@@ -202,10 +205,10 @@ const CONFIG = {
     "Scratched into the shell: 'Luca was here. Luca is always here.'"
   ],
   secrets: {
-    owl: ["An owl is tapping on the window with a letter tied to its leg.", "The letter reads: Happy birthday! Your real adventure starts today."],
-    book: ["Her favourite fantasy series, spines cracked from rereading.", "A bookmark sits at chapter one again. Time for another reread."],
-    card: ["Taped inside the locker: a shiny holographic trading card.", "It shows a sleepy sea-otter creature. Ultra rare!"],
-    poster: ["A poster for the bar's rooftop film night.", "A mob family saga, then a mind-bending space epic. Popcorn is already booked."]
+    owl: ["A snowy owl taps the window with a letter tied to its leg.", "It's a Hogwarts acceptance letter! Platform 9 3/4, here we come."],
+    book: ["The full Harry Potter series, spines cracked from rereading.", "The bookmark sits at Philosopher's Stone again. Time for another reread."],
+    card: ["Taped inside the locker: a shiny holographic Pokemon card.", "It's a Pikachu! Electric type, ultra rare, mint condition."],
+    poster: ["A poster for the bar's rooftop film night.", "A wizarding double feature under the stars. Popcorn is booked."]
   },
   // Paulo's finale speech. One line per dialogue box.
   finaleMessage: [
@@ -259,7 +262,9 @@ const SPR = {
   dumbbell: { pal: { K: INK, X: "#3a3d5c", A: "#a7b0bf", a: "#6f7788" }, rows: [".KK......KK.", "KXXK....KXXK", "KXXKAAAAKXXK", "KXXKaaaaKXXK", "KXXK....KXXK", ".KK......KK."] },
   cake: { pal: { K: INK, F: "#f7a8c4", W: "#ffffff", B: "#f3d9a8", Y: "#ffc53d", C: "#6ec3e8" }, rows: ["......YY......", "......CC......", "......CC......", "..KKKKKKKKKK..", ".KWWFWWFWWFWK.", ".KFFFFFFFFFFK.", ".KBBBBBBBBBBK.", ".KFFFFFFFFFFK.", ".KBBBBBBBBBBK.", "KKKKKKKKKKKKKK", "KWWWWWWWWWWWWK", ".KKKKKKKKKKKK."] },
   heart: { pal: { K: INK, R: "#ff5c7a" }, rows: [".KK.KK.", "KRRKRRK", "KRRRRRK", ".KRRRK.", "..KRK..", "...K..."] },
-  inbox: { pal: { K: INK, W: "#ffffff", w: "#d7dce6", R: "#ff5c7a" }, rows: ["...........KKK..", "..........KRRRK.", ".KKKKKKKKKKKKKK.", ".KwKWWWWWWWWKwK.", ".KWwKWWWWWWKwWK.", ".KWWwKWWWWKwWWK.", ".KWWWwKKKKwWWWK.", ".KWWWWWWWWWWWWK.", ".KWWWKKWWKKWWWK.", ".KWWWWWWWWWWWWK.", ".KWWWKKKKKKWWWK.", ".KWWWWWWWWWWWWK.", ".KKKKKKKKKKKKKK."] }
+  inbox: { pal: { K: INK, W: "#ffffff", w: "#d7dce6", R: "#ff5c7a" }, rows: ["...........KKK..", "..........KRRRK.", ".KKKKKKKKKKKKKK.", ".KwKWWWWWWWWKwK.", ".KWwKWWWWWWKwWK.", ".KWWwKWWWWKwWWK.", ".KWWWwKKKKwWWWK.", ".KWWWWWWWWWWWWK.", ".KWWWKKWWKKWWWK.", ".KWWWWWWWWWWWWK.", ".KWWWKKKKKKWWWK.", ".KWWWWWWWWWWWWK.", ".KKKKKKKKKKKKKK."] },
+  pokecard: { pal: { K: INK, G: "#e0a92e", W: "#fff7e0", t: "#8fd6e6", o: "#c98a2e", y: "#ffe45c", E: INK, R: "#ff5c7a" }, rows: ["KKKKKKKKKKKKKKKK", "KGGGGGGGGGGGGGGK", "KGWWWWWWWWWWWWGK", "KGWttttttttttWGK", "KGW.oo....oo.WGK", "KGW.oo....oo.WGK", "KGW..oooooo..WGK", "KGW.yyyyyyyy.WGK", "KGW.yEyyyyEy.WGK", "KGW.yyyyyyyy.WGK", "KGWRyyyyyyyyRWGK", "KGW.yyyyyyyy.WGK", "KGW..yyyyyy..WGK", "KGWttttttttttWGK", "KGWWWWWWWWWWWWGK", "KGGGGGGGGGGGGGGK", "KKKKKKKKKKKKKKKK"] },
+  hogletter: { pal: { K: INK, P: "#f0e2c0", d: "#cbb98a", s: "#b3202e" }, rows: ["KKKKKKKKKKKKKKKK", "KPPPPPPPPPPPPPPK", "KPdPPPPPPPPdPPPK", "KPPdPPPPPPdPPPPK", "KPPPdPPPPdPPPPPK", "KPPPPdPPdPPPPPPK", "KPPPPPssPPPPPPPK", "KPPPPsssssPPPPPK", "KPPPPPssPPPPPPPK", "KPPPPPPPPPPPPPPK", "KKKKKKKKKKKKKKKK"] }
 };
 const spriteCache = {};
 function dk(hex) {
@@ -325,7 +330,24 @@ function toast(txt) { const t = el('div', 'toast'); t.textContent = txt; toasts.
 function earn(id) { if (G.badges[id]) return; G.badges[id] = true; sfx('badge'); toast('Badge earned: ' + BADGES[id].n); }
 function secret(id) {
   if (!G.secrets[id]) { G.secrets[id] = true; sfx('pickup'); stat('happy', 5, false); toast('Secret found (' + Object.keys(G.secrets).length + '/4)'); }
-  say(CONFIG.secrets[id]);
+  const img = { owl: 'hogletter', card: 'pokecard' }[id];
+  if (img) showItem(img, CONFIG.secrets[id]);
+  else say(CONFIG.secrets[id]);
+}
+function showItem(sprKey, lines) {
+  clearUI();
+  const im = sprite(sprKey);
+  const p = el('div', 'panel');
+  p.innerHTML = '<h2>Secret found!</h2>';
+  const wrap = el('div', 'itemwrap');
+  const c = el('canvas', 'itemimg'); c.width = im.width; c.height = im.height;
+  c.getContext('2d').drawImage(im, 0, 0);
+  wrap.append(c); p.append(wrap);
+  const txt = el('p', 'isub'); txt.textContent = (Array.isArray(lines) ? lines : [lines]).join(' ');
+  p.append(txt);
+  const close = makeBtn('Nice!', () => { clearUI(); G.mode = 'map'; }); close.style.alignItems = 'center';
+  p.append(close); ui.append(p);
+  setMenu([close], { onBack: () => { clearUI(); G.mode = 'map'; } });
 }
 updateHUD();
 
@@ -514,7 +536,7 @@ const MAPS = {
     start: { x: 7, y: 5, dir: 'down' }, luca: { x: 8, y: 5 },
     npc: c => c === 'M' ? ['mum', {}] : null,
     hints: () => [!F.outfit && 'w', !F.skincare && 'v', !F.music && 'S', !F.mum && 'M'],
-    onEnter() { G.wearing = 'pj'; say(["It's the morning of Annette's birthday!", "Annette's phone buzzes on the nightstand.", { n: CONFIG.boyfriend, t: "Good morning my Annette, have the best day!!!! I love you ❤️" }, { n: CONFIG.name, t: "I love you too ❤️" }, "Luca is already wagging at the foot of the bed.", "Get ready. Pick an outfit, do your skincare, and put a playlist on at the speaker.", "Psst: there are 4 SECRET ITEMS hidden through the day. Explore and interact to find them all!"]); },
+    onEnter() { G.wearing = 'pj'; say(["It's the morning of Annette's birthday!", "Annette's phone buzzes on the nightstand.", { n: CONFIG.boyfriend, t: "Good morning my Annette, have the best day!!!! I love you ❤️" }, { n: CONFIG.name, t: "I love you too ❤️" }, "Luca is already wagging at the foot of the bed.", "Luca wants to follow you around like Pikachu! Bring him along for the day.", "Get ready. Pick an outfit, do your skincare, and put a playlist on at the speaker.", "Psst: there are 4 SECRET ITEMS hidden through the day. Look for the pink question marks and interact to find them all!"]); },
     doorOpen: () => F.outfit && F.skincare && F.music,
     doorLocked: () => ({ n: 'Mum', t: "Not so fast! Outfit, skincare and some tunes first, love." }),
     onDoor() { G.wearing = 'gym'; fade(() => loadMap('gym')); },
@@ -569,7 +591,7 @@ const MAPS = {
   },
   botanist: {
     theme: 'botanist', title: 'Chapter 5: ' + CONFIG.dinnerSpot,
-    rows: ["######F########", "#f...n.....f.f#", "#..rrrrrr.....#", "#.............#", "#.tt....tt..h.#", "#.............#", "#.tt....Att...#", "#.............#", "#f...........f#", "######D########"],
+    rows: ["######F########", "#f...n.....f.f#", "#..rrrrrr.....#", "#.............#", "#....f...f...h#", "#.............#", "#......At.....#", "#.............#", "#f...........f#", "######D########"],
     start: { x: 6, y: 8, dir: 'up' }, luca: { x: 7, y: 8 },
     npc: c => c === 'n' ? ['paulo', { D: '#6b4a32', T: '#2f5d4a', P: INK }] : c === 'A' ? ['paulo', {}] : null,
     hints: () => [!F.drink && 'n', F.drink && 'A'],
@@ -1175,6 +1197,18 @@ function renderMap() {
       const [W] = ob.includes(c) ? extent(tiles, tx, ty, c) : [16];
       const x = tx * 16 + W / 2 - 4, y = Math.max(1, ty * 16 - 20) + Math.round(Math.sin(G.t * 5) * 2);
       R(x, y, 8, 10, INK); R(x + 1, y + 1, 6, 8, '#ffd166'); R(x + 3, y + 2, 2, 4, INK); R(x + 3, y + 7, 2, 1, INK);
+    }
+  });
+  // secret-item markers: a pink "?" bubble so secrets are easy to find
+  const secretsHere = ({ bedroom: [['o', 'owl'], ['k', 'book']], gym: [['L', 'card']], botanist: [['F', 'poster']] })[G.mapId] || [];
+  secretsHere.forEach(([c, id]) => {
+    if (G.secrets[id]) return;
+    for (let ty = 0; ty < tiles.length; ty++) for (let tx = 0; tx < tiles[0].length; tx++) {
+      if (tiles[ty][tx] !== c || !isOrigin(tiles, tx, ty, c)) continue;
+      const [W] = (ob.includes(c) || wo.includes(c)) ? extent(tiles, tx, ty, c) : [16];
+      const x = tx * 16 + W / 2 - 4, y = Math.max(1, ty * 16 - 20) + Math.round(Math.sin(G.t * 5 + 1.5) * 2);
+      R(x - 1, y - 1, 10, 12, INK); R(x, y, 8, 10, '#ff6f91');
+      R(x + 2, y + 1, 4, 1, '#fff'); R(x + 5, y + 2, 1, 2, '#fff'); R(x + 3, y + 4, 2, 1, '#fff'); R(x + 3, y + 6, 1, 1, '#fff'); R(x + 3, y + 8, 1, 1, '#fff');
     }
   });
 }
