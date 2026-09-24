@@ -192,7 +192,8 @@ const CONFIG = {
   lunches: [
     { n: "Tonkotsu ramen", d: "That new ramen place everyone's on about." },
     { n: "Banh mi", d: "Crunchy, fresh and fast." },
-    { n: "Food from home", d: "Portuguese chicken and rice. Cosy and packed with love." }
+    { n: "Food from home", d: "Portuguese chicken and rice. Cosy and packed with love." },
+    { n: "Read my Kobo", d: "A cheeky chapter or two on the break." }
   ],
   // Three inside jokes. Swap in your own.
   insideJokes: [
@@ -211,7 +212,7 @@ const CONFIG = {
     "A PR at the gym, exec reports smashed, a good lunch, and now cocktails by the harbour. What a day.",
     "You do so much! How lucky am I!!",
     "Happy birthday my Annette. I love you.",
-    "Now, cake? And let's enjoy the harbour bridge view!"
+    "Now let's ignore the Harbour Bridge again!"
   ]
 };
 
@@ -513,7 +514,7 @@ const MAPS = {
     start: { x: 7, y: 5, dir: 'down' }, luca: { x: 8, y: 5 },
     npc: c => c === 'M' ? ['mum', {}] : null,
     hints: () => [!F.outfit && 'w', !F.skincare && 'v', !F.music && 'S', !F.mum && 'M'],
-    onEnter() { G.wearing = 'pj'; say(["It's the morning of Annette's birthday!", "Annette's phone buzzes on the nightstand.", { n: CONFIG.boyfriend, t: "Good morning my Annette, have the best day!!!! I love you ❤️" }, { n: CONFIG.name, t: "Love you too ❤️" }, "Luca is already wagging at the foot of the bed.", "Get ready. Pick an outfit, do your skincare, and put a playlist on at the speaker."]); },
+    onEnter() { G.wearing = 'pj'; say(["It's the morning of Annette's birthday!", "Annette's phone buzzes on the nightstand.", { n: CONFIG.boyfriend, t: "Good morning my Annette, have the best day!!!! I love you ❤️" }, { n: CONFIG.name, t: "I love you too ❤️" }, "Luca is already wagging at the foot of the bed.", "Get ready. Pick an outfit, do your skincare, and put a playlist on at the speaker.", "Psst: there are 4 SECRET ITEMS hidden through the day. Explore and interact to find them all!"]); },
     doorOpen: () => F.outfit && F.skincare && F.music,
     doorLocked: () => ({ n: 'Mum', t: "Not so fast! Outfit, skincare and some tunes first, love." }),
     onDoor() { G.wearing = 'gym'; fade(() => loadMap('gym')); },
@@ -675,7 +676,7 @@ function mumMenu() {
 }
 function relaxByWindow() {
   F.relaxed = true; clearUI(); G.mode = 'busy'; stat('energy', 12, false); stat('happy', 8, false); sfx('heal');
-  say(["Annette makes a flat white and curls up by the big window.", "North Ryde is waking up outside. Luca rests his chin on her knee.", "A calm, happy start to the birthday.", { n: 'Mum', t: "There's my girl. Now go enjoy your day." }]);
+  say(["Annette makes a flat white and curls up by the big window.", "North Ryde is waking up outside. Luca rests his chin on her knee.", "A calm, happy start to the birthday.", { n: 'Mum', t: "Now go enjoy your day, love." }]);
 }
 function tidyItem(tx, ty) {
   G.map.tiles[ty][tx] = '.'; G.tidied++; sfx('good'); stat('tidy', 5);
@@ -740,7 +741,7 @@ const LANES = [108, 134];
 function startDrive(theme, next, dest) {
   clearUI(); G.scene = 'drive'; G.mode = 'drive';
   setChapter('Driving to date night');
-  G.drive = { theme, next, dest, t: 0, dur: 8, lane: 1, y: LANES[1], cones: [], spawn: 1.4, slows: [], slowSpawn: 1.4, paused: false, hits: 0, scroll: 0, shake: 0, st: (G.radioPick != null ? G.radioPick : Math.floor(Math.random() * CONFIG.radio.length)), done: false };
+  G.drive = { theme, next, dest, t: 0, dur: 10, lane: 1, y: LANES[1], cones: [], spawn: 1.4, slows: [], slowSpawn: 1.2, paused: false, hits: 0, scroll: 0, shake: 0, st: (G.radioPick != null ? G.radioPick : Math.floor(Math.random() * CONFIG.radio.length)), done: false };
   const r = el('div', 'radio', '<span class="rl">' + esc(CONFIG.car) + '\'s radio</span><span class="rs"></span>');
   const b = el('button', 'opt', 'Change station'); b.type = 'button';
   b.addEventListener('mousedown', e => e.preventDefault());
@@ -767,7 +768,7 @@ function honkPrompt(c) {
 function updateRadio() { const s = ui.querySelector('.rs'); if (!s) return; const artist = CONFIG.radio[G.drive.st], bars = (CONFIG.radioBars || {})[artist] || []; s.textContent = 'Now playing: ' + artist + (bars.length ? ' · ' + bars[npI % bars.length] : ''); }
 function changeStation() { if (!G.drive || G.drive.done) return; G.drive.st = (G.drive.st + 1) % CONFIG.radio.length; sfx('blip'); updateRadio(); }
 function updateDrive(dt) {
-  const d = G.drive; if (d.done) return;
+  const d = G.drive; if (d.done || d.paused) return;
   if (held.up) d.lane = 0; if (held.down) d.lane = 1;
   d.t += dt; d.scroll += 110 * dt; d.shake = Math.max(0, d.shake - dt);
   d.y += (LANES[d.lane] - d.y) * Math.min(1, dt * 12);
@@ -779,6 +780,14 @@ function updateDrive(dt) {
     if (!c.hit && c.lane === carLane && c.x < 58 && c.x + 6 > 38) { c.hit = true; d.hits++; d.shake = 0.3; sfx('hit'); stat('energy', -3); }
   });
   d.cones = d.cones.filter(c => c.x > -12);
+  // slow drivers ahead: pull up close, then Annette gives them a honk (guaranteed dialogue)
+  d.slowSpawn -= dt;
+  if (d.slowSpawn <= 0 && d.t > 0.6 && d.t < d.dur - 2.2) { d.slows.push({ x: 250, lane: carLane, honked: false, spd: 62 }); d.slowSpawn = 3.4 + Math.random(); }
+  d.slows.forEach(c => {
+    c.x -= (110 - c.spd) * dt;
+    if (!d.paused && !c.honked && c.x < 96 && c.x > 50) honkPrompt(c);
+  });
+  d.slows = d.slows.filter(c => c.x > -26);
   if (d.t >= d.dur) {
     d.done = true; G.mode = 'busy';
     const lines = d.hits === 0 ? ["Clean drive, zero cones!", CONFIG.car + " made it to " + d.dest + "."] : [CONFIG.car + " made it to " + d.dest + ".", "Only bumped " + d.hits + " cone" + (d.hits > 1 ? "s" : "") + ". " + CONFIG.car + " forgives you."];
@@ -818,6 +827,7 @@ function renderDrive() {
   const doff = d.scroll % 24; for (let x = -doff; x < 244; x += 24) R(x, 130, 12, 2, '#f4f6fb');
   R(-4, 157, 248, 3, '#3e4152');
   d.cones.forEach(c => { const y = LANES[c.lane] + 4, x = c.x; R(x + 2, y, 2, 2, '#ff7a1a'); R(x + 1, y + 2, 4, 2, '#ffffff'); R(x + 1, y + 4, 4, 2, '#ff7a1a'); R(x, y + 6, 6, 1, INK); });
+  d.slows.forEach(c => { drawSpr(sprite('corolla', { C: '#c0392b', c: '#8e2216' }), c.x, LANES[c.lane] - 2, false); });
   drawSpr(sprite('corolla'), 36, d.y + (Math.floor(G.t * 10) % 2), false);
   R(8, 5, 224, 6, INK); R(9, 6, 222 * clamp(d.t / d.dur, 0, 1), 4, '#ffd166');
   ctx.restore();
@@ -1247,7 +1257,7 @@ function loop(now) {
 function showTitle() {
   G.scene = 'title'; clearUI(); setChapter(CONFIG.name + "'s Big Day");
   ui.append(el('div', 'titlecard', '<h1>' + esc(CONFIG.name) + "'s Big Day</h1><p>A birthday adventure across one sunny Sydney day</p>"));
-  ui.append(el('p', 'howto', 'Move with the arrows. A to talk and interact. B opens your collection.'));
+  ui.append(el('p', 'howto', 'Move with the arrows. A to talk and interact. B opens your collection. There are 4 SECRET ITEMS to find!'));
   const b = makeBtn('Press start', () => fade(() => loadMap('bedroom'))); b.classList.add('start');
   ui.append(b); setMenu([b]); music('title');
 }
