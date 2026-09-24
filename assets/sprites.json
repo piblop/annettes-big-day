@@ -1,0 +1,487 @@
+{
+ "note": "Pixel sprite source. Each row is one line of pixels; each character maps to a palette colour; \".\" is transparent.",
+ "sprites": {
+  "annette_pants": {
+   "palette": {
+    "K": "#231d33",
+    "S": "#f9d1b0",
+    "s": "#e6a57f",
+    "R": "#f4a3a8",
+    "L": "#d9637a",
+    "E": "#3d7be0",
+    "H": "#f5d271",
+    "h": "#d8a441",
+    "T": "#ff6f91",
+    "t": "#c94a6e",
+    "P": "#2b2d42",
+    "p": "#1c1d2c",
+    "B": "#f4f6fb"
+   },
+   "rows": [
+    "....KKKKKKKK....",
+    "...KHHHHHHHHK...",
+    "..KHHHHHHHHHHK..",
+    "..KHhHHHHHHhHK..",
+    "..KHhSSSSSShHK..",
+    "..KHSSSSSSSSHK..",
+    "..KHSEESSEESHK..",
+    "..KHRSSSSSSRHK..",
+    "..KHSSSLLSSSHK..",
+    "..KHhKSSSSKhHK..",
+    "..KHHKKSSKKHHK..",
+    "..KHKTTSSTTKHK..",
+    "..KHTTTTTTTTHK..",
+    "..KhTtTTTTtThK..",
+    "..KSKTTTTTTKSK..",
+    "...KKTTTTTTKK...",
+    "....KPPPPPPK....",
+    "....KPPKKPPK....",
+    "....KBBKKBBK....",
+    "....KKK..KKK...."
+   ]
+  },
+  "annette_crop": {
+   "palette": {
+    "K": "#231d33",
+    "S": "#f9d1b0",
+    "s": "#e6a57f",
+    "R": "#f4a3a8",
+    "L": "#d9637a",
+    "E": "#3d7be0",
+    "H": "#f5d271",
+    "h": "#d8a441",
+    "T": "#ff6f91",
+    "t": "#c94a6e",
+    "P": "#2b2d42",
+    "p": "#1c1d2c",
+    "B": "#f4f6fb"
+   },
+   "rows": [
+    "....KKKKKKKK....",
+    "...KHHHHHHHHK...",
+    "..KHHHHHHHHHHK..",
+    "..KHhHHHHHHhHK..",
+    "..KHhSSSSSShHK..",
+    "..KHSSSSSSSSHK..",
+    "..KHSEESSEESHK..",
+    "..KHRSSSSSSRHK..",
+    "..KHSSSLLSSSHK..",
+    "..KHhKSSSSKhHK..",
+    "..KHHKKSSKKHHK..",
+    "..KHKTTSSTTKHK..",
+    "..KHTTTTTTTTHK..",
+    "..KhTtTTTTtThK..",
+    "..KSKTTTTTTKSK..",
+    "...KKSSSSSSKK...",
+    "....KPPPPPPK....",
+    "....KPPKKPPK....",
+    "....KBBKKBBK....",
+    "....KKK..KKK...."
+   ]
+  },
+  "annette_dress": {
+   "palette": {
+    "K": "#231d33",
+    "S": "#f9d1b0",
+    "s": "#e6a57f",
+    "R": "#f4a3a8",
+    "L": "#d9637a",
+    "E": "#3d7be0",
+    "H": "#f5d271",
+    "h": "#d8a441",
+    "T": "#ff6f91",
+    "t": "#c94a6e",
+    "P": "#2b2d42",
+    "p": "#1c1d2c",
+    "B": "#f4f6fb"
+   },
+   "rows": [
+    "....KKKKKKKK....",
+    "...KHHHHHHHHK...",
+    "..KHHHHHHHHHHK..",
+    "..KHhHHHHHHhHK..",
+    "..KHhSSSSSShHK..",
+    "..KHSSSSSSSSHK..",
+    "..KHSEESSEESHK..",
+    "..KHRSSSSSSRHK..",
+    "..KHSSSLLSSSHK..",
+    "..KHhKSSSSKhHK..",
+    "..KHHKKSSKKHHK..",
+    "..KHKTTSSTTKHK..",
+    "..KHTTTTTTTTHK..",
+    "..KhTtTTTTtThK..",
+    "..KSKTTTTTTKSK..",
+    "...KTTTTTTTTK...",
+    "..KTTTTTTTTTTK..",
+    "..KKKKKKKKKKKK..",
+    "....KSSKKSSK....",
+    "....KKK..KKK...."
+   ]
+  },
+  "annette_back_pants": {
+   "palette": {
+    "K": "#231d33",
+    "S": "#f9d1b0",
+    "s": "#e6a57f",
+    "R": "#f4a3a8",
+    "L": "#d9637a",
+    "E": "#3d7be0",
+    "H": "#f5d271",
+    "h": "#d8a441",
+    "T": "#ff6f91",
+    "t": "#c94a6e",
+    "P": "#2b2d42",
+    "p": "#1c1d2c",
+    "B": "#f4f6fb"
+   },
+   "rows": [
+    "....KKKKKKKK....",
+    "...KHHHHHHHHK...",
+    "..KHHHHHHHHHHK..",
+    "..KHhHHHHHHhHK..",
+    "..KHHHhHHhHHHK..",
+    "..KHHHHHHHHHHK..",
+    "..KHhHHHHHHhHK..",
+    "..KHHHHHHHHHHK..",
+    "..KhHHHHHHHHhK..",
+    "..KHHHHHHHHHHK..",
+    "..KHHhHHHHhHHK..",
+    "..KHHHHHHHHHHK..",
+    "..KSHHHHHHHHSK..",
+    "..KShHHHHHHhSK..",
+    "..KSKhHHHHhKSK..",
+    "...KKTTTTTTKK...",
+    "....KPPPPPPK....",
+    "....KPPKKPPK....",
+    "....KBBKKBBK....",
+    "....KKK..KKK...."
+   ]
+  },
+  "annette_back_crop": {
+   "palette": {
+    "K": "#231d33",
+    "S": "#f9d1b0",
+    "s": "#e6a57f",
+    "R": "#f4a3a8",
+    "L": "#d9637a",
+    "E": "#3d7be0",
+    "H": "#f5d271",
+    "h": "#d8a441",
+    "T": "#ff6f91",
+    "t": "#c94a6e",
+    "P": "#2b2d42",
+    "p": "#1c1d2c",
+    "B": "#f4f6fb"
+   },
+   "rows": [
+    "....KKKKKKKK....",
+    "...KHHHHHHHHK...",
+    "..KHHHHHHHHHHK..",
+    "..KHhHHHHHHhHK..",
+    "..KHHHhHHhHHHK..",
+    "..KHHHHHHHHHHK..",
+    "..KHhHHHHHHhHK..",
+    "..KHHHHHHHHHHK..",
+    "..KhHHHHHHHHhK..",
+    "..KHHHHHHHHHHK..",
+    "..KHHhHHHHhHHK..",
+    "..KHHHHHHHHHHK..",
+    "..KSHHHHHHHHSK..",
+    "..KShHHHHHHhSK..",
+    "..KSKhHHHHhKSK..",
+    "...KKSSSSSSKK...",
+    "....KPPPPPPK....",
+    "....KPPKKPPK....",
+    "....KBBKKBBK....",
+    "....KKK..KKK...."
+   ]
+  },
+  "annette_back_dress": {
+   "palette": {
+    "K": "#231d33",
+    "S": "#f9d1b0",
+    "s": "#e6a57f",
+    "R": "#f4a3a8",
+    "L": "#d9637a",
+    "E": "#3d7be0",
+    "H": "#f5d271",
+    "h": "#d8a441",
+    "T": "#ff6f91",
+    "t": "#c94a6e",
+    "P": "#2b2d42",
+    "p": "#1c1d2c",
+    "B": "#f4f6fb"
+   },
+   "rows": [
+    "....KKKKKKKK....",
+    "...KHHHHHHHHK...",
+    "..KHHHHHHHHHHK..",
+    "..KHhHHHHHHhHK..",
+    "..KHHHhHHhHHHK..",
+    "..KHHHHHHHHHHK..",
+    "..KHhHHHHHHhHK..",
+    "..KHHHHHHHHHHK..",
+    "..KhHHHHHHHHhK..",
+    "..KHHHHHHHHHHK..",
+    "..KHHhHHHHhHHK..",
+    "..KHHHHHHHHHHK..",
+    "..KSHHHHHHHHSK..",
+    "..KShHHHHHHhSK..",
+    "..KSKhHHHHhKSK..",
+    "...KTTTTTTTTK...",
+    "..KTTTTTTTTTTK..",
+    "..KKKKKKKKKKKK..",
+    "....KSSKKSSK....",
+    "....KKK..KKK...."
+   ]
+  },
+  "paulo": {
+   "palette": {
+    "K": "#231d33",
+    "S": "#eab98f",
+    "D": "#3a2a22",
+    "d": "#22160f",
+    "E": "#5a3a22",
+    "T": "#1f1a24",
+    "t": "#141019",
+    "P": "#3f6fb0",
+    "p": "#2d5088",
+    "B": "#f4f6fb"
+   },
+   "rows": [
+    "................",
+    "....KKKKKKKK....",
+    "...KDDDDDDDDK...",
+    "..KDDDdDDdDDDK..",
+    "..KDSSSSSSSSDK..",
+    "..KSSSSSSSSSSK..",
+    "..KSSEESSEESSK..",
+    "..KSSSSSSSSSSK..",
+    "..KSSSSKKSSSSK..",
+    "...KSSSSSSSSK...",
+    "....KKSSSSKK....",
+    "...KTTTSSTTTK...",
+    "..KSTTTTTTTTSK..",
+    "..KSTtTTTTtTSK..",
+    "..KSKTTTTTTKSK..",
+    "...KKSSSSSSKK...",
+    "....KPPPPPPK....",
+    "....KPPKKPPK....",
+    "....KBBKKBBK....",
+    "....KKK..KKK...."
+   ]
+  },
+  "mum": {
+   "palette": {
+    "K": "#231d33",
+    "S": "#f5cfae",
+    "R": "#eea0a0",
+    "L": "#c55a6c",
+    "E": "#6b4a32",
+    "M": "#4a3226",
+    "m": "#2f1f18",
+    "T": "#7fa383",
+    "t": "#5c7d60",
+    "P": "#5b5566",
+    "p": "#433f4c",
+    "B": "#f4f6fb"
+   },
+   "rows": [
+    "................",
+    "....KKKKKKKK....",
+    "...KMMMMMMMMK...",
+    "..KMMMmMMmMMMK..",
+    "..KMMSSSSSSMMK..",
+    "..KMSSSSSSSSMK..",
+    "..KMSEESSEESMK..",
+    "..KMRSSSSSSRMK..",
+    "..KMSSSLLSSSMK..",
+    "..KMKSSSSSSKMK..",
+    "..KKKKSSSSKKKK..",
+    "...KTTTSSTTTK...",
+    "..KTTTTTTTTTTK..",
+    "..KTTtTTTTtTTK..",
+    "..KSKTTTTTTKSK..",
+    "...KKTTTTTTKK...",
+    "....KPPPPPPK....",
+    "....KPPKKPPK....",
+    "....KBBKKBBK....",
+    "....KKK..KKK...."
+   ]
+  },
+  "luca": {
+   "palette": {
+    "K": "#231d33",
+    "G": "#e3a54c",
+    "g": "#b87a2e",
+    "N": "#231d33",
+    "R": "#f28b9b"
+   },
+   "rows": [
+    "..........KKKK..",
+    ".........KGgGGK.",
+    "........KGGGGGGK",
+    "........KgGKGGGK",
+    "...KK...KGGGGGNK",
+    "..KGGK..KgGGGRK.",
+    ".KGgGGKKKGGGGK..",
+    ".KGGKGGGGGGGGgK.",
+    "..KK.KGgGGGgGGK.",
+    ".....KGGGGGGGGK.",
+    ".....KgGGgGGgGK.",
+    ".....KGK.KGKGK..",
+    ".....KGK.KGKGK..",
+    ".....KKK.KKKKK.."
+   ]
+  },
+  "corolla": {
+   "palette": {
+    "K": "#231d33",
+    "C": "#2f6fd1",
+    "c": "#1f4d99",
+    "V": "#cdeaf7",
+    "A": "#a7b0bf",
+    "Y": "#ffd966",
+    "R": "#e2554f"
+   },
+   "rows": [
+    "........KKKKKKKK........",
+    ".......KVVVKVVVVK.......",
+    "......KVVVVKVVVVVK......",
+    "..KKKKCCCCCCCCCCCCKKKK..",
+    ".KCCCCCCCCCCCCCCCCCCCCK.",
+    "KYCCCCCCCCKCCCCCCCCCCRK.",
+    "KCCCCCCCCCKCCCCCCCCCCCK.",
+    "KcccKKKccccccccccKKKcccK",
+    ".KcKAAAKccccccccKAAAKcK.",
+    "..KKAKAK........KAKAK...",
+    "....KKK..........KKK...."
+   ]
+  },
+  "dumbbell": {
+   "palette": {
+    "K": "#231d33",
+    "X": "#3a3d5c",
+    "A": "#a7b0bf",
+    "a": "#6f7788"
+   },
+   "rows": [
+    ".KK......KK.",
+    "KXXK....KXXK",
+    "KXXKAAAAKXXK",
+    "KXXKaaaaKXXK",
+    "KXXK....KXXK",
+    ".KK......KK."
+   ]
+  },
+  "cake": {
+   "palette": {
+    "K": "#231d33",
+    "F": "#f7a8c4",
+    "W": "#ffffff",
+    "B": "#f3d9a8",
+    "Y": "#ffc53d",
+    "C": "#6ec3e8"
+   },
+   "rows": [
+    "......YY......",
+    "......CC......",
+    "......CC......",
+    "..KKKKKKKKKK..",
+    ".KWWFWWFWWFWK.",
+    ".KFFFFFFFFFFK.",
+    ".KBBBBBBBBBBK.",
+    ".KFFFFFFFFFFK.",
+    ".KBBBBBBBBBBK.",
+    "KKKKKKKKKKKKKK",
+    "KWWWWWWWWWWWWK",
+    ".KKKKKKKKKKKK."
+   ]
+  },
+  "heart": {
+   "palette": {
+    "K": "#231d33",
+    "R": "#ff5c7a"
+   },
+   "rows": [
+    ".KK.KK.",
+    "KRRKRRK",
+    "KRRRRRK",
+    ".KRRRK.",
+    "..KRK..",
+    "...K..."
+   ]
+  },
+  "inbox": {
+   "palette": {
+    "K": "#231d33",
+    "W": "#ffffff",
+    "w": "#d7dce6",
+    "R": "#ff5c7a"
+   },
+   "rows": [
+    "...........KKK..",
+    "..........KRRRK.",
+    ".KKKKKKKKKKKKKK.",
+    ".KwKWWWWWWWWKwK.",
+    ".KWwKWWWWWWKwWK.",
+    ".KWWwKWWWWKwWWK.",
+    ".KWWWwKKKKwWWWK.",
+    ".KWWWWWWWWWWWWK.",
+    ".KWWWKKWWKKWWWK.",
+    ".KWWWWWWWWWWWWK.",
+    ".KWWWKKKKKKWWWK.",
+    ".KWWWWWWWWWWWWK.",
+    ".KKKKKKKKKKKKKK."
+   ]
+  }
+ },
+ "outfits": {
+  "pj": {
+   "name": "Pyjamas",
+   "style": "pants",
+   "top": "#c9b6f2",
+   "bottom": "#c9b6f2"
+  },
+  "gym": {
+   "name": "Lululemon set",
+   "style": "crop",
+   "top": "#ff6f91",
+   "bottom": "#2b2d42"
+  },
+  "office": {
+   "name": "City office",
+   "style": "pants",
+   "note": "Navy blazer, tailored pants",
+   "top": "#26457a",
+   "bottom": "#d9c7a8"
+  },
+  "dinner": {
+   "name": "All black",
+   "style": "pants",
+   "note": "Sleek and boardroom-ready",
+   "top": "#1f1a24",
+   "bottom": "#1f1a24"
+  },
+  "sunny": {
+   "name": "Sunny day",
+   "style": "pants",
+   "note": "Yellow top, light blue jeans",
+   "top": "#ffd166",
+   "bottom": "#7fc8f8"
+  },
+  "pink": {
+   "name": "Pink power",
+   "style": "pants",
+   "note": "Pink knit, white pants",
+   "top": "#ff9fb8",
+   "bottom": "#f4f6fb"
+  },
+  "dress": {
+   "name": "Blue dress",
+   "style": "dress",
+   "top": "#3b5bdb",
+   "bottom": "#3b5bdb"
+  }
+ }
+}
