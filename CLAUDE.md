@@ -21,7 +21,7 @@ A birthday gift game for Annette, built by Paulo. A top-down, handheld-style pix
 - `EDIT ME` / `CONFIG`: all personal content (names, car, company, drinks, dishes, inside jokes, secrets, finale speech)
 - `sprites`: pixel sprites as string rows. Each char maps to a palette key, `.` is transparent. Annette is built from `HEAD_F`/`HEAD_B` plus a `LOWER` style (`pants`, `crop`, `dress`). Lower-case keys are shades: when an override recolours `T`, `P`, `H`, `D` or `M`, the matching lower-case key is darkened automatically, so shading follows every outfit and NPC
 - Luca: `luca`, `luca_walk`, `luca_wag` (side view, faces right, flip to face left). Use `lucaSpr(moving)` to pick the frame
-- `state`, `HUD`, `audio` (WebAudio SFX + tiny chiptune sequencer), `input` (keyboard + on-screen D-pad/A/B)
+- `state`, `HUD` (needs-style bars coloured by level via `needColour`, in-game clock via `SCENE_TIME` / `setClock`), `audio` (WebAudio SFX + tiny chiptune sequencer), `input` (keyboard + on-screen D-pad/A/B)
 - `UI primitives`: `say()` dialogue with typewriter, `setMenu()` keyboard/touch menus, `fade()`
 - `maps`: `MAPS` object. Each map is 15x10 tiles of 16px on a 240x160 canvas
 - Chapter logic: bedroom, drive, gym + lift mini-game, battles, office report sprint, beach, The Botanist, finale, credits
@@ -49,6 +49,7 @@ Title (party stage with Annette, Mum, Paulo and Luca) > Bedroom (outfit, skincar
 - Art direction: cozy and rounded. Outlines are never flat ink: `sprite()` turns `K` pixels into a darker shade of the colour they border, the `box()` helper in `drawObject` draws rounded corners with shaded edges and a top highlight, and `oval(..., INK)` strokes in the fill's own shade. Keep new art in that system rather than adding hard black lines. UI corners use `--r`.
 - Must work on mobile Safari and desktop Chrome. Keep touch controls working.
 - No external network calls. Pixelify Sans and Figtree (SIL OFL) are embedded as base64 `@font-face` rules.
+- Life-sim touches: speech bubbles over whoever is talking (drawn in `renderMap`), furniture with a front face and lit top edge from `box()`, and a clock that pauses during dialogue and menus.
 - Luca only appears in the morning (bedroom), on the title screen and in the credits. He stays home with Mum for the rest of the day.
 - Keep in-screen text readable on phones: use `max(<px>, <n>cqw)` font sizes, never below about 10px.
 - After any change, play through start to finish (or script it with Playwright) and check the console for errors.
