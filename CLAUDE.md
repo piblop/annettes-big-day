@@ -13,17 +13,19 @@ A birthday gift game for Annette, built by Paulo. A top-down, handheld-style pix
 - `assets/sprites-8x/`: same sprites at 8x for previews and docs
 - `assets/sprites.json`: sprite source data (rows + palettes) and outfit colours
 - `assets/sprite-sheet.png`: all sprites on one sheet
-- `assets/screenshots/`: reference shots of each scene
+- `assets/screenshots/`: reference shots of each scene, `00-title.png` to `11-credits.png` (regenerate after visual changes)
+- `Claude outputs/`: before/after comparison images from polish passes
 - `PROMPT.md`: the kickoff prompt for Claude Code
 
 ## How index.html is organised (search for these banners)
 - `EDIT ME` / `CONFIG`: all personal content (names, car, company, drinks, dishes, inside jokes, secrets, finale speech)
-- `sprites`: pixel sprites as string rows. Each char maps to a palette key, `.` is transparent. Annette is built from `HEAD_F`/`HEAD_B` plus a `LOWER` style (`pants`, `crop`, `dress`)
+- `sprites`: pixel sprites as string rows. Each char maps to a palette key, `.` is transparent. Annette is built from `HEAD_F`/`HEAD_B` plus a `LOWER` style (`pants`, `crop`, `dress`). Lower-case keys are shades: when an override recolours `T`, `P`, `H`, `D` or `M`, the matching lower-case key is darkened automatically, so shading follows every outfit and NPC
+- Luca: `luca`, `luca_walk`, `luca_wag` (side view, faces right, flip to face left). Use `lucaSpr(moving)` to pick the frame
 - `state`, `HUD`, `audio` (WebAudio SFX + tiny chiptune sequencer), `input` (keyboard + on-screen D-pad/A/B)
 - `UI primitives`: `say()` dialogue with typewriter, `setMenu()` keyboard/touch menus, `fade()`
 - `maps`: `MAPS` object. Each map is 15x10 tiles of 16px on a 240x160 canvas
 - Chapter logic: bedroom, drive, gym + lift mini-game, battles, office report sprint, beach, The Botanist, finale, credits
-- `tile art`: `drawFloor`, `drawWall`, `drawObject` per theme
+- `tile art`: `drawFloor`, `drawWall`, `drawObject` per theme, plus `mapDecor(theme, 'under'|'over')` for rugs (drawn before furniture) and lighting overlays (fairy lights, golden hour)
 - `loop`: update + render per `G.scene`
 
 ## Map legend (per theme)
@@ -37,7 +39,7 @@ A birthday gift game for Annette, built by Paulo. A top-down, handheld-style pix
 Multi-tile objects are drawn once from their top-left tile (`isOrigin` + `extent`).
 
 ## Game flow
-Title > Bedroom (outfit, skincare, tidy, Mum) > Drive > One Playground (lift mini-game, battle The Last Set, lockers) > Drive > National Intermodal (report sprint, battle Inbox Overload) > Beach (golden hour, Joanne) > The Botanist, Kirribilli (drink, dinner with Paulo, cake, speech) > Fireworks finale > Credits.
+Title (party stage with Annette, Mum, Paulo and Luca) > Bedroom (outfit, skincare, tidy, Mum; Luca says goodbye at the door) > Drive > One Playground (lift mini-game, battle The Last Set, lockers) > Drive > National Intermodal (report sprint, battle Inbox Overload) > Lunch café > Drive > Beach (golden hour, Joanne) > The Botanist, Kirribilli (drink, dinner with Paulo, cake, speech) > Fireworks finale > Credits.
 
 ## Rules
 - Keep it one self-contained `index.html` unless Paulo explicitly asks for a build setup. It must stay easy to share as a single file or link.
@@ -45,5 +47,7 @@ Title > Bedroom (outfit, skincare, tidy, Mum) > Drive > One Playground (lift min
 - Never show Annette's age anywhere in the game.
 - In-game text: warm, short, playful. No em dashes.
 - Must work on mobile Safari and desktop Chrome. Keep touch controls working.
-- No external network calls except Google Fonts (with fallbacks).
+- No external network calls. Pixelify Sans and Figtree (SIL OFL) are embedded as base64 `@font-face` rules.
+- Luca only appears in the morning (bedroom), on the title screen and in the credits. He stays home with Mum for the rest of the day.
+- Keep in-screen text readable on phones: use `max(<px>, <n>cqw)` font sizes, never below about 10px.
 - After any change, play through start to finish (or script it with Playwright) and check the console for errors.
