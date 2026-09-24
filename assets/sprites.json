@@ -1,9 +1,9 @@
 {
- "note": "Pixel sprite source. Each row is one line of pixels; each character maps to a palette colour; \".\" is transparent.",
+ "note": "Pixel sprite source. Each row is one line of pixels; each character maps to a palette colour; \".\" is transparent. K pixels are outlines: the game renders them as a darker shade of the neighbouring colour (selective outlining), so the exported PNGs show coloured outlines rather than the flat K value.",
  "sprites": {
   "annette_pants": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "Y": "#fbe7a1",
     "S": "#f9d1b0",
     "s": "#e6a57f",
@@ -43,7 +43,7 @@
   },
   "annette_crop": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "Y": "#fbe7a1",
     "S": "#f9d1b0",
     "s": "#e6a57f",
@@ -83,7 +83,7 @@
   },
   "annette_dress": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "Y": "#fbe7a1",
     "S": "#f9d1b0",
     "s": "#e6a57f",
@@ -123,7 +123,7 @@
   },
   "annette_back_pants": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "Y": "#fbe7a1",
     "S": "#f9d1b0",
     "s": "#e6a57f",
@@ -163,7 +163,7 @@
   },
   "annette_back_crop": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "Y": "#fbe7a1",
     "S": "#f9d1b0",
     "s": "#e6a57f",
@@ -203,7 +203,7 @@
   },
   "annette_back_dress": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "Y": "#fbe7a1",
     "S": "#f9d1b0",
     "s": "#e6a57f",
@@ -243,7 +243,7 @@
   },
   "paulo": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "S": "#b57848",
     "D": "#2a1d12",
     "d": "#170f08",
@@ -281,7 +281,7 @@
   },
   "mum": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "S": "#f5cfae",
     "R": "#eea0a0",
     "L": "#c55a6c",
@@ -320,15 +320,15 @@
   },
   "luca": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "A": "#e0a866",
     "a": "#f3c68f",
     "g": "#b3763a",
     "d": "#8f5a2b",
     "C": "#f7e6c8",
-    "E": "#231d33",
+    "E": "#4a3b52",
     "W": "#ffffff",
-    "N": "#231d33",
+    "N": "#4a3b52",
     "R": "#f28b9b"
    },
    "rows": [
@@ -351,7 +351,7 @@
   },
   "corolla": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "C": "#2f6fd1",
     "c": "#1f4d99",
     "V": "#cdeaf7",
@@ -377,7 +377,7 @@
   },
   "dumbbell": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "X": "#3a3d5c",
     "A": "#a7b0bf",
     "a": "#6f7788"
@@ -393,7 +393,7 @@
   },
   "cake": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "F": "#f7a8c4",
     "W": "#ffffff",
     "B": "#f3d9a8",
@@ -417,7 +417,7 @@
   },
   "heart": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "R": "#ff5c7a",
     "W": "#ffd1dc"
    },
@@ -432,7 +432,7 @@
   },
   "inbox": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "W": "#ffffff",
     "w": "#d7dce6",
     "R": "#ff5c7a"
@@ -455,15 +455,15 @@
   },
   "luca_walk": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "A": "#e0a866",
     "a": "#f3c68f",
     "g": "#b3763a",
     "d": "#8f5a2b",
     "C": "#f7e6c8",
-    "E": "#231d33",
+    "E": "#4a3b52",
     "W": "#ffffff",
-    "N": "#231d33",
+    "N": "#4a3b52",
     "R": "#f28b9b"
    },
    "rows": [
@@ -486,15 +486,15 @@
   },
   "luca_wag": {
    "palette": {
-    "K": "#231d33",
+    "K": "#4a3b52",
     "A": "#e0a866",
     "a": "#f3c68f",
     "g": "#b3763a",
     "d": "#8f5a2b",
     "C": "#f7e6c8",
-    "E": "#231d33",
+    "E": "#4a3b52",
     "W": "#ffffff",
-    "N": "#231d33",
+    "N": "#4a3b52",
     "R": "#f28b9b"
    },
    "rows": [
