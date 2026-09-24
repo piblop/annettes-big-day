@@ -36,6 +36,9 @@ body{min-height:100vh;display:flex;justify-content:center;font-family:'Pixelify 
 .dialog p{margin:0}
 .dialog .tag{position:absolute;left:3cqw;top:-3.8cqw;padding:.3cqw 1.8cqw;background:var(--sun);border:.6cqw solid var(--ink);font-weight:700;font-size:3cqw}
 .dialog .more{position:absolute;right:2.4cqw;bottom:1.8cqw;width:0;height:0;border-left:1.2cqw solid transparent;border-right:1.2cqw solid transparent;border-top:1.4cqw solid var(--ink);animation:bob .6s steps(2) infinite}
+.dialog.paulo{background:#eaf1ff;border-color:#3d5a9e;box-shadow:.9cqw .9cqw 0 #3d5a9e}
+.dialog.paulo .tag{background:#9fc0ff;border-color:#3d5a9e}
+.dialog.paulo .more{border-top-color:#3d5a9e}
 @keyframes bob{50%{transform:translateY(.6cqw)}}
 .panel{position:absolute;inset:4cqw 6cqw;background:var(--paper);border:.7cqw solid var(--ink);box-shadow:.9cqw .9cqw 0 var(--ink);padding:3cqw 3.5cqw;display:flex;flex-direction:column;gap:1.8cqw;overflow:auto}
 .panel h2{margin:0;font-size:5cqw;line-height:1}
@@ -206,6 +209,7 @@ const CONFIG = {
   // Paulo's finale speech. One line per dialogue box.
   finaleMessage: [
     "A PR at the gym, exec reports smashed, a good lunch, and now cocktails by the harbour. What a day.",
+    "You do so much! How lucky am I!!",
     "Happy birthday my Annette. I love you.",
     "Now, cake? And let's enjoy the harbour bridge view!"
   ]
@@ -480,6 +484,7 @@ function say(lines, done) {
 function showLine() {
   const d = G.dlg, line = d.lines[d.i];
   d.tag.hidden = !line.n; d.tag.textContent = line.n || '';
+  d.box.classList.toggle('paulo', line.n === CONFIG.boyfriend);
   d.p.textContent = ''; d.shown = 0; d.more.hidden = true;
 }
 function dialogAdvance() {
@@ -744,7 +749,7 @@ function startDrive(theme, next, dest) {
   ui.append(el('div', 'hint', 'Driving to ' + dest + '. Up/down to change lanes. Dodge cones, honk at slow drivers!'));
   updateRadio(); music('drive');
 }
-const HONKS = ['YALLAH!', 'COME ON HABIBI!', 'THIS GUY!'];
+const HONKS = ['YALLAH!', 'COME ON HABIBI YOU CAN DO IT', 'THIS GUY!'];
 function honkPrompt(c) {
   const d = G.drive; d.paused = true; G.mode = 'menu';
   const p = el('div', 'panel'); p.style.inset = '30cqw 7cqw 3cqw';
