@@ -1258,10 +1258,30 @@ function renderBeachScene(sunset) {
   for (let i = 0; i < 40; i++) R(Math.floor(hsh(i, 1, 2) * 240), 106 + Math.floor(hsh(i, 2, 3) * 52), 1, 1, '#e3c47f');
 }
 function renderTitle() {
-  renderBeachScene(false);
-  R(166, 44, 34, 8, '#ffffff'); R(174, 38, 16, 6, '#ffffff');
-  drawSpr(annetteSprite(false, 'dress'), 150, 104, false, 2);
-  drawSpr(lucaSpr(), 186, 128, true);
+  const cols = ['#ff6f91', '#ffd166', '#7fc8f8', '#3fae7c', '#c9b6f2'];
+  // party room: wall + floor
+  R(0, 0, 240, 116, '#ffd9e6'); R(0, 0, 240, 44, '#ffcfe0');
+  R(0, 116, 240, 44, '#c9a27a'); R(0, 116, 240, 3, '#8a5a3b');
+  for (let y = 123; y < 160; y += 8) R(0, y, 240, 1, '#b78e63');
+  // party rug the crew stands on
+  R(50, 120, 150, 32, '#ff9fb8'); R(50, 120, 150, 2, '#e27a98');
+  // bunting swag with pennants
+  ctx.strokeStyle = '#c98aa0'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, 6); ctx.quadraticCurveTo(120, 26, 240, 6); ctx.stroke();
+  for (let i = 0; i < 19; i++) { const x = 4 + i * 13, y = 6 + Math.sin(Math.PI * x / 240) * 12, c = cols[i % cols.length]; ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x + 4, y); ctx.lineTo(x, y + 7); ctx.closePath(); ctx.fill(); }
+  // balloons
+  const bal = (x, y, c) => { oval(x, y, 7, 9, c, INK); R(x, y + 9, 1, 7, '#c98aa0'); R(x - 1, y + 8, 3, 2, c); };
+  bal(206, 48, '#ff6f91'); bal(223, 58, '#ffd166'); bal(20, 72, '#7fc8f8');
+  // confetti falling
+  for (let i = 0; i < 44; i++) { const x = Math.floor((hsh(i, 1, 2) * 240 + G.t * 16 * (0.4 + hsh(i, 3, 4))) % 240); const y = Math.floor((hsh(i, 2, 3) * 114 + G.t * 26 * (0.4 + hsh(i, 4, 5))) % 114); R(x, y, 2, 2, cols[i % cols.length]); }
+  // floating hearts
+  drawSpr(sprite('heart'), 150, 90 + Math.round(Math.sin(G.t * 3) * 2), false, 1);
+  drawSpr(sprite('heart'), 198, 100 + Math.round(Math.sin(G.t * 3 + 1) * 2), false, 1);
+  // the crew: Mum, Annette (birthday girl), Paulo, Luca
+  drawSpr(sprite('mum'), 60, 104, false, 2);
+  drawSpr(annetteSprite(false, 'dress'), 100, 102, false, 2);
+  drawSpr(sprite('paulo'), 140, 104, false, 2);
+  drawSpr(lucaSpr(), 190, 116, true, 2);
 }
 function renderFinale() {
   R(0, 0, 240, 30, '#141a3a'); R(0, 30, 240, 30, '#1c2346'); R(0, 60, 240, 30, '#28305c');
