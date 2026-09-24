@@ -312,26 +312,32 @@
   "luca": {
    "palette": {
     "K": "#231d33",
-    "G": "#e3a54c",
-    "g": "#b87a2e",
+    "A": "#e0a866",
+    "a": "#f3c68f",
+    "g": "#b3763a",
+    "d": "#8f5a2b",
+    "C": "#f7e6c8",
+    "E": "#231d33",
+    "W": "#ffffff",
     "N": "#231d33",
     "R": "#f28b9b"
    },
    "rows": [
-    "..........KKKK..",
-    ".........KGgGGK.",
-    "........KGGGGGGK",
-    "........KgGKGGGK",
-    "...KK...KGGGGGNK",
-    "..KGGK..KgGGGRK.",
-    ".KGgGGKKKGGGGK..",
-    ".KGGKGGGGGGGGgK.",
-    "..KK.KGgGGGgGGK.",
-    ".....KGGGGGGGGK.",
-    ".....KgGGgGGgGK.",
-    ".....KGK.KGKGK..",
-    ".....KGK.KGKGK..",
-    ".....KKK.KKKKK.."
+    "..........KKK...",
+    ".KK......KaAaK..",
+    "KaAK....KgAAAAK.",
+    "KAaAK..KggAEWAK.",
+    "KAAgK.KggdAEEAAK",
+    ".KAgK.KgdgAAACCN",
+    "..KAK.KggdAACRK.",
+    "..KAKKKdgdAAAK..",
+    "..KAaAaAgggACK..",
+    "..KAAAAaAAAACK..",
+    "..KAaAAAAAACCK..",
+    "..KAgggggggCK...",
+    "..KAAKKKKKAAK...",
+    "..KAAK...KAAK...",
+    "..KKKK...KKKK..."
    ]
   },
   "corolla": {
@@ -433,6 +439,68 @@
     ".KWWWKKKKKKWWWK.",
     ".KWWWWWWWWWWWWK.",
     ".KKKKKKKKKKKKKK."
+   ]
+  },
+  "luca_walk": {
+   "palette": {
+    "K": "#231d33",
+    "A": "#e0a866",
+    "a": "#f3c68f",
+    "g": "#b3763a",
+    "d": "#8f5a2b",
+    "C": "#f7e6c8",
+    "E": "#231d33",
+    "W": "#ffffff",
+    "N": "#231d33",
+    "R": "#f28b9b"
+   },
+   "rows": [
+    "..........KKK...",
+    ".KK......KaAaK..",
+    "KaAK....KgAAAAK.",
+    "KAaAK..KggAEWAK.",
+    "KAAgK.KggdAEEAAK",
+    ".KAgK.KgdgAAACCN",
+    "..KAK.KggdAACRK.",
+    "..KAKKKdgdAAAK..",
+    "..KAaAaAgggACK..",
+    "..KAAAAaAAAACK..",
+    "..KAaAAAAAACCK..",
+    "..KAgggggggCK...",
+    "..KAAKKKKKAAK...",
+    "...KAAK.KAAK....",
+    "...KKKK.KKKK...."
+   ]
+  },
+  "luca_wag": {
+   "palette": {
+    "K": "#231d33",
+    "A": "#e0a866",
+    "a": "#f3c68f",
+    "g": "#b3763a",
+    "d": "#8f5a2b",
+    "C": "#f7e6c8",
+    "E": "#231d33",
+    "W": "#ffffff",
+    "N": "#231d33",
+    "R": "#f28b9b"
+   },
+   "rows": [
+    "..........KKK...",
+    "..KK.....KaAaK..",
+    ".KaAK...KgAAAAK.",
+    ".KAaAK.KggAEWAK.",
+    ".KAAgKKggdAEEAAK",
+    "..KAgKKgdgAAACCN",
+    "..KAK.KggdAACRK.",
+    "..KAKKKdgdAAAK..",
+    "..KAaAaAgggACK..",
+    "..KAAAAaAAAACK..",
+    "..KAaAAAAAACCK..",
+    "..KAgggggggCK...",
+    "..KAAKKKKKAAK...",
+    "..KAAK...KAAK...",
+    "..KKKK...KKKK..."
    ]
   }
  },
