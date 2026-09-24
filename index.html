@@ -265,19 +265,14 @@ function hsh(x, y, n) { let h = (x * 374761393 + y * 668265263 + n * 982451653) 
 function oval(cx, cy, rx, ry, fill, stroke) { ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill(); if (stroke) { ctx.lineWidth = 2; ctx.strokeStyle = stroke; ctx.stroke(); } }
 
 /* ---------------- sprites ---------------- */
-const BODY = [
-  "...KTTTSSTTTK...", "..KSTTTTTTTTSK..", "..KSTtTTTTtTSK..", "..KSKTTTTTTKSK..",
-  "...KKbbbbbbKK...", "....KPPPPPPK....", "....KPPKKPPK....", "....KBBKKBBK....", "....KKK..KKK...."
-];
-const girlPal = { K: INK, S: "#f9d1b0", s: "#e6a57f", R: "#f4a3a8", L: "#d9637a", E: "#3d7be0", H: "#f5d271", h: "#d8a441", T: "#ff6f91", t: "#c94a6e", P: "#2b2d42", p: "#1c1d2c", B: "#f4f6fb" };
-const HEAD_F = ["....KKKKKKKK....", "...KHHHHHHHHK...", "..KHHHHHHHHHHK..", "..KHhHHHHHHhHK..", "..KHhSSSSSShHK..", "..KHSSSSSSSSHK..", "..KHSEESSEESHK..", "..KHRSSSSSSRHK..", "..KHSSSLLSSSHK..", "..KHhKSSSSKhHK..", "..KHHKKSSKKHHK..",
-  "..KHKTTSSTTKHK..", "..KHTTTTTTTTHK..", "..KhTtTTTTtThK..", "..KSKTTTTTTKSK.."];
-const HEAD_B = ["....KKKKKKKK....", "...KHHHHHHHHK...", "..KHHHHHHHHHHK..", "..KHhHHHHHHhHK..", "..KHHHhHHhHHHK..", "..KHHHHHHHHHHK..", "..KHhHHHHHHhHK..", "..KHHHHHHHHHHK..", "..KhHHHHHHHHhK..", "..KHHHHHHHHHHK..", "..KHHhHHHHhHHK..",
-  "..KHHHHHHHHHHK..", "..KSHHHHHHHHSK..", "..KShHHHHHHhSK..", "..KSKhHHHHhKSK.."];
+const BODY = ["...KTTtSStTTK...", "..KSTTTTTTTTSK..", "..KsTtTTTTtTsK..", "..KSKTTTTTTKSK..", "...KKbbbbbbKK...", "....KPPPPPPK....", "....KPpKKpPK....", "....KBBKKBBK....", "....KKK..KKK...."];
+const girlPal = { K: INK, Y: "#fbe7a1", S: "#f9d1b0", s: "#e6a57f", R: "#f4a3a8", L: "#d9637a", E: "#3d7be0", H: "#f5d271", h: "#d8a441", T: "#ff6f91", t: "#c94a6e", P: "#2b2d42", p: "#1c1d2c", B: "#f4f6fb" };
+const HEAD_F = ["....KKKKKKKK....", "...KHHYYHHHHK...", "..KHYYHHHHHHhK..", "..KHHHHHhhSShK..", "..KHhhSSSSSShK..", "..KHSKKSSKKSHK..", "..KHSEESSEESHK..", "..KHRSSSSSSRHK..", "..KHhSSLLSShHK..", "..KHHKsSSsKHHK..", "..KHHhKSSKhHHK..", "..KHKTTSSTTKHK..", "..KHTTTTTTTTHK..", "..KhtTTTTTTthK..", "..KSKtTTTTtKSK.."];
+const HEAD_B = ["....KKKKKKKK....", "...KHHYYHHHHK...", "..KHYYHHHHHHhK..", "..KHYHHHHHHhhK..", "..KHHHHHHHHHhK..", "..KHhHHHHHHHhK..", "..KHHhHHHHHhHK..", "..KHHHhHHHhHHK..", "..KhHHhHHHhHhK..", "..KHhHHhHhHHhK..", "..KHHhHhHhHhHK..", "..KTHHhHHHhHTK..", "..KTtHHhHhHtTK..", "..KtTKhHHhKTtK..", "..KSKtTKKTtKSK.."];
 const LOWER = {
-  pants: ["...KKTTTTTTKK...", "....KPPPPPPK....", "....KPPKKPPK....", "....KBBKKBBK....", "....KKK..KKK...."],
-  crop: ["...KKSSSSSSKK...", "....KPPPPPPK....", "....KPPKKPPK....", "....KBBKKBBK....", "....KKK..KKK...."],
-  dress: ["...KTTTTTTTTK...", "..KTTTTTTTTTTK..", "..KKKKKKKKKKKK..", "....KSSKKSSK....", "....KKK..KKK...."]
+  pants: ["...KKtTTTTtKK...", "....KPPPPPPK....", "....KPpKKpPK....", "....KBBKKBBK....", "....KKK..KKK...."],
+  crop: ["...KKsSSSSsKK...", "....KPPPPPPK....", "....KPpKKpPK....", "....KBBKKBBK....", "....KKK..KKK...."],
+  dress: ["...KtTTTTTTtK...", "..KtTTTTTTTTtK..", "..KKKKKKKKKKKK..", "....KSsKKsSK....", "....KKK..KKK...."]
 };
 // Luca the cavoodle: apricot curls, floppy ear, plume tail. Faces right; flip to face left.
 const LUCA_PAL = { K: INK, A: "#e0a866", a: "#f3c68f", g: "#b3763a", d: "#8f5a2b", C: "#f7e6c8", E: INK, W: "#ffffff", N: INK, R: "#f28b9b" };
@@ -288,15 +283,15 @@ const SPR = {
   annette_back_pants: { pal: girlPal, rows: HEAD_B.concat(LOWER.pants) },
   annette_back_crop: { pal: girlPal, rows: HEAD_B.concat(LOWER.crop) },
   annette_back_dress: { pal: girlPal, rows: HEAD_B.concat(LOWER.dress) },
-  paulo: { pal: { K: INK, S: "#b57848", D: "#2a1d12", d: "#170f08", E: "#3a2414", T: "#1f1a24", t: "#141019", P: "#3f6fb0", p: "#2d5088", B: "#f4f6fb", b: "#15121c" }, rows: ["................", "....KKKKKKKK....", "...KDDDDDDDDK...", "..KDDDdDDdDDDK..", "..KDSSSSSSSSDK..", "..KSSSSSSSSSSK..", "..KSSEESSEESSK..", "..KSSSSSSSSSSK..", "..KSSSSKKSSSSK..", "...KSSSSSSSSK...", "....KKSSSSKK...."].concat(BODY) },
-  mum: { pal: { K: INK, S: "#f5cfae", R: "#eea0a0", L: "#c55a6c", E: "#6b4a32", M: "#4a3226", m: "#2f1f18", T: "#7fa383", t: "#5c7d60", P: "#5b5566", p: "#433f4c", B: "#f4f6fb" }, rows: ["................", "....KKKKKKKK....", "...KMMMMMMMMK...", "..KMMMmMMmMMMK..", "..KMMSSSSSSMMK..", "..KMSSSSSSSSMK..", "..KMSEESSEESMK..", "..KMRSSSSSSRMK..", "..KMSSSLLSSSMK..", "..KMKSSSSSSKMK..", "..KKKKSSSSKKKK..", "...KTTTSSTTTK...", "..KTTTTTTTTTTK..", "..KTTtTTTTtTTK..", "..KSKTTTTTTKSK..", "...KKTTTTTTKK...", "....KPPPPPPK....", "....KPPKKPPK....", "....KBBKKBBK....", "....KKK..KKK...."] },
+  paulo: { pal: { K: INK, S: "#b57848", D: "#2a1d12", d: "#170f08", E: "#3a2414", T: "#1f1a24", t: "#141019", P: "#3f6fb0", p: "#2d5088", B: "#f4f6fb", b: "#15121c", s: "#9a6238" }, rows: ["................", "....KKKKKKKK....", "...KDDdDDdDDK...", "..KDDDDDDDDDDK..", "..KDdSSSSSSdDK..", "..KSSSSSSSSSSK..", ".KsSEESSSSEESsK.", "..KSSSSSSSSSSK..", "..KSSSsSSsSSSK..", "...KSSSKKSSSK...", "....KKsSSsKK...."].concat(BODY) },
+  mum: { pal: { K: INK, S: "#f5cfae", R: "#eea0a0", L: "#c55a6c", E: "#6b4a32", M: "#4a3226", m: "#2f1f18", T: "#7fa383", t: "#5c7d60", P: "#5b5566", p: "#433f4c", B: "#f4f6fb", s: "#e2b28f" }, rows: ["................", "....KKKKKKKK....", "...KMMMmMMMMK...", "..KMMmMMMMmMMK..", "..KMMSSSSSSMMK..", "..KMSSSSSSSSMK..", "..KMSEESSEESMK..", "..KMRSSSSSSRMK..", "..KMSSSLLSSSMK..", "..KmKsSSSSsKmK..", "..KKKKsSSsKKKK..", "...KTTtSStTTK...", "..KTTTTTTTTTTK..", "..KTTtTTTTtTTK..", "..KSKTTTTTTKSK..", "...KKtttttKK....", "....KPPPPPPK....", "....KPpKKpPK....", "....KBBKKBBK....", "....KKK..KKK...."] },
   luca: { pal: LUCA_PAL, rows: ["..........KKK...", ".KK......KaAaK..", "KaAK....KgAAAAK.", "KAaAK..KggAEWAK.", "KAAgK.KggdAEEAAK", ".KAgK.KgdgAAACCN", "..KAK.KggdAACRK.", "..KAKKKdgdAAAK..", "..KAaAaAgggACK..", "..KAAAAaAAAACK..", "..KAaAAAAAACCK..", "..KAgggggggCK...", "..KAAKKKKKAAK...", "..KAAK...KAAK...", "..KKKK...KKKK..."] },
   luca_walk: { pal: LUCA_PAL, rows: ["..........KKK...", ".KK......KaAaK..", "KaAK....KgAAAAK.", "KAaAK..KggAEWAK.", "KAAgK.KggdAEEAAK", ".KAgK.KgdgAAACCN", "..KAK.KggdAACRK.", "..KAKKKdgdAAAK..", "..KAaAaAgggACK..", "..KAAAAaAAAACK..", "..KAaAAAAAACCK..", "..KAgggggggCK...", "..KAAKKKKKAAK...", "...KAAK.KAAK....", "...KKKK.KKKK...."] },
   luca_wag: { pal: LUCA_PAL, rows: ["..........KKK...", "..KK.....KaAaK..", ".KaAK...KgAAAAK.", ".KAaAK.KggAEWAK.", ".KAAgKKggdAEEAAK", "..KAgKKgdgAAACCN", "..KAK.KggdAACRK.", "..KAKKKdgdAAAK..", "..KAaAaAgggACK..", "..KAAAAaAAAACK..", "..KAaAAAAAACCK..", "..KAgggggggCK...", "..KAAKKKKKAAK...", "..KAAK...KAAK...", "..KKKK...KKKK..."] },
-  corolla: { pal: { K: INK, C: "#2f6fd1", c: "#1f4d99", V: "#cdeaf7", A: "#a7b0bf", Y: "#ffd966", R: "#e2554f" }, rows: ["........KKKKKKKK........", ".......KVVVKVVVVK.......", "......KVVVVKVVVVVK......", "..KKKKCCCCCCCCCCCCKKKK..", ".KCCCCCCCCCCCCCCCCCCCCK.", "KYCCCCCCCCKCCCCCCCCCCRK.", "KCCCCCCCCCKCCCCCCCCCCCK.", "KcccKKKccccccccccKKKcccK", ".KcKAAAKccccccccKAAAKcK.", "..KKAKAK........KAKAK...", "....KKK..........KKK...."] },
+  corolla: { pal: { K: INK, C: "#2f6fd1", c: "#1f4d99", V: "#cdeaf7", A: "#a7b0bf", Y: "#ffd966", R: "#e2554f", L: "#5b93e6", W: "#ffffff" }, rows: ["........KKKKKKKK........", ".......KVWVKVVWVK.......", "......KVWVVKVWVVVK......", "..KKKKLLLLLLLLLLLLKKKK..", ".KLLCCCCCCCCCCCCCCCCCCK.", "KYCCCCcCCCKCCCCcCCCCCRK.", "KCCCCCCCCCKCCCCCCCCCCCK.", "KcccKKKccccccccccKKKcccK", ".KcKAWAKccccccccKAWAKcK.", "..KKAKAK........KAKAK...", "....KKK..........KKK...."] },
   dumbbell: { pal: { K: INK, X: "#3a3d5c", A: "#a7b0bf", a: "#6f7788" }, rows: [".KK......KK.", "KXXK....KXXK", "KXXKAAAAKXXK", "KXXKaaaaKXXK", "KXXK....KXXK", ".KK......KK."] },
   cake: { pal: { K: INK, F: "#f7a8c4", W: "#ffffff", B: "#f3d9a8", Y: "#ffc53d", C: "#6ec3e8" }, rows: ["......YY......", "......CC......", "......CC......", "..KKKKKKKKKK..", ".KWWFWWFWWFWK.", ".KFFFFFFFFFFK.", ".KBBBBBBBBBBK.", ".KFFFFFFFFFFK.", ".KBBBBBBBBBBK.", "KKKKKKKKKKKKKK", "KWWWWWWWWWWWWK", ".KKKKKKKKKKKK."] },
-  heart: { pal: { K: INK, R: "#ff5c7a" }, rows: [".KK.KK.", "KRRKRRK", "KRRRRRK", ".KRRRK.", "..KRK..", "...K..."] },
+  heart: { pal: { K: INK, R: "#ff5c7a", W: "#ffd1dc" }, rows: [".KK.KK.", "KWRKRRK", "KRRRRRK", ".KRRRK.", "..KRK..", "...K..."] },
   inbox: { pal: { K: INK, W: "#ffffff", w: "#d7dce6", R: "#ff5c7a" }, rows: ["...........KKK..", "..........KRRRK.", ".KKKKKKKKKKKKKK.", ".KwKWWWWWWWWKwK.", ".KWwKWWWWWWKwWK.", ".KWWwKWWWWKwWWK.", ".KWWWwKKKKwWWWK.", ".KWWWWWWWWWWWWK.", ".KWWWKKWWKKWWWK.", ".KWWWWWWWWWWWWK.", ".KWWWKKKKKKWWWK.", ".KWWWWWWWWWWWWK.", ".KKKKKKKKKKKKKK."] },
   pokecard: { pal: { K: INK, G: "#e0a92e", W: "#fff7e0", t: "#8fd6e6", o: "#c98a2e", y: "#ffe45c", E: INK, R: "#ff5c7a" }, rows: ["KKKKKKKKKKKKKKKK", "KGGGGGGGGGGGGGGK", "KGWWWWWWWWWWWWGK", "KGWttttttttttWGK", "KGW.oo....oo.WGK", "KGW.oo....oo.WGK", "KGW..oooooo..WGK", "KGW.yyyyyyyy.WGK", "KGW.yEyyyyEy.WGK", "KGW.yyyyyyyy.WGK", "KGWRyyyyyyyyRWGK", "KGW.yyyyyyyy.WGK", "KGW..yyyyyy..WGK", "KGWttttttttttWGK", "KGWWWWWWWWWWWWGK", "KGGGGGGGGGGGGGGK", "KKKKKKKKKKKKKKKK"] },
   hogletter: { pal: { K: INK, P: "#f0e2c0", d: "#cbb98a", s: "#b3202e" }, rows: ["KKKKKKKKKKKKKKKK", "KPPPPPPPPPPPPPPK", "KPdPPPPPPPPdPPPK", "KPPdPPPPPPdPPPPK", "KPPPdPPPPdPPPPPK", "KPPPPdPPdPPPPPPK", "KPPPPPssPPPPPPPK", "KPPPPsssssPPPPPK", "KPPPPPssPPPPPPPK", "KPPPPPPPPPPPPPPK", "KKKKKKKKKKKKKKKK"] }
@@ -579,10 +574,10 @@ const MAPS = {
     start: { x: 7, y: 5, dir: 'down' }, luca: { x: 8, y: 5 },
     npc: c => c === 'M' ? ['mum', {}] : null,
     hints: () => [!F.outfit && 'w', !F.skincare && 'v', !F.music && 'S', !F.mum && 'M'],
-    onEnter() { G.wearing = 'pj'; say(["It's the morning of Annette's birthday!", "Annette's phone buzzes on the nightstand.", { n: CONFIG.boyfriend, t: "Good morning my Annette, have the best day!!!! I love you ❤️" }, { n: CONFIG.name, t: "I love you too ❤️" }, "Luca is already wagging at the foot of the bed.", "Luca wants to follow you around like Pikachu! Bring him along for the day.", "Get ready. Pick an outfit, do your skincare, and put a playlist on at the speaker.", "Psst: there are 4 SECRET ITEMS hidden through the day. Look for the pink question marks and interact to find them all!"]); },
+    onEnter() { G.wearing = 'pj'; say(["It's the morning of Annette's birthday!", "Annette's phone buzzes on the nightstand.", { n: CONFIG.boyfriend, t: "Good morning my Annette, have the best day!!!! I love you ❤️" }, { n: CONFIG.name, t: "I love you too ❤️" }, "Luca is already wagging at the foot of the bed.", "Luca trots after Annette everywhere she goes this morning.", "Get ready. Pick an outfit, do your skincare, and put a playlist on at the speaker.", "Psst: there are 4 SECRET ITEMS hidden through the day. Look for the pink question marks and interact to find them all!"]); },
     doorOpen: () => F.outfit && F.skincare && F.music,
     doorLocked: () => ({ n: 'Mum', t: "Not so fast! Outfit, skincare and some tunes first, love." }),
-    onDoor() { G.wearing = 'gym'; fade(() => loadMap('gym')); },
+    onDoor() { G.mode = 'busy'; say(["Luca sits by the door, tail going a mile a minute.", { n: 'Mum', t: "Luca's staying home with me today. Go have fun, love!" }, "Annette gives Luca a big cuddle goodbye."], () => { G.wearing = 'gym'; fade(() => loadMap('gym')); }); },
     act: {
       w: () => outfitMenu(),
       v: () => F.skincare ? say("Skin is already glowing. No notes.") : skincareGame(),
@@ -597,10 +592,10 @@ const MAPS = {
   gym: {
     theme: 'gym', title: 'Chapter 2: Gym',
     rows: ["#########mm####", "#rr..rr..LL...#", "#.....h.......#", "#.g.......g...#", "#.............#", "#..bb....bb...#", "#.............#", "#.....n.......#", "#.............#", "######D########"],
-    start: { x: 6, y: 8, dir: 'up' }, luca: { x: 7, y: 8 },
+    start: { x: 6, y: 8, dir: 'up' },
     npc: (c, x) => c === 'g' ? (x < 6 ? ['mum', { M: '#e07b39', T: '#3fae7c', P: '#2b2d42' }] : ['paulo', { D: '#c9a27a', T: '#7f93b3', P: '#2b2d42' }]) : c === 'n' ? ['paulo', { D: INK, T: '#ff6f91', P: '#2b2d42' }] : null,
     hints: () => [!F.lifted && 'r'],
-    onEnter() { G.wearing = 'gym'; say(["One Playground. Annette changes into her Lululemon set.", "Luca guards the water bottle. Time to lift!"]); },
+    onEnter() { G.wearing = 'gym'; say(["One Playground. Annette changes into her Lululemon set.", "Time to lift!"]); },
     doorOpen: () => F.lifted,
     doorLocked: () => "You just got here! Hit the squat rack first.",
     onDoor() { G.wearing = G.outfit; fade(() => loadMap('office')); },
@@ -616,7 +611,7 @@ const MAPS = {
   office: {
     theme: 'office', title: 'Chapter 3: Work',
     rows: ["#ww#ww#ww#ww###", "#............p#", "#.............#", "#.dd..dd..YZ..#", "#..c...c......#", "#.............#", "#.dd..dd..dd..#", "#..c......c...#", "#.........h...#", "######D########"],
-    start: { x: 6, y: 8, dir: 'up' }, luca: { x: 7, y: 8 },
+    start: { x: 6, y: 8, dir: 'up' },
     npc: (c, x, y) => c === 'c' ? ((x + y) % 2 ? ['paulo', { D: '#6b4a32', T: '#7f93b3' }] : ['mum', { M: INK, T: '#c55a6c', P: '#3a3d5c' }]) : null,
     hints: () => [!F.sorted && 'Y', !F.officeBattle && 'Z'],
     onEnter() { G.wearing = G.outfit; say([CONFIG.company + ", Sydney CBD. Birthday balloons on the project coordinator's desk.", "File the reports at your desk, then battle that inbox on the computer."]); },
@@ -635,10 +630,10 @@ const MAPS = {
   botanist: {
     theme: 'botanist', title: 'Chapter 5: ' + CONFIG.dinnerSpot,
     rows: ["######F########", "#f...n.....f.f#", "#..rrrrrr.....#", "#.............#", "#....f...f...h#", "#.............#", "#......At.....#", "#.............#", "#f...........f#", "######D########"],
-    start: { x: 6, y: 8, dir: 'up' }, luca: { x: 7, y: 8 },
+    start: { x: 6, y: 8, dir: 'up' },
     npc: c => c === 'n' ? ['paulo', { D: '#6b4a32', T: '#2f5d4a', P: INK }] : c === 'A' ? ['paulo', {}] : null,
     hints: () => [!F.drink && 'n', F.drink && 'A'],
-    onEnter() { G.wearing = 'dress'; say([CONFIG.dinnerSpot + ". Fairy lights, plants everywhere, harbour breeze.", "Annette's in her blue dress. Luca got a spot in the dog-friendly courtyard.", { n: 'Paulo', t: "Wow! Look how beautiful your outfit is. Have you been working out? Someone's been training legs 😍" }]); },
+    onEnter() { G.wearing = 'dress'; say([CONFIG.dinnerSpot + ". Fairy lights, plants everywhere, harbour breeze.", "Annette's in her blue dress.", { n: 'Paulo', t: "Wow! Look how beautiful your outfit is. Have you been working out? Someone's been training legs 😍" }]); },
     doorOpen: () => false,
     doorLocked: () => "Leaving? The night's just getting started.",
     act: {
@@ -653,16 +648,16 @@ const MAPS = {
   beach: {
     theme: 'beach', title: 'Chapter 4: Golden hour',
     rows: ["~~~~~~~~~~~~~~~", "~~~~~~~~~~~~~~~", "_______________", ".....u...JJ....", "...............", "...s.......s...", "......h........", ".........h.....", "...p...........", "..............."],
-    start: { x: 7, y: 9, dir: 'up' }, luca: { x: 6, y: 9 },
+    start: { x: 7, y: 9, dir: 'up' },
     npc: () => null,
     hints: () => ['J'],
-    onEnter() { G.wearing = G.outfit; say(["Golden hour at the beach.", "Luca's ears are flapping in the sea breeze.", CONFIG.car + " is parked by the sand whenever you're ready for dinner."]); },
+    onEnter() { G.wearing = G.outfit; say(["Golden hour at the beach.", "The sea breeze is perfect.", CONFIG.car + " is parked by the sand whenever you're ready for dinner."]); },
     act: {
       J: () => say([CONFIG.car + " the Corolla, parked and ready.", { n: 'Paulo', t: "(Text message) Table's booked at The Botanist. Wear the blue dress?" }, { n: 'Annette', t: CONFIG.catchphrase }], () => fade(() => loadMap('botanist'))),
-      s: (tx) => say(tx < 6 ? CONFIG.insideJokes[2] : "Just a shell. Luca sniffs it suspiciously."),
+      s: (tx) => say(tx < 6 ? CONFIG.insideJokes[2] : "Just a shell. Luca would have sniffed it suspiciously."),
       u: () => say("A beach umbrella. Shade for later."),
       p: () => say("A palm tree swaying in the breeze."),
-      '~': () => say("The water looks perfect. Luca wants in.")
+      '~': () => say("The water looks perfect. Luca would love this.")
     }
   }
 };
@@ -674,14 +669,14 @@ function loadMap(id) {
   G.mapId = id; G.map = { def: M, tiles: M.rows.map(r => r.split('')) };
   const s = M.start;
   G.p = { x: s.x, y: s.y, px: s.x * 16, py: s.y * 16, dir: s.dir || 'down', mv: null, bump: false };
-  G.l = { x: M.luca.x, y: M.luca.y, px: M.luca.x * 16, py: M.luca.y * 16, mv: null, flip: M.luca.x > s.x };
+  G.l = M.luca ? { x: M.luca.x, y: M.luca.y, px: M.luca.x * 16, py: M.luca.y * 16, mv: null, flip: M.luca.x > s.x } : null; // Luca only joins in the morning
   clearUI(); setChapter(M.title); chapterCard(M.title); G.scene = 'map'; G.mode = 'map'; music(id);
   if (M.onEnter) M.onEnter();
 }
 function interact() {
   const p = G.p; if (p.mv) return;
   const [dx, dy] = DIRS[p.dir], tx = p.x + dx, ty = p.y + dy;
-  if (G.l.x === tx && G.l.y === ty) return lucaTalk();
+  if (G.l && G.l.x === tx && G.l.y === ty) return lucaTalk();
   const c = tileAt(tx, ty), f = c && G.map.def.act && G.map.def.act[c];
   if (f) f(tx, ty);
 }
@@ -703,12 +698,12 @@ function updateMap(dt) {
       else if (c && WALK.has(c)) {
         const ox = p.x, oy = p.y;
         p.mv = { fx: ox, fy: oy, t: 0 }; p.x = nx; p.y = ny;
-        if (!(l.x === ox && l.y === oy)) { l.mv = { fx: l.x, fy: l.y, t: 0 }; if (ox !== l.x) l.flip = ox < l.x; l.x = ox; l.y = oy; }
+        if (l && !(l.x === ox && l.y === oy)) { l.mv = { fx: l.x, fy: l.y, t: 0 }; if (ox !== l.x) l.flip = ox < l.x; l.x = ox; l.y = oy; }
       }
     } else p.bump = false;
   }
   [p, l].forEach(e => {
-    if (!e.mv) return;
+    if (!e || !e.mv) return;
     e.mv.t = Math.min(1, e.mv.t + dt / STEP);
     e.px = (e.mv.fx + (e.x - e.mv.fx) * e.mv.t) * 16; e.py = (e.mv.fy + (e.y - e.mv.fy) * e.mv.t) * 16;
     if (e.mv.t >= 1) { e.mv = null; e.px = e.x * 16; e.py = e.y * 16; if (e === p) arrive(); }
@@ -933,7 +928,7 @@ function finishLift() {
   const L = G.lift, good = L.res.filter(r => r !== 'miss').length, perfect = L.res.filter(r => r === 'perfect').length;
   G.lift = null; clearUI(); F.lifted = true; G.mode = 'map';
   stat('gains', perfect * 4 + good * 2); stat('energy', -8);
-  if (good >= 3) { F.pr = true; sfx('pr'); earn('gains'); say(["NEW PR! Annette just lifted her heaviest ever.", "The whole gym turns around. Luca barks in approval.", "Time to head to work."]); }
+  if (good >= 3) { F.pr = true; sfx('pr'); earn('gains'); say(["NEW PR! Annette just lifted her heaviest ever.", "The whole gym turns around.", "Time to head to work."]); }
   else say(["Solid session. " + good + " clean reps.", "Time to head to work."]);
 }
 
@@ -1025,7 +1020,6 @@ function renderBattle() {
     }
   }
   if (!(b.flashP > 0 && Math.floor(G.t * 20) % 2)) drawSpr(annetteSprite(true), 32, 42, false, 3);
-  drawSpr(lucaSpr(), 4, 84, false, 1);
 }
 
 /* ---------------- chapter 3 ---------------- */
@@ -1079,7 +1073,6 @@ function renderLunch() {
   R(98, 112, 44, 3, '#ffffff');
   ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 2;
   for (let i = 0; i < 3; i++) { const bx = 108 + i * 12; ctx.beginPath(); ctx.moveTo(bx, 104); ctx.quadraticCurveTo(bx + Math.sin(G.t * 3 + i) * 5, 92, bx, 80); ctx.stroke(); }
-  drawSpr(lucaSpr(), 30, 128, false, 1);
 }
 
 /* ---------------- chapter 4 ---------------- */
@@ -1228,8 +1221,8 @@ function renderMap() {
     if (c === 'q') ents.push({ y: ty * 16, d: () => drawSpr(sprite('cake'), tx * 16 + 1, ty * 16 + 3, false) });
   }
   const p = G.p, l = G.l;
-  const pb = p.mv ? (Math.floor(p.mv.t * 4) % 2) : 0, lb = l.mv ? (Math.floor(l.mv.t * 4) % 2) : 0;
-  ents.push({ y: l.py, d: () => { R(l.px + 3, l.py + 14, 10, 2, 'rgba(35,29,51,.22)'); drawSpr(lucaSpr(!!l.mv, l.mv ? l.mv.t : null), l.px, l.py + 1, l.flip); } });
+  const pb = p.mv ? (Math.floor(p.mv.t * 4) % 2) : 0;
+  if (l) ents.push({ y: l.py, d: () => { R(l.px + 3, l.py + 14, 10, 2, 'rgba(35,29,51,.22)'); drawSpr(lucaSpr(!!l.mv, l.mv ? l.mv.t : null), l.px, l.py + 1, l.flip); } });
   ents.push({ y: p.py + 0.5, d: () => { R(p.px + 3, p.py + 14, 10, 2, 'rgba(35,29,51,.22)'); drawSpr(annetteSprite(p.dir === 'up'), p.px, p.py - 4 - pb, false); } });
   ents.sort((a, b) => a.y - b.y).forEach(e => e.d());
   // objective markers
@@ -1296,7 +1289,6 @@ function renderFinale() {
   R(150, 128, 40, 4, INK); R(151, 129, 38, 2, '#ffffff'); R(168, 132, 4, 16, INK);
   drawSpr(sprite('cake'), 163, 114, false, 1);
   R(154, 121, 3, 7, '#ffd166'); R(154, 119, 3, 2, '#ffffff'); R(184, 121, 3, 5, '#8e1f3a'); R(185, 126, 1, 2, INK);
-  drawSpr(lucaSpr(), 30, 136, false, 1);
   drawSpr(annetteSprite(false, 'dress'), 70, 108, false, 2);
   drawSpr(sprite('paulo'), 108, 108, false, 2);
   drawSpr(sprite('heart'), 99, 94 + Math.round(Math.sin(G.t * 3) * 2), false, 2);
