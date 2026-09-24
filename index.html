@@ -78,12 +78,13 @@ body{min-height:100vh;display:flex;justify-content:center;font-family:'Pixelify 
 .item i{width:6cqw;height:6cqw;border:.5cqw solid var(--ink);display:block}
 .shake{animation:shake .3s}
 @keyframes shake{25%{transform:translateX(-1cqw)}75%{transform:translateX(1cqw)}}
-.titlecard{position:absolute;left:5cqw;top:5cqw;width:58cqw;padding:3cqw 3.6cqw;background:var(--paper);border:.7cqw solid var(--ink);box-shadow:1cqw 1cqw 0 var(--ink);display:flex;flex-direction:column;gap:1.2cqw}
-.titlecard h1{margin:0;font-size:7cqw;line-height:1;color:var(--pinkd)}
-.titlecard p{margin:0;font-family:Figtree,sans-serif;font-size:max(11px,2.6cqw);color:var(--muted)}
-.start{position:absolute;left:8cqw;bottom:6cqw;font-size:max(13px,4cqw);padding:1.2cqw 4cqw;align-items:center;animation:blink 1.2s steps(2) infinite}
+.titlecard{position:absolute;left:0;right:0;top:3.5cqw;display:flex;flex-direction:column;align-items:center;gap:1cqw;text-align:center;pointer-events:none}
+.titlecard h1{margin:0;font-size:9.6cqw;line-height:.95;letter-spacing:.3cqw;color:#fff;text-shadow:.5cqw 0 0 var(--ink),-.5cqw 0 0 var(--ink),0 .5cqw 0 var(--ink),0 -.5cqw 0 var(--ink),.5cqw .5cqw 0 var(--ink),-.5cqw .5cqw 0 var(--ink),.5cqw -.5cqw 0 var(--ink),-.5cqw -.5cqw 0 var(--ink),1.1cqw 1.1cqw 0 var(--pinkd)}
+.titlecard h1 span{display:block;font-size:6.4cqw;color:var(--sun)}
+.titlecard p{margin:0;font-family:Figtree,sans-serif;font-size:max(11px,2.6cqw);font-weight:700;color:var(--ink);background:rgba(255,255,255,.8);padding:.3cqw 1.6cqw}
+.start{position:absolute;left:0;right:0;margin:0 auto;width:-webkit-fit-content;width:fit-content;bottom:3cqw;font-size:max(13px,4cqw);padding:1.2cqw 4cqw;align-items:center;animation:blink 1.2s steps(2) infinite}
 @keyframes blink{50%{box-shadow:none;transform:translate(.4cqw,.4cqw)}}
-.titlecard .keys{font-size:max(10.5px,2.3cqw);color:var(--ink);opacity:.8}
+.titlecard .keys{font-size:max(10px,2.2cqw);font-weight:600}
 .radio{position:absolute;left:3.3cqw;right:3.3cqw;top:6.4cqw;display:flex;align-items:center;gap:1.6cqw;background:var(--paper);border:.5cqw solid var(--ink);box-shadow:.6cqw .6cqw 0 var(--ink);padding:.6cqw 1cqw;font-size:max(10.5px,2.5cqw);white-space:nowrap}
 .radio .rs{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .radio .rl{background:var(--ink);color:#fff;padding:.2cqw 1cqw}
@@ -1258,10 +1259,41 @@ function renderBeachScene(sunset) {
   for (let i = 0; i < 40; i++) R(Math.floor(hsh(i, 1, 2) * 240), 106 + Math.floor(hsh(i, 2, 3) * 52), 1, 1, '#e3c47f');
 }
 function renderTitle() {
-  renderBeachScene(false);
-  R(166, 44, 34, 8, '#ffffff'); R(174, 38, 16, 6, '#ffffff');
-  drawSpr(annetteSprite(false, 'dress'), 150, 104, false, 2);
-  drawSpr(lucaSpr(), 186, 128, true);
+  // sunset-pink backdrop in pixel bands with dithered seams
+  const bands = ['#cdb4f0', '#dab6ee', '#e8b8e6', '#f5bddc', '#ffc4d6', '#ffd0d8'];
+  bands.forEach((c, i) => {
+    R(0, i * 20, 240, 20, c);
+    if (i) for (let x = (i % 2); x < 240; x += 2) R(x, i * 20, 1, 1, bands[i - 1]);
+  });
+  // spotlight rings behind the cast
+  [[64, '#ffe0ea'], [50, '#ffeaf1'], [36, '#fff3f7']].forEach(([r, c]) => oval(120, 104, r, r * 0.62, c));
+  // twinkling sparkles
+  for (let i = 0; i < 22; i++) {
+    const x = Math.floor(hsh(i, 3, 7) * 236) + 2, y = Math.floor(hsh(i, 5, 9) * 110) + 2;
+    if ((Math.floor(G.t * 2.5) + i) % 4 === 0) continue;
+    const c = i % 3 ? '#ffffff' : '#ffd166';
+    R(x, y, 1, 1, c); if (i % 2) { R(x - 1, y, 3, 1, c); R(x, y - 1, 1, 3, c); }
+  }
+  // floating hearts
+  for (let i = 0; i < 5; i++) {
+    const x = 18 + i * 50 + Math.round(Math.sin(G.t * 1.5 + i) * 4), y = 124 - ((G.t * 14 + i * 29) % 128);
+    drawSpr(sprite('heart'), x, Math.round(y), false);
+  }
+  // party floor
+  R(0, 116, 240, 44, '#7f5ea8'); R(0, 116, 240, 2, '#b193dd'); R(0, 118, 240, 1, INK);
+  for (let x = 0; x < 240; x += 24) R(x + ((Math.floor(x / 24) % 2) * 12), 124, 1, 36, '#6c4f93');
+  R(0, 136, 240, 1, '#6c4f93');
+  // bunting across the top
+  for (let x = -4; x < 244; x += 12) { const c = ['#ff6f91', '#ffd166', '#7fc8f8', '#8fd6a8'][Math.floor((x + 4) / 12) % 4]; R(x, 1, 12, 1, INK); for (let r = 0; r < 5; r++) R(x + 1 + r, 2 + r, 10 - r * 2, 1, c); }
+  const sh = (x, w) => oval(x + w / 2, 117, w / 2 - 2, 3, 'rgba(35,29,51,.25)');
+  const bob = (o) => Math.round(Math.sin(G.t * 3 + o) * 1);
+  // back row: Mum and Paulo
+  sh(28, 32); drawSpr(sprite('mum'), 28, 77 + bob(1), false, 2);
+  sh(180, 32); drawSpr(sprite('paulo'), 180, 77 + bob(2), false, 2);
+  // Annette front and centre
+  sh(96, 48); drawSpr(annetteSprite(false, 'dress'), 96, 57 + bob(0), false, 3);
+  // Luca out front, looking up at her
+  sh(64, 32); drawSpr(lucaSpr(), 64, 88, false, 2);
 }
 function renderFinale() {
   R(0, 0, 240, 30, '#141a3a'); R(0, 30, 240, 30, '#1c2346'); R(0, 60, 240, 30, '#28305c');
@@ -1325,7 +1357,7 @@ function loop(now) {
 /* ---------------- title ---------------- */
 function showTitle() {
   G.scene = 'title'; clearUI(); setChapter(CONFIG.name + "'s Big Day");
-  ui.append(el('div', 'titlecard', '<h1>' + esc(CONFIG.name) + "'s Big Day</h1><p>A birthday adventure across one sunny Sydney day</p><p class='keys'>Arrows to move · A to interact · B for your collection</p>"));
+  ui.append(el('div', 'titlecard', '<h1>' + esc(CONFIG.name.toUpperCase()) + "'S<span>BIG DAY</span></h1><p class='keys'>Arrows to move · A to interact · B for your collection</p>"));
   const b = makeBtn('Press start', () => fade(() => loadMap('bedroom'))); b.classList.add('start');
   ui.append(b); setMenu([b]); music('title');
 }
