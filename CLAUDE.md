@@ -46,9 +46,10 @@ Title (party stage with Annette, Mum, Paulo and Luca) > Bedroom (outfit, skincar
 - Original art only. No real Pokemon, Nintendo or other franchise characters, logos or names. No song lyrics or copyrighted audio (artist names on the radio are fine).
 - Never show Annette's age anywhere in the game.
 - In-game text: warm, short, playful. No em dashes.
+- UI direction: cozy life-sim. Fredoka (rounded) for headings, dialogue and buttons, Figtree for small body text. Cream paper, warm brown ink, tan borders, leaf-green and orange accents, pill-shaped buttons and tags, soft drop shadows (no hard ink offsets). Page background is grass green. Pink stays for Annette's own things (outfits, hearts, her dialogue box).
 - Art direction: cozy and rounded. Outlines are never flat ink: `sprite()` turns `K` pixels into a darker shade of the colour they border, the `box()` helper in `drawObject` draws rounded corners with shaded edges and a top highlight, and `oval(..., INK)` strokes in the fill's own shade. Keep new art in that system rather than adding hard black lines. UI corners use `--r`.
 - Must work on mobile Safari and desktop Chrome. Keep touch controls working.
-- No external network calls. Pixelify Sans and Figtree (SIL OFL) are embedded as base64 `@font-face` rules.
+- No external network calls. Pixelify Sans, Figtree and Fredoka (SIL OFL) are embedded as base64 `@font-face` rules.
 - Life-sim touches: speech bubbles over whoever is talking (drawn in `renderMap`), furniture with a front face and lit top edge from `box()`, and a clock that pauses during dialogue and menus.
 - Luca only appears in the morning (bedroom), on the title screen and in the credits. He stays home with Mum for the rest of the day.
 - Keep in-screen text readable on phones: use `max(<px>, <n>cqw)` font sizes, never below about 10px.
