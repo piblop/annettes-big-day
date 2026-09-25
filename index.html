@@ -269,6 +269,8 @@ const CONFIG = {
     ],
     shopList: ["Bananas", "Sourdough", "Oat milk", "Dark chocolate"],
     shopExtras: ["Dishwasher tabs", "Sparkling water", "Avocados", "Party pies", "Dog treats", "Scented candle"],
+    // The famous ALDI centre aisle. Absolutely none of this is on the list. Add your own chaos.
+    specialBuys: ["Go-kart", "85-inch TV", "Chainsaw", "Inflatable spa", "Ski helmet", "Welding mask", "Kayak", "Robot vacuum", "Snowboard", "Espresso machine", "Beekeeping suit", "Electric scooter"],
     wines: [
       { n: "Sauvignon Blanc", d: "Crisp and cold" },
       { n: "Pinot Noir", d: "Light and lovely" },
@@ -317,6 +319,11 @@ const LOWER = {
   crop: ["...KKsSSSSsKK...", "....KPPPPPPK....", "....KPpKKpPK....", "....KBBKKBBK....", "....KKK..KKK...."],
   dress: ["...KtTTTTTTtK...", "..KtTTTTTTTTtK..", "..KKKKKKKKKKKK..", "....KSsKKsSK....", "....KKK..KKK...."]
 };
+// Generic townsfolk: simpler flat sprites (hi=1) so background NPCs read clearly apart from the detailed leads.
+// Recolour H (hair), T (shirt), P (pants), S (skin) per person for variety.
+const GEN_HEAD = ["....KKKKKKKK....", "...KHHHHHHHHK...", "..KHHHHHHHHHHK..", "..KHHSSSSSSHHK..", "..KHSSSSSSSSHK..", "..KHSEESSEESHK..", "..KHSSSSSSSSHK..", "..KHSSSSSSSSHK..", "..KHSSssssSSHK..", "..KHSSSSSSSSHK..", "...KHSSSSSSHK...", "....KKsSSsKK...."];
+const GEN_HEAD_BUN = [".....KHHK......."].concat(GEN_HEAD);
+const GEN_PAL = { K: INK, S: "#e6b58f", s: "#c98f68", H: "#6b4a32", h: "#4a3222", E: INK, T: "#7f93b3", t: "#5f6f8a", P: "#4a4658", p: "#333040", B: "#3a2f2a", W: "#ffffff" };
 // Luca the cavoodle: teddy-bear face, long floppy ear, curly apricot coat, plume tail. 16x16, faces right; flip to face left.
 const LUCA_PAL = { K: INK, A: "#f1cfa0", a: "#fbe6c6", g: "#d7a76e", d: "#c28c55", C: "#fff6e8", E: INK, W: "#ffffff", N: INK, R: "#f6a4b0" };
 const SPR = {
@@ -328,6 +335,8 @@ const SPR = {
   annette_back_dress: { pal: girlPal, rows: HEAD_B.concat(LOWER.dress) },
   paulo: { pal: { K: INK, S: "#b57848", D: "#2a1d12", d: "#170f08", E: "#3a2414", T: "#1f1a24", t: "#141019", P: "#3f6fb0", p: "#2d5088", B: "#f4f6fb", b: "#15121c", s: "#9a6238", W: "#ffffff" }, rows: ["....KKKKKKKK....", "...KDDdDDdDDK...", "..KDDDDDDDDDDK..", ".KDDdDDDDDDdDDK.", ".KDdSSSSSSSSdDK.", ".KsSSSSSSSSSSsK.", ".KsSEWSSSSEWSsK.", ".KsSEESSSSEESsK.", "..KSEESSSSEESK..", "..KSSSSsSSSSSK..", "..KSSSSKKSSSSK..", "...KSSSSSSSSK...", "....KKsSSsKK...."].concat(BODY) },
   mum: { pal: { K: INK, S: "#f5cfae", R: "#eea0a0", L: "#c55a6c", E: "#6b4a32", M: "#4a3226", m: "#2f1f18", T: "#7fa383", t: "#5c7d60", P: "#5b5566", p: "#433f4c", B: "#f4f6fb", s: "#e2b28f", W: "#ffffff" }, rows: ["....KKKKKKKK....", "...KMMMmMMMMK...", "..KMMmMMMMmMMK..", ".KMMMMMMMMMMMMK.", ".KMMmSSSSSSmMMK.", ".KMmSSSSSSSSmMK.", ".KMmSEWSSEWSSMK.", ".KMmSEESSEESSMK.", ".KMmSEESSEESSMK.", ".KMmRSSSSSSRmMK.", ".KMmSSSLLSSSmMK.", ".KMMmSSSSSSmMMK.", ".KmMKTTTTTTKMmK.", ".KmMTtTTTTtTMmK.", "..KSKtTTTTtKSK..", "...KKtTTTTtKK...", "....KPPPPPPK....", "....KPpKKpPK....", "....KBBKKBBK....", "....KKK..KKK...."] },
+  npc_a: { pal: GEN_PAL, rows: GEN_HEAD.concat(BODY) },
+  npc_b: { pal: GEN_PAL, rows: GEN_HEAD_BUN.concat(BODY) },
   luca: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gdAAAAAAa", "......gddAAKWAAA", ".aa...gdgdAAKAAA", "aAAa..gddAAAAACN", "AgAAa.gdgdAAACCK", "aAAAa.ggdAAACRC.", ".aAAAaagdgAAACa.", "..aAAAAAAaAAAAA.", "..AAgAAAgAAAAAa.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "...AAA...aAAA...", "...gAg...gAg....", "...KKK...KKK...."] },
   luca_walk: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gdAAAAAAa", "......gddAAKWAAA", ".aa...gdgdAAKAAA", "aAAa..gddAAAAACN", "AgAAa.gdgdAAACCK", "aAAAa.ggdAAACRC.", ".aAAAaagdgAAACa.", "..aAAAAAAaAAAAA.", "..AAgAAAgAAAAAa.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "....AAA.aAAA....", "....gAg.gAg.....", "....KKK.KKK....."] },
   luca_wag: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gdAAAAAAa", ".aa...gddAAKWAAA", "aAAa..gdgdAAKAAA", "AgAAa.gddAAAAACN", "aAAAa.gdgdAAACCK", ".aAAAaggdAAACRC.", "..aAAaagdgAAACa.", "..aAAAAAAaAAAAA.", "..AAgAAAgAAAAAa.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "...AAA...aAAA...", "...gAg...gAg....", "...KKK...KKK...."] },
@@ -714,7 +723,7 @@ const MAPS = {
     theme: 'gym', title: 'Chapter 2: Gym',
     rows: ["#########mm####", "#rr..rr..LL...#", "#.....h.......#", "#.g.......g...#", "#.............#", "#..bb....bb...#", "#.............#", "#.....n.......#", "#.............#", "######D########"],
     start: { x: 6, y: 8, dir: 'up' },
-    npc: (c, x) => c === 'g' ? (x < 6 ? ['mum', { M: '#e07b39', T: '#3fae7c', P: '#2b2d42' }] : ['paulo', { D: '#c9a27a', T: '#7f93b3', P: '#2b2d42' }]) : c === 'n' ? ['paulo', { D: INK, T: '#ff6f91', P: '#2b2d42' }] : null,
+    npc: (c, x) => c === 'g' ? (x < 6 ? ['npc_b', { H: '#e07b39', T: '#3fae7c', P: '#2b2d42', S: '#f0c39a' }] : ['npc_a', { H: '#2a1d12', T: '#7f93b3', P: '#2b2d42', S: '#8a5a36' }]) : c === 'n' ? ['npc_a', { H: INK, T: '#ff6f91', P: '#2b2d42', S: '#cf9b6f' }] : null,
     hints: () => [!F.lifted && 'r'],
     onEnter() { G.wearing = 'gym'; say(["One Playground. Annette changes into her Lululemon set.", "Time to lift!"]); },
     doorOpen: () => F.lifted,
@@ -733,7 +742,7 @@ const MAPS = {
     theme: 'office', title: 'Chapter 3: Work',
     rows: ["#ww#ww#ww#ww###", "#............p#", "#.............#", "#.dd..dd..YZ..#", "#..c...c......#", "#.............#", "#.dd..dd..dd..#", "#..c......c...#", "#.........h...#", "######D########"],
     start: { x: 6, y: 8, dir: 'up' },
-    npc: (c, x, y) => c === 'c' ? ((x + y) % 2 ? ['paulo', { D: '#6b4a32', T: '#7f93b3' }] : ['mum', { M: INK, T: '#c55a6c', P: '#3a3d5c' }]) : null,
+    npc: (c, x, y) => c === 'c' ? ((x + y) % 2 ? ['npc_a', { H: '#6b4a32', T: '#7f93b3', S: '#cf9b6f' }] : ['npc_b', { H: '#3a2f2a', T: '#c55a6c', P: '#3a3d5c', S: '#f0c39a' }]) : null,
     hints: () => [!F.sorted && 'Y', !F.officeBattle && 'Z'],
     onEnter() { G.wearing = G.outfit; say([CONFIG.company + ", Sydney CBD. Birthday balloons on the project coordinator's desk.", "File the reports at your desk, then battle that inbox on the computer."]); },
     doorOpen: () => F.sorted && F.officeBattle,
@@ -752,7 +761,7 @@ const MAPS = {
     theme: 'botanist', title: 'Chapter 5: ' + CONFIG.dinnerSpot,
     rows: ["######F########", "#f...n.....f.f#", "#..rrrrrr.....#", "#.............#", "#....f...f...h#", "#.............#", "#......At.....#", "#.............#", "#f...........f#", "######D########"],
     start: { x: 6, y: 8, dir: 'up' },
-    npc: c => c === 'n' ? ['paulo', { D: '#6b4a32', T: '#2f5d4a', P: INK }] : c === 'A' ? ['paulo', {}] : null,
+    npc: c => c === 'n' ? ['npc_a', { H: '#6b4a32', T: '#2f5d4a', P: INK, S: '#8a5a36' }] : c === 'A' ? ['paulo', {}] : null,
     hints: () => [!F.drink && 'n', F.drink && 'A'],
     onEnter() { G.wearing = 'dress'; say([CONFIG.dinnerSpot + ". Fairy lights, plants everywhere, harbour breeze.", "Annette's in her blue dress.", { n: 'Paulo', t: "Wow! Look how beautiful your outfit is. Have you been working out? Someone's been training legs 😍" }]); },
     doorOpen: () => false,
@@ -1400,23 +1409,36 @@ function picnicChoice() {
 function groceryGame() {
   clearUI();
   const W = CONFIG.weekend, need = W.shopList.slice();
-  const extras = shuffle(W.shopExtras.slice()).slice(0, 4);
-  const pool = shuffle(need.concat(extras));
-  let got = 0;
-  const p = el('div', 'panel', '<h2>' + esc(W.grocer) + ' dash</h2><p class="sub">Grab everything on the list. List: ' + esc(need.join(', ')) + '</p><div class="grid2"></div><p class="cnt sub"></p>');
+  const extras = shuffle(W.shopExtras.slice()).slice(0, 3);
+  const specials = shuffle(W.specialBuys.slice()).slice(0, 2);
+  const items = shuffle(need.map(n => ({ n, k: 'need' })).concat(extras.map(n => ({ n, k: 'extra' })), specials.map(n => ({ n, k: 'special' }))));
+  let got = 0, chaos = 0;
+  const p = el('div', 'panel', '<h2>' + esc(W.grocer) + ' dash</h2><p class="sub">Grab the list, and try to resist the centre aisle. List: ' + esc(need.join(', ')) + '</p><div class="grid2"></div><p class="cnt sub"></p>');
   ui.append(p);
   const cnt = p.querySelector('.cnt');
-  const upd = () => { cnt.textContent = got + ' / ' + need.length + ' in the trolley'; };
-  const btns = pool.map(name => makeBtn('<span>' + esc(name) + '</span>', b => {
-    if (need.includes(name)) {
-      if (b.classList.contains('done')) return;
-      b.classList.add('done'); b.disabled = true; got++; sfx('good'); upd();
-      if (got >= need.length) {
-        MENU = null; clearUI(); G.mode = 'map'; F.wkGroceries = true; stat('energy', 6, false); stat('happy', 6, false);
-        say([{ n: CONFIG.name, t: "Trolley sorted." }, "Famous ALDI checkout speed: survived.", { n: CONFIG.name, t: CONFIG.catchphrase }]);
-      }
-    } else { sfx('bad'); p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake'); toast('Not on the list!'); }
-  }, true));
+  const upd = () => { cnt.textContent = got + ' / ' + need.length + ' in the trolley' + (chaos ? '  ·  ' + chaos + ' impulse buy' + (chaos > 1 ? 's' : '') : ''); };
+  const react = name => ['A ' + name + '?! Into the trolley it goes... no. NO.', 'We absolutely do not need a ' + name.toLowerCase() + '.', 'Ooh, ' + name + '. Paulo is already Googling reviews.', name + ' was NOT on the list. Classic centre aisle.'][Math.floor(Math.random() * 4)];
+  const finish = () => {
+    MENU = null; clearUI(); G.mode = 'map'; F.wkGroceries = true; stat('energy', 6, false); stat('happy', 6 + chaos, false);
+    const lines = [{ n: CONFIG.name, t: "Trolley sorted." }];
+    if (chaos) lines.push({ n: CONFIG.boyfriend, t: "We came for four things and left with a " + G.wkImpulse + "." }, { n: CONFIG.name, t: "The centre aisle got us again." });
+    else lines.push("Straight down the list, zero impulse buys. Iconic.");
+    lines.push({ n: CONFIG.name, t: CONFIG.catchphrase });
+    say(lines);
+  };
+  const btns = items.map(it => {
+    const label = it.k === 'special' ? '<span>' + esc(it.n) + '</span><small>⭐ Centre aisle special buy</small>' : '<span>' + esc(it.n) + '</span>';
+    return makeBtn(label, b => {
+      if (it.k === 'need') {
+        if (b.classList.contains('done')) return;
+        b.classList.add('done'); b.disabled = true; got++; sfx('good'); upd();
+        if (got >= need.length) finish();
+      } else if (it.k === 'special') {
+        if (b.classList.contains('done')) return;
+        b.classList.add('done'); chaos++; G.wkImpulse = it.n.toLowerCase(); sfx('blip'); toast(react(it.n)); upd();
+      } else { sfx('bad'); p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake'); toast('Not on the list!'); }
+    }, true);
+  });
   p.querySelector('.grid2').append(...btns); upd();
   setMenu(btns, { cols: 2, onBack: () => { clearUI(); G.mode = 'map'; } });
 }
@@ -1668,6 +1690,16 @@ function drawObject(th, c, X, Y, W, H) {
     case 'park:b': R(X + 1, Y + 1, W - 2, 2, '#b07a4a'); R(X + 1, Y + 3, W - 2, 1, '#c48d5a'); R(X + 1, Y + 4, W - 2, 2, '#a06d40'); R(X + 2, Y + 6, 2, 4, '#7a5230'); R(X + W - 4, Y + 6, 2, 4, '#7a5230'); break;
     case 'park:g': oval(X + 8, Y + 10, 3.5, 3.5, '#c7e05a', INK); R(X + 6, Y + 9, 5, 1, '#eaf5a8'); break;
     case 'home:w': box(1, 1, W - 2, 11, '#bfe3ff'); R(X + 2, Y + 2, W - 4, 4, '#dff3ff'); R(X + 3, Y + 7, W - 6, 3, '#a8dc86'); R(X + 1, Y + 6, W - 2, 1, '#ffffff'); for (let i = 16; i < W - 2; i += 16) R(X + i, Y + 1, 1, 11, '#ffffff'); R(X, Y + 12, W, 2, '#b07a4a'); break;
+    case 'home:f': {
+      const c = '#c96f8a';
+      box(0, 1, W, 5, c);                                            // tall backrest
+      box(0, 5, 4, H - 6, c);                                        // left armrest
+      box(W - 4, 5, 4, H - 6, c);                                    // right armrest
+      box(4, H - 9, W - 8, 8, lite(c));                              // seat base
+      for (let i = 4; i < W - 4; i += (W - 8) / 2) box(i, H - 10, (W - 8) / 2, 6, '#e08aa4');   // seat cushions
+      R(X + 5, Y + 3, W - 10, 1, lite(c));                           // backrest highlight
+      break;
+    }
     case 'home:V': { box(1, 1, W - 2, H - 8, '#2b2d42'); R(X + 3, Y + 3, W - 6, H - 14, F.wkMovie ? '#6fa8dc' : '#3a3d5c'); if (F.wkMovie) { R(X + 5, Y + 6, W - 12, 2, '#ffe7a8'); R(X + 6, Y + H - 16, W - 14, 1, '#a9d1ef'); } R(X + W / 2 - 3, Y + H - 7, 6, 2, '#4d4764'); R(X + W / 2 - 6, Y + H - 5, 12, 2, '#3f4258'); break; }
     case 'home:H': { box(2, 4, W - 4, H - 6, '#8a5a3b'); R(X + 3, Y + 5, W - 6, 1, '#a06d40'); const bs = Math.max(1, Math.floor((W - 10) / 8)); for (let r = 0; r < 3; r++) for (let cc = 0; cc < 8; cc++) R(X + 5 + cc * bs, Y - 2 + r, bs, 1, (r + cc) % 2 ? '#3a2a1a' : '#f0e4d0'); R(X + 7, Y - 4, 1, 2, '#f0e4d0'); R(X + W - 9, Y - 4, 1, 2, '#3a2a1a'); break; }
     case 'home:k': { box(0, 2, W, H - 2, '#e7ebf1'); R(X + 1, Y + 3, W - 2, 1, '#f4f7fb'); R(X + 3, Y + 6, 4, 3, '#e2554f'); R(X + 9, Y + 7, 3, 4, '#3fae7c'); R(X + 2, Y + H - 8, W - 4, 2, '#c9d3e0'); break; }
