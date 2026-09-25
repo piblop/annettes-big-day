@@ -176,7 +176,7 @@ button:focus-visible{outline:3px solid #3d7be0;outline-offset:3px}
       <div id="stats"></div>
     </header>
     <div id="screen">
-      <canvas id="game" width="240" height="160" aria-label="Game screen"></canvas>
+      <canvas id="game" width="480" height="320" aria-label="Game screen"></canvas>
       <div id="ui" aria-live="polite"></div>
       <div id="toasts"></div>
       <div id="np" hidden></div>
@@ -261,6 +261,7 @@ const CONFIG = {
 /* ---------------- helpers ---------------- */
 const $ = s => document.querySelector(s);
 const cv = $('#game'), ctx = cv.getContext('2d');
+ctx.setTransform(2, 0, 0, 2, 0, 0); ctx.imageSmoothingEnabled = false;
 ctx.imageSmoothingEnabled = false;
 const ui = $('#ui'), toasts = $('#toasts'), fadeEl = $('#fade');
 const INK = '#4a3b52';
@@ -276,7 +277,7 @@ function hsh(x, y, n) { let h = (x * 374761393 + y * 668265263 + n * 982451653) 
 function oval(cx, cy, rx, ry, fill, stroke) { ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill(); if (stroke) { ctx.lineWidth = 2; ctx.strokeStyle = stroke === INK ? shade(fill, 0.6) : stroke; ctx.stroke(); } }
 
 /* ---------------- sprites ---------------- */
-const BODY = [".KSKTTtSStTTKSK.", "..KSTTTTTTTTSK..", "..KsTtTTTTtTsK..", "..KSKtTTTTtKSK..", "...KKbbbbbbKK...", "....KPPPPPPK....", "....KPpKKpPK....", "....KBBKKBBK....", "....KKK..KKK...."];
+const BODY = ["..KKTTtSStTTKK..", ".KSKTTTTTTTTKSK.", ".KsKTtTTTTtTKsK.", "..KKtTTTTTTtKK..", "....KPPPPPPK....", "....KPpKKpPK....", "....KBBKKBBK....", "....KKK..KKK...."];
 const girlPal = { K: INK, W: "#ffffff", Y: "#fbe7a1", S: "#f9d1b0", s: "#e6a57f", R: "#f4a3a8", L: "#d9637a", E: "#3d7be0", H: "#f5d271", h: "#d8a441", T: "#ff6f91", t: "#c94a6e", P: "#2b2d42", p: "#1c1d2c", B: "#f4f6fb" };
 const HEAD_F = ["....KKKKKKKK....", "...KHHHYHHHHK...", "..KHHYYHHHHHhK..", ".KHHHHHHHHHHHhK.", ".KHHhSSSSSShHHK.", ".KHhSSSSSSSShHK.", ".KHhSEWSSEWSSHK.", ".KHhSEESSEESSHK.", ".KHhSEESSEESSHK.", ".KHhRSSSSSSRhHK.", ".KHhSSSLLSSShHK.", ".KHHhSSSSSShHHK.", ".KhHKTTTTTTKHhK.", ".KhHTtTTTTtTHhK.", "..KSKtTTTTtKSK.."];
 const HEAD_B = ["....KKKKKKKK....", "...KHHHYHHHHK...", "..KHHYYHHHHHhK..", ".KHHHHHHHHHHHhK.", ".KHhHHHHHHHHhHK.", ".KHHHhHHHHhHHHK.", ".KHHHHHhHhHHHHK.", ".KHhHHHHHHHHhHK.", ".KHHHhHHhHHhHHK.", ".KHHHHHHHHHHHHK.", ".KHhHHhHHhHHhHK.", ".KHHHHHHHHHHHHK.", ".KhHKTHHhHHTKHhK", ".KhHTtHhHhHtTHhK", "..KSKtTHHhTtKSK."];
@@ -313,29 +314,53 @@ function dk(hex) {
   const n = parseInt(h, 16); if (isNaN(n)) return hex;
   return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => ('0' + Math.round(v * 0.72).toString(16)).slice(-2)).join('');
 }
+// EPX / Scale2x: doubles a character grid while rounding diagonals, so the leads lose the staircase look
+function epx(rows) {
+  const h = rows.length, w = rows[0].length, at = (x, y) => (y < 0 || y >= h || x < 0 || x >= w) ? '.' : rows[y][x];
+  const out = Array.from({ length: h * 2 }, () => new Array(w * 2).fill('.'));
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const P = at(x, y), A = at(x, y - 1), B = at(x + 1, y), C = at(x - 1, y), D = at(x, y + 1);
+    let p1 = P, p2 = P, p3 = P, p4 = P;
+    if (C === A && C !== D && A !== B) p1 = A;
+    if (A === B && A !== C && B !== D) p2 = B;
+    if (D === C && D !== B && C !== A) p3 = C;
+    if (B === D && B !== A && D !== C) p4 = D;
+    out[y * 2][x * 2] = p1; out[y * 2][x * 2 + 1] = p2; out[y * 2 + 1][x * 2] = p3; out[y * 2 + 1][x * 2 + 1] = p4;
+  }
+  return out.map(r => r.join(''));
+}
+function isLead(key, ov) { return key.startsWith('annette') || key.startsWith('luca') || ((key === 'paulo' || key === 'mum') && !(ov && Object.keys(ov).length)); }
 function sprite(key, ov) {
   const id = key + JSON.stringify(ov || {});
   if (spriteCache[id]) return spriteCache[id];
   const d = SPR[key], pal = Object.assign({}, d.pal);
   if (ov) for (const k in ov) { if (ov[k] && pal[k] !== undefined) { pal[k] = ov[k]; const lk = k.toLowerCase(); if (lk !== k && pal[lk] !== undefined) pal[lk] = dk(ov[k]); } }
-  const w = d.rows[0].length, h = d.rows.length;
-  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const hi = isLead(key, ov) ? 2 : 1, rows = hi === 2 ? epx(d.rows) : d.rows;
+  const w = rows[0].length, h = rows.length;
+  const c = document.createElement('canvas'); c.width = w; c.height = h; c.hi = hi;
   const x = c.getContext('2d');
-  const at = (xx, yy) => (yy < 0 || yy >= h || xx < 0 || xx >= w) ? '.' : d.rows[yy][xx];
-  d.rows.forEach((r, yy) => { for (let xx = 0; xx < w; xx++) {
+  const at = (xx, yy) => (yy < 0 || yy >= h || xx < 0 || xx >= w) ? '.' : rows[yy][xx];
+  const solid = ch => ch !== '.' && ch !== 'K';
+  rows.forEach((r, yy) => { for (let xx = 0; xx < w; xx++) {
     const ch = r[xx]; if (!ch || ch === '.') continue;
     let col = pal[ch] || '#f0f';
     if (ch === 'K') {
       // outline pixel: borrow the colour it sits against, darkened (selective outlining)
       const nb = [[0, -1], [-1, 0], [1, 0], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]].map(([dx, dy]) => at(xx + dx, yy + dy)).filter(n => n !== '.' && n !== 'K' && pal[n]);
       if (nb.length) { const counts = {}; nb.forEach(n => counts[n] = (counts[n] || 0) + 1); const best = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0]; col = shade(pal[best], 0.55); }
+    } else if (hi === 2 && ch !== 'W' && ch !== 'E') {
+      // soft form shading on the leads: lit from the top-left, shadowed toward the bottom-right edges
+      const up = at(xx, yy - 1), dn = at(xx, yy + 1), lf = at(xx - 1, yy), rt = at(xx + 1, yy);
+      if (!solid(up) || !solid(lf)) col = lite(col);
+      else if (!solid(dn) || !solid(rt)) col = shade(col, 0.86);
+      else if (!solid(at(xx, yy + 2)) || !solid(at(xx + 2, yy))) col = shade(col, 0.94);
     }
     x.fillStyle = col; x.fillRect(xx, yy, 1, 1);
   } });
   return (spriteCache[id] = c);
 }
 function drawSpr(img, x, y, flip, scale) {
-  scale = scale || 1; x = Math.round(x); y = Math.round(y);
+  scale = (scale || 1) / (img.hi || 1); x = Math.round(x); y = Math.round(y);
   const w = img.width * scale, h = img.height * scale;
   if (flip) { ctx.save(); ctx.translate(x + w, y); ctx.scale(-1, 1); ctx.drawImage(img, 0, 0, w, h); ctx.restore(); }
   else ctx.drawImage(img, x, y, w, h);
@@ -413,7 +438,7 @@ function showItem(sprKey, lines) {
   const p = el('div', 'panel');
   p.innerHTML = '<h2>Secret found!</h2>';
   const wrap = el('div', 'itemwrap');
-  const c = el('canvas', 'itemimg'); c.width = im.width; c.height = im.height;
+  const c = el('canvas', 'itemimg'); c.width = im.width; c.height = im.height; c.style.width = (26 / (im.hi || 1)) + 'cqw';
   c.getContext('2d').drawImage(im, 0, 0);
   wrap.append(c); p.append(wrap);
   const txt = el('p', 'isub'); txt.textContent = (Array.isArray(lines) ? lines : [lines]).join(' ');
@@ -1460,7 +1485,7 @@ function loop(now) {
   else if (G.scene === 'finale' || G.scene === 'credits') updateFinale(dt);
   if (G.mode === 'lift') updateLift(dt);
   nowPlaying(); tickClock(dt);
-  ctx.clearRect(0, 0, 240, 160);
+  ctx.setTransform(2, 0, 0, 2, 0, 0); ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, 240, 160);
   if (G.scene === 'title') renderTitle();
   else if (G.scene === 'map') renderMap();
   else if (G.scene === 'drive') renderDrive();

@@ -36,6 +36,8 @@ A birthday gift game for Annette, built by Paulo. A top-down, handheld-style pix
 - beach: `~` water, `u` umbrella, `p` palm, `s` shell, `J` Joanne the Corolla (exit)
 - botanist: `F` film poster (secret), `f` fern, `r` bar counter, `t` table, `n` bartender, `A` Paulo
 
+The canvas is 480x320 but all drawing code works in 240x160 units (the context is scaled 2x). Lead characters (Annette, Luca, and Paulo/Mum without palette overrides) are rendered at 2x through `epx()` (rounded diagonals) plus soft top-left lighting, so they carry twice the detail of NPCs, which stay at 1x. `drawSpr` reads `canvas.hi` to size them correctly.
+
 Multi-tile objects are drawn once from their top-left tile (`isOrigin` + `extent`).
 
 ## Game flow
