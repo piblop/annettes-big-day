@@ -255,7 +255,38 @@ const CONFIG = {
     "You do so much! How lucky am I!!",
     "Happy birthday my Annette. I love you.",
     "Now let's ignore the Harbour Bridge again!"
-  ]
+  ],
+  // EXPANSION PACK: a weekend with Paulo and Luca. Edit freely.
+  weekend: {
+    baths: "Greenwich Baths",
+    shops: "Top Ryde",
+    grocer: "ALDI",
+    // Movies named as references (like the radio artists). No copyrighted text.
+    movies: [
+      { n: "A Scorsese classic", d: "Wise guys, big city, three hours fly by." },
+      { n: "A Nolan mind-bender", d: "Time folds. Nobody blinks." },
+      { n: "The Godfather", d: "An offer you can't refuse." }
+    ],
+    shopList: ["Bananas", "Sourdough", "Oat milk", "Dark chocolate"],
+    shopExtras: ["Dishwasher tabs", "Sparkling water", "Avocados", "Party pies", "Dog treats", "Scented candle"],
+    wines: [
+      { n: "Sauvignon Blanc", d: "Crisp and cold" },
+      { n: "Pinot Noir", d: "Light and lovely" },
+      { n: "Rose", d: "All day" },
+      { n: "Prosecco", d: "Because weekend" }
+    ],
+    dinners: [
+      { n: "Margherita pizza", d: "Simple and perfect" },
+      { n: "Pasta special", d: "Whatever's fresh tonight" },
+      { n: "Steak frites", d: "Medium, obviously" },
+      { n: "Dumplings", d: "One more basket" }
+    ],
+    picnicTreats: [
+      { n: "Cheese and crackers", d: "A little bit fancy" },
+      { n: "Strawberries", d: "Straight from the punnet" },
+      { n: "Iced coffee", d: "Two straws" }
+    ]
+  }
 };
 
 /* ---------------- helpers ---------------- */
@@ -409,7 +440,7 @@ Object.keys(STAT_INFO).forEach(k => { const s = el('div', 'stat', `<span><svg vi
 function updateHUD() { for (const k in G.stats) { const b = $('#st-' + k); b.style.width = G.stats[k] + '%'; b.style.backgroundColor = needColour(G.stats[k]); } }
 // in-game clock: each scene starts at its own time of day and ticks on slowly
 let clockMin = 7 * 60 + 30, clockAcc = 0;
-const SCENE_TIME = { bedroom: 7 * 60 + 30, gym: 8 * 60 + 45, office: 10 * 60 + 5, lunch: 12 * 60 + 30, beach: 17 * 60 + 20, botanist: 19 * 60 + 15, finale: 21 * 60, credits: 23 * 60 + 30 };
+const SCENE_TIME = { bedroom: 7 * 60 + 30, gym: 8 * 60 + 45, office: 10 * 60 + 5, lunch: 12 * 60 + 30, beach: 17 * 60 + 20, botanist: 19 * 60 + 15, finale: 21 * 60, credits: 23 * 60 + 30, baths: 10 * 60, aldi: 11 * 60 + 30, park: 13 * 60, home: 15 * 60 + 30 };
 function setClock(id) { if (SCENE_TIME[id] != null) clockMin = SCENE_TIME[id]; drawClock(); }
 function drawClock() { const h = Math.floor(clockMin / 60) % 24, m = clockMin % 60; $('#clock').textContent = ((h + 11) % 12 + 1) + ':' + ('0' + m).slice(-2) + (h < 12 ? ' am' : ' pm'); }
 function tickClock(dt) { if (G.scene === 'title' || G.mode === 'dialog' || G.mode === 'menu') return; clockAcc += dt; if (clockAcc >= 2.5) { clockAcc = 0; clockMin = Math.min(clockMin + 1, 23 * 60 + 59); drawClock(); } }
@@ -488,7 +519,7 @@ const SONGS = {
   battle: { tempo: .12, lead: [69, 0, 72, 69, 76, 0, 74, 72, 69, 0, 72, 69, 79, 0, 77, 76], bass: [45, 45, 57, 45, 45, 45, 57, 45, 43, 43, 55, 43, 41, 41, 53, 41] },
   finale: { tempo: .15, lead: [72, 76, 79, 84, 79, 76, 77, 81, 84, 89, 84, 81, 79, 83, 86, 91], bass: [48, 0, 55, 0, 53, 0, 57, 0, 55, 0, 59, 0, 48, 0, 0, 0] }
 };
-const SCENE_SONG = { title: 'calm', bedroom: 'calm', gym: 'upbeat', drive: 'upbeat', office: 'calm', beach: 'calm', botanist: 'calm', battle: 'battle', finale: 'finale' };
+const SCENE_SONG = { title: 'calm', bedroom: 'calm', gym: 'upbeat', drive: 'upbeat', office: 'calm', beach: 'calm', botanist: 'calm', battle: 'battle', finale: 'finale', baths: 'calm', aldi: 'upbeat', park: 'upbeat', home: 'calm' };
 let song = null, step = 0, nextT = 0;
 // Background music removed by request. Sound effects (sfx) still play.
 function music(name) { song = null; step = 0; }
@@ -552,6 +583,7 @@ function onA() {
     case 'dialog': dialogAdvance(); break;
     case 'menu': menuPick(); break;
     case 'lift': liftPress(); break;
+    case 'fetch': fetchPress(); break;
     case 'drive': changeStation(); break;
     case 'bmsg': { const n = G.bnext; G.bnext = null; sfx('blip'); if (n) n(); break; }
   }
@@ -626,8 +658,8 @@ function fade(cb) {
 
 /* ---------------- maps ---------------- */
 const WALK = new Set(['.', 'h', 'D', '_']);
-const WALLOBJ = { bedroom: 'oG', gym: 'm', office: 'w', botanist: 'F', beach: '' };
-const OBJ = { bedroom: 'wkvbxoSG', gym: 'rLbm', office: 'wpdYZ', botanist: 'Frtf', beach: 'upsJ' };
+const WALLOBJ = { bedroom: 'oG', gym: 'm', office: 'w', botanist: 'F', beach: '', shop: '', park: '', home: 'w' };
+const OBJ = { bedroom: 'wkvbxoSG', gym: 'rLbm', office: 'wpdYZ', botanist: 'Frtf', beach: 'upsJ', shop: 'Szcp', park: 'Tbg', home: 'wfVHkp' };
 const MAPS = {
   bedroom: {
     theme: 'bedroom', title: 'Chapter 1: Wake up',
@@ -719,6 +751,80 @@ const MAPS = {
       u: () => say("A beach umbrella. Shade for later."),
       p: () => say("A palm tree swaying in the breeze."),
       '~': () => say("The water looks perfect. Luca would love this.")
+    }
+  },
+  /* ---------------- EXPANSION PACK: weekend maps ---------------- */
+  baths: {
+    theme: 'beach', title: 'Weekend Pack: ' + CONFIG.weekend.baths,
+    rows: ["~~~~~~~~~~~~~~~", "~~~~~~~~~~~~~~~", "_______________", "...u.......p...", "......A........", "...............", "....s.....s....", "...............", "..........JJ...", "..............."],
+    start: { x: 7, y: 9, dir: 'up' }, luca: { x: 5, y: 5 },
+    npc: c => c === 'A' ? ['paulo', {}] : null,
+    hints: () => ['J'],
+    onEnter() { G.wearing = 'sunny'; say(["EXPANSION PACK: a weekend with Paulo.", "No alarms, no meetings. Just a slow Saturday.", CONFIG.weekend.baths + ", all to yourselves.", "Luca sniffs every blade of grass on the lawn.", "Face the water and press A for a morning dip."]); },
+    doorOpen: () => false,
+    doorLocked: () => "The car's parked over on the sand.",
+    act: {
+      '~': () => F.wkBaths ? say("That water is perfect. One more dip later.") : swimBaths(),
+      J: () => F.wkBaths ? say([CONFIG.car + " is packed. Next stop: " + CONFIG.weekend.shops + " for the ALDI run.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(() => startDrive('country', 'aldi', CONFIG.weekend.shops))) : say({ n: CONFIG.boyfriend, t: "Leaving already? Let's have a dip first!" }),
+      u: () => say("A stripy umbrella planted in the lawn."),
+      p: () => say("A gum tree leaning over the baths."),
+      s: () => say("A little shell. Luca sniffs it suspiciously."),
+      A: () => say(F.wkBaths ? { n: CONFIG.boyfriend, t: "Best swim of the year. Ready when you are." } : { n: CONFIG.boyfriend, t: "Greenwich Baths, all to ourselves. Race you in?" })
+    }
+  },
+  aldi: {
+    theme: 'shop', title: 'Weekend Pack: ' + CONFIG.weekend.grocer,
+    rows: ["###############", "#SS..SS..SS.p.#", "#.............#", "#SS..SS..zz...#", "#......A......#", "#SS..SS.......#", "#.............#", "#..cc.........#", "#.............#", "######D########"],
+    start: { x: 7, y: 8, dir: 'up' },
+    npc: c => c === 'A' ? ['paulo', {}] : null,
+    hints: () => [!F.wkGroceries && 'A', F.wkGroceries && 'D'],
+    onEnter() { G.wearing = 'sunny'; say([CONFIG.weekend.shops + " on a Saturday. " + CONFIG.weekend.grocer + " first.", "Luca's snoozing in the car with the window cracked.", { n: CONFIG.boyfriend, t: "Here's the list. Divide and conquer?" }]); },
+    doorOpen: () => F.wkGroceries,
+    doorLocked: () => ({ n: CONFIG.boyfriend, t: "Not without the groceries! Grab the list off me." }),
+    onDoor() { G.mode = 'busy'; say(["Bags loaded. Luca approves of the dog treats.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(() => startDrive('country', 'park', 'the dog park'))); },
+    act: {
+      A: () => F.wkGroceries ? say({ n: CONFIG.boyfriend, t: "Trolley's full. That was a solid run." }) : groceryGame(),
+      c: () => F.wkGroceries ? say("Checkout cleared at record ALDI speed.") : say({ n: CONFIG.boyfriend, t: "Grab the list off me first!" }),
+      S: () => say("Shelves stacked to the ceiling. Middle aisle is dangerous."),
+      z: () => say("The freezer aisle. Someone say ice cream?"),
+      p: () => say("A shop plant. Surprisingly thriving under the fluoros.")
+    }
+  },
+  park: {
+    theme: 'park', title: 'Weekend Pack: the dog park',
+    rows: ["###############", "#T....T.....T.#", "#.............#", "#....g........#", "#.......A.....#", "#.............#", "#..b.......b..#", "#.............#", "#.............#", "######D########"],
+    start: { x: 7, y: 8, dir: 'up' }, luca: { x: 9, y: 8 },
+    npc: c => c === 'A' ? ['paulo', {}] : null,
+    hints: () => [!F.wkFetch && 'g', F.wkFetch && 'D'],
+    onEnter() { G.wearing = 'sunny'; if (!G.lucaPat.park) { G.lucaPat.park = true; stat('happy', 5); } say(["Off-leash heaven. Luca does a full lap of zoomies.", { n: CONFIG.boyfriend, t: "Grab the ball. He's already staring at it." }]); },
+    doorOpen: () => F.wkFetch,
+    doorLocked: () => "One round of fetch first, Luca's begging.",
+    onDoor() { G.mode = 'busy'; say(["Luca trots home happy and worn out.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(() => loadMap('home'))); },
+    act: {
+      g: () => F.wkFetch ? say("The ball's thoroughly slobbered. Luca is content.") : fetchGame(),
+      T: () => say("A big shady gum. Cicadas going nuts."),
+      b: () => say("A park bench. Prime dog-watching seat."),
+      A: () => say(F.wkFetch ? { n: CONFIG.boyfriend, t: "He's going to sleep the whole way home." } : { n: CONFIG.boyfriend, t: "Off the leash! Go on, Luca!" })
+    }
+  },
+  home: {
+    theme: 'home', title: 'Weekend Pack: home',
+    rows: ["###wwww###wwww#", "#............p#", "#..VV........k#", "#..VV........k#", "#..ff....HH...#", "#..ff.........#", "#......A......#", "#.............#", "#.............#", "######D########"],
+    start: { x: 9, y: 8, dir: 'up' }, luca: { x: 6, y: 8 },
+    npc: c => c === 'A' ? ['paulo', {}] : null,
+    hints: () => [!F.wkMovie && 'V', F.wkMovie && !F.wkActivity && 'H', F.wkMovie && F.wkActivity && 'D'],
+    onEnter() { G.wearing = 'sunny'; say(["Home again. Luca flops on his back instantly.", "A whole afternoon with nothing booked.", { n: CONFIG.boyfriend, t: "Movie first, then chess or a picnic. Dealer's choice." }]); },
+    doorOpen: () => F.wkMovie && F.wkActivity,
+    doorLocked: () => (!F.wkMovie ? "Watch a film first! It's a weekend." : "Chess or a picnic first, then we'll head out."),
+    onDoor() { G.mode = 'busy'; say(["Shoes on, Luca settled with a chew.", { n: CONFIG.boyfriend, t: "Let's go out and finish the weekend right." }], () => fade(() => weekendOut())); },
+    act: {
+      V: () => F.wkMovie ? say("Credits already rolled. Great pick.") : movieMenu(),
+      H: () => !F.wkMovie ? say({ n: CONFIG.boyfriend, t: "Movie first, then I'll lose at chess." }) : F.wkActivity ? say("Good game. Rematch after dinner.") : chessGame(),
+      k: () => !F.wkMovie ? say("Snacks later, film's starting.") : F.wkActivity ? say("Picnic's already packed.") : picnicChoice(),
+      f: () => say("The comfiest couch in Sydney. Luca's throne too."),
+      w: () => say("Afternoon light pours in over the garden."),
+      p: () => say("A happy little pot plant."),
+      A: () => say(!F.wkMovie ? { n: CONFIG.boyfriend, t: "Home sweet home. Movie on the telly?" } : !F.wkActivity ? { n: CONFIG.boyfriend, t: "Chess board's out, or shall we pack a picnic?" } : { n: CONFIG.boyfriend, t: "What a day. Dinner out to finish it off?" })
     }
   }
 };
@@ -1197,7 +1303,9 @@ function credits() {
   const got = Object.keys(BADGES).filter(k => G.badges[k]).map(k => '<p>' + BADGES[k].n + '</p>').join('') || '<p>None yet. Play again!</p>';
   c.innerHTML = '<div class="roll"><h3>' + esc(CONFIG.name) + "'s Big Day</h3><h3>Starring</h3><p>" + esc(CONFIG.name) + ' as herself</p><p>Luca as the goodest boy</p><p>Mum as Mum</p><p>' + esc(CONFIG.boyfriend) + ' as the boyfriend</p><p>' + esc(CONFIG.car) + ' as the blue Corolla</p><h3>Filmed on location</h3><p>North Ryde, the Sydney CBD and Kirribilli</p><h3>Badges</h3>' + got + '<h3>Secrets found</h3><p>' + Object.keys(G.secrets).length + ' of 4</p><h3>Hearts collected</h3><p>' + G.hearts + ' of ' + G.heartsTotal + '</p><h3>Made with love by</h3><p>' + esc(CONFIG.boyfriend) + '</p><h3>Happy birthday</h3><p>Here\'s to the next level.</p></div>';
   ui.append(c);
-  const b = makeBtn('Play again', () => location.reload()); c.append(b); setMenu([b]);
+  const w = makeBtn('Play the weekend', () => startWeekend()); w.style.bottom = '12cqw';
+  const b = makeBtn('Play again', () => location.reload());
+  c.append(w, b); setMenu([w, b]);
 }
 function updateFinale(dt) {
   G.fxT -= dt;
@@ -1222,6 +1330,144 @@ function openCollection() {
   setMenu([close], { onBack: () => { clearUI(); G.mode = 'map'; } });
 }
 
+/* ---------------- EXPANSION PACK: weekend ---------------- */
+function startWeekend() {
+  ['wkBaths', 'wkGroceries', 'wkFetch', 'wkMovie', 'wkActivity'].forEach(k => { delete F[k]; });
+  G.weekend = true; G.wearing = 'sunny'; G.outfit = 'sunny';
+  clearUI(); fade(() => loadMap('baths'));
+}
+function swimBaths() {
+  F.wkBaths = true; stat('happy', 8); stat('energy', 6);
+  say([{ n: CONFIG.name, t: "In we go!" }, "The harbour water is cool and clear.", "You float on your back and watch the ferries drift past.", { n: CONFIG.boyfriend, t: "Told you. Best spot in Sydney." }]);
+}
+function movieMenu() {
+  pickMenu('Movie night', 'Paulo made popcorn. Your pick.', CONFIG.weekend.movies, m => {
+    F.wkMovie = true; stat('happy', 8);
+    say([{ n: CONFIG.name, t: "Tonight: " + m.n + "." }, "Lights off, popcorn ready, Luca curled up between you.", { n: CONFIG.boyfriend, t: "Best seat in the house is next to you." }]);
+  });
+}
+function chessGame() {
+  pickMenu('Chess at home', 'White to move. Paulo swears checkmate in three.', [
+    { n: 'Knight to f7', d: 'A bold fork' },
+    { n: 'Queen takes h7', d: 'Sacrifice attack' },
+    { n: 'Castle and wait', d: 'Play it safe' }
+  ], m => {
+    F.wkActivity = true; stat('happy', 6);
+    say([{ n: CONFIG.name, t: m.n + "." }, { n: CONFIG.boyfriend, t: "...how did you even see that." }, { n: CONFIG.name, t: CONFIG.catchphrase }, "Checkmate. Reigning champion, still."]);
+  });
+}
+function picnicChoice() {
+  pickMenu('Backyard picnic', 'Pack the rug and a little something.', CONFIG.weekend.picnicTreats, m => {
+    F.wkActivity = true; stat('happy', 7); stat('energy', 4);
+    say([{ n: CONFIG.name, t: "Picnic packed: " + m.n + "." }, "You lay the rug out back. Luca supervises the snacks closely.", { n: CONFIG.boyfriend, t: "This. This is the good stuff." }]);
+  });
+}
+function groceryGame() {
+  clearUI();
+  const W = CONFIG.weekend, need = W.shopList.slice();
+  const extras = shuffle(W.shopExtras.slice()).slice(0, 4);
+  const pool = shuffle(need.concat(extras));
+  let got = 0;
+  const p = el('div', 'panel', '<h2>' + esc(W.grocer) + ' dash</h2><p class="sub">Grab everything on the list. List: ' + esc(need.join(', ')) + '</p><div class="grid2"></div><p class="cnt sub"></p>');
+  ui.append(p);
+  const cnt = p.querySelector('.cnt');
+  const upd = () => { cnt.textContent = got + ' / ' + need.length + ' in the trolley'; };
+  const btns = pool.map(name => makeBtn('<span>' + esc(name) + '</span>', b => {
+    if (need.includes(name)) {
+      if (b.classList.contains('done')) return;
+      b.classList.add('done'); b.disabled = true; got++; sfx('good'); upd();
+      if (got >= need.length) {
+        MENU = null; clearUI(); G.mode = 'map'; F.wkGroceries = true; stat('energy', 6, false); stat('happy', 6, false);
+        say([{ n: CONFIG.name, t: "Trolley sorted." }, "Famous ALDI checkout speed: survived.", { n: CONFIG.name, t: CONFIG.catchphrase }]);
+      }
+    } else { sfx('bad'); p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake'); toast('Not on the list!'); }
+  }, true));
+  p.querySelector('.grid2').append(...btns); upd();
+  setMenu(btns, { cols: 2, onBack: () => { clearUI(); G.mode = 'map'; } });
+}
+/* fetch: a timing bar, modeled on the squat-rack lift game */
+function fetchGame() {
+  clearUI();
+  G.fetch = { round: 0, pos: 0, dir: 1, speed: 1.0, zc: 0.5, zw: 0.2, res: [], lock: 0, end: 0 };
+  const p = el('div', 'panel');
+  p.innerHTML = '<h2>Fetch with Luca</h2><p class="sub">Press A when the marker is in the pink zone. Three throws for the goodest boy.</p><div class="bar"><div class="zone"></div><div class="mark"></div></div><p class="result">Throw 1 of 3</p><div class="reps">' + '<span class="rep"></span>'.repeat(3) + '</div>';
+  const tap = el('button', 'opt', 'Throw!'); tap.type = 'button'; tap.style.alignItems = 'center';
+  tap.addEventListener('pointerdown', e => { e.preventDefault(); fetchPress(); });
+  p.append(tap); ui.append(p);
+  G.fetch.el = p; G.mode = 'fetch'; placeFetchZone();
+}
+function placeFetchZone() { const L = G.fetch, z = L.el.querySelector('.zone'); z.style.left = ((L.zc - L.zw / 2) * 100) + '%'; z.style.width = (L.zw * 100) + '%'; }
+function updateFetch(dt) {
+  const L = G.fetch; if (!L) return;
+  if (L.end) { L.end -= dt; if (L.end <= 0) { L.end = 0; finishFetch(); } return; }
+  if (L.lock > 0) { L.lock -= dt; return; }
+  L.pos += L.dir * L.speed * dt;
+  if (L.pos > 1) { L.pos = 1; L.dir = -1; } if (L.pos < 0) { L.pos = 0; L.dir = 1; }
+  L.el.querySelector('.mark').style.left = (L.pos * 100) + '%';
+}
+function fetchPress() {
+  const L = G.fetch; if (!L || L.lock > 0 || L.end || L.round >= 3) return;
+  const d = Math.abs(L.pos - L.zc), half = L.zw / 2;
+  const r = d <= half * 0.4 ? 'perfect' : d <= half ? 'good' : 'miss';
+  L.res.push(r); L.el.querySelectorAll('.rep')[L.round].classList.add(r);
+  sfx(r === 'miss' ? 'bad' : 'good');
+  L.round++;
+  L.el.querySelector('.result').textContent = (r === 'perfect' ? 'Perfect throw!' : r === 'good' ? 'Good throw.' : 'Luca lost it in the bushes.') + (L.round < 3 ? '  Throw ' + (L.round + 1) + ' of 3' : '');
+  if (L.round >= 3) { L.end = 0.8; return; }
+  L.lock = 0.4; L.speed += 0.18; L.zw = Math.max(0.12, L.zw - 0.02); L.zc = 0.25 + Math.random() * 0.5; placeFetchZone();
+}
+function finishFetch() {
+  const L = G.fetch, good = L.res.filter(r => r !== 'miss').length;
+  G.fetch = null; clearUI(); F.wkFetch = true; G.mode = 'map';
+  stat('happy', good * 3 + 3);
+  if (good >= 3) { sfx('pr'); say(["Every throw, perfect fetch. Luca is BUZZING.", { n: CONFIG.boyfriend, t: "Olympic level, both of you." }]); }
+  else say([good + " good throw" + (good === 1 ? '' : 's') + ". Luca had the time of his life.", "Tongue out, tail spinning. Very good boy."]);
+}
+function weekendOut() {
+  clearUI(); G.scene = 'wnight'; G.mode = 'busy'; clockMin = 19 * 60; drawClock(); setChapter('Weekend Pack: a night out');
+  const p = el('div', 'panel', '<h2>Head out for the night</h2><p class="sub">Dinner out, or a cosy wine bar?</p><div class="grid2"></div>');
+  ui.append(p);
+  const b1 = makeBtn('<span>Dinner out</span><small>Somewhere with good pasta</small>', () => dinnerOutMenu());
+  const b2 = makeBtn('<span>Wine bar</span><small>A bottle and small plates</small>', () => wineBarMenu());
+  p.querySelector('.grid2').append(b1, b2);
+  setMenu([b1, b2], { cols: 2 });
+}
+function dinnerOutMenu() {
+  clearUI();
+  const p = el('div', 'panel', '<h2>Dinner out</h2><p class="sub">Order anything. Weekend rules.</p><div class="grid2"></div>');
+  ui.append(p);
+  const btns = CONFIG.weekend.dinners.map(d => makeBtn('<span>' + esc(d.n) + '</span><small>' + esc(d.d) + '</small>', () => {
+    clearUI(); G.mode = 'busy'; stat('energy', 20, false); stat('happy', 10, false);
+    say([{ n: CONFIG.boyfriend, t: "Good call. The " + d.n.toLowerCase() + " here is unreal." }, d.n + ". Absolutely delicious.", { n: CONFIG.name, t: CONFIG.catchphrase }], weekendFinale);
+  }));
+  p.querySelector('.grid2').append(...btns);
+  setMenu(btns, { cols: 2, onBack: weekendOut });
+}
+function wineBarMenu() {
+  clearUI();
+  const p = el('div', 'panel', '<h2>Wine bar</h2><p class="sub">A bottle to share and a few small plates.</p><div class="grid2"></div>');
+  ui.append(p);
+  const btns = CONFIG.weekend.wines.map(d => makeBtn('<span>' + esc(d.n) + '</span><small>' + esc(d.d) + '</small>', () => {
+    clearUI(); G.mode = 'busy'; stat('happy', 14, false);
+    say([{ n: CONFIG.boyfriend, t: "A bottle of " + d.n.toLowerCase() + ", please." }, "Candlelight, small plates, no rush at all.", { n: CONFIG.name, t: CONFIG.catchphrase }], weekendFinale);
+  }));
+  p.querySelector('.grid2').append(...btns);
+  setMenu(btns, { cols: 2, onBack: weekendOut });
+}
+function weekendFinale() {
+  G.mode = 'busy'; setChapter('Weekend Pack');
+  say([{ n: CONFIG.boyfriend, t: "No big plans. Just you, me and Luca." }, { n: CONFIG.boyfriend, t: "My favourite kind of weekend." }, { n: CONFIG.name, t: "Say less." }], () => fade(() => weekendEnd()));
+}
+function weekendEnd() {
+  clearUI(); G.scene = 'wend'; G.mode = 'busy'; setChapter('The best kind of ordinary');
+  ui.append(el('div', 'big', 'What a weekend, ' + esc(CONFIG.name) + '!'));
+  const b1 = makeBtn('Play the weekend again', () => startWeekend());
+  const b2 = makeBtn('Back to title', () => showTitle());
+  b1.classList.add('finbtn'); b2.classList.add('finbtn');
+  b1.style.top = '23cqw'; b2.style.top = '34cqw';
+  ui.append(b1, b2); setMenu([b1, b2]);
+}
+
 /* ---------------- tile art ---------------- */
 function drawFloor(th, X, Y, tx, ty) {
   if (th === 'bedroom') {
@@ -1244,6 +1490,22 @@ function drawFloor(th, X, Y, tx, ty) {
     R(X, Y + 3, 16, 1, '#6a4229'); R(X, Y + 11, 16, 1, '#6a4229'); R(X + ((tx + ty) % 2 ? 5 : 12), Y + 4, 1, 7, '#6a4229');
     R(X + 2 + Math.floor(hsh(tx, ty, 3) * 9), Y + 7, 3, 1, '#7d5034');
   }
+  else if (th === 'shop') {
+    R(X, Y, 16, 16, (tx + ty) % 2 ? '#eef1f6' : '#e7ebf2');
+    R(X, Y, 16, 1, '#f6f8fc'); R(X, Y + 15, 16, 1, '#d6dbe6'); R(X + 15, Y, 1, 16, '#d6dbe6');
+    if ((tx + ty) % 4 === 0) R(X + 5, Y + 6, 5, 1, '#dde2ec');
+  }
+  else if (th === 'park') {
+    R(X, Y, 16, 16, (tx + ty) % 2 ? '#7fc65f' : '#77bf58');
+    for (let i = 0; i < 4; i++) { const gx = X + Math.floor(hsh(tx, ty, i) * 14), gy = Y + 2 + Math.floor(hsh(ty, tx, i + 3) * 12); R(gx, gy, 1, 2, i % 2 ? '#5aa84b' : '#8fd36b'); }
+    if ((tx + ty) % 5 === 0) { R(X + 4, Y + 9, 3, 1, '#ffd94f'); R(X + 5, Y + 8, 1, 1, '#ffe27a'); }
+  }
+  else if (th === 'home') {
+    const v = hsh(tx, ty, 4) > 0.5 ? '#d9b483' : '#d2ab77';
+    R(X, Y, 16, 16, v); R(X, Y, 16, 1, '#e6c79a'); R(X, Y + 8, 16, 1, '#e6c79a');
+    R(X, Y + 7, 16, 1, '#c19064'); R(X, Y + 15, 16, 1, '#c19064');
+    const o = (tx + ty) % 2; R(X + (o ? 5 : 11), Y, 1, 7, '#c19064'); R(X + (o ? 12 : 4), Y + 8, 1, 7, '#c19064');
+  }
   else {
     R(X, Y, 16, 16, '#f4d99a'); if ((tx + ty) % 3 === 0) R(X + 2, Y + 9, 7, 1, '#ead08c');
     for (let i = 0; i < 4; i++) R(X + Math.floor(hsh(tx, ty, i) * 15), Y + Math.floor(hsh(ty, tx, i + 5) * 15), 1, 1, i % 2 ? '#dcbb77' : '#fff0c4');
@@ -1251,13 +1513,16 @@ function drawFloor(th, X, Y, tx, ty) {
 }
 function drawWall(th, X, Y, tx, ty, tiles) {
   const below = ty + 1 < tiles.length ? tiles[ty + 1][tx] : '#';
-  const col = { bedroom: ['#f6dbe6', '#eab8cb'], gym: ['#eceff5', '#ff9fb4'], office: ['#eef2f7', '#cfd8e3'], botanist: ['#3f6f5a', '#e6c47a'] }[th];
+  const col = { bedroom: ['#f6dbe6', '#eab8cb'], gym: ['#eceff5', '#ff9fb4'], office: ['#eef2f7', '#cfd8e3'], botanist: ['#3f6f5a', '#e6c47a'], shop: ['#e8edf3', '#c9d3e0'], park: ['#8fd36b', '#6aa84f'], home: ['#f0e4d0', '#d8c3a0'] }[th];
   R(X, Y, 16, 16, col[0]); if (ty === 0) { R(X, Y, 16, 2, lite(col[0])); R(X, Y + 2, 16, 1, shade(col[0], 0.9)); }
   if (th === 'bedroom') { R(X + 3, Y, 1, 13, '#f2d0de'); R(X + 11, Y, 1, 13, '#f2d0de'); if ((tx + ty) % 2 === 0) { R(X + 6, Y + 5, 2, 2, col[1]); R(X + 8, Y + 5, 2, 2, col[1]); R(X + 7, Y + 7, 2, 1, col[1]); } R(X, Y + 11, 16, 2, '#ffffff'); }
   if (th === 'gym') R(X, Y + 5, 16, 3, col[1]);
   if (th === 'office') { R(X, Y + 11, 16, 1, col[1]); R(X, Y + 12, 16, 1, '#ffffff'); }
   if (th === 'gym') R(X, Y + 11, 16, 2, '#cfd6e2');
   if (th === 'botanist') { R(X, Y + 4, 16, 1, col[1]); R(X + (tx % 2 ? 3 : 10), Y + 6, 3, 5, '#3fae7c'); R(X + (tx % 2 ? 4 : 11), Y + 5, 1, 1, '#56c28c'); }
+  if (th === 'shop') { R(X, Y + 4, 16, 3, col[1]); R(X, Y + 4, 16, 1, '#ffffff'); if ((tx + ty) % 3 === 0) R(X + 4, Y + 9, 8, 2, '#ffd166'); }
+  if (th === 'park') { R(X, Y, 16, 16, '#8fd36b'); R(X, Y + 6, 16, 2, '#c9a06a'); R(X, Y + 10, 16, 2, '#c9a06a'); for (let i = 2; i < 16; i += 6) { R(X + i, Y + 2, 2, 12, '#dab77f'); R(X + i, Y + 2, 2, 1, '#efd4a2'); } }
+  if (th === 'home') { R(X, Y + 10, 16, 1, col[1]); R(X, Y + 11, 16, 2, '#ffffff'); R(X, Y + 13, 16, 1, shade(col[0], 0.9)); }
   if (below !== '#' && !(WALLOBJ[th] || '').includes(below)) { R(X, Y + 13, 16, 3, shade(col[0], 0.62)); R(X, Y + 16, 16, 3, 'rgba(35,29,51,.14)'); }
 }
 function isOrigin(tiles, tx, ty, c) { return (tx === 0 || tiles[ty][tx - 1] !== c) && (ty === 0 || tiles[ty - 1][tx] !== c); }
@@ -1300,6 +1565,17 @@ function drawObject(th, c, X, Y, W, H) {
     case 'beach:u': R(X - 6, Y + 6, 14, 8, '#5b93c9'); R(X - 5, Y + 7, 12, 6, '#7fc8f8'); R(X - 5, Y + 9, 12, 2, '#ffffff'); R(X - 5, Y + 12, 12, 1, '#ffffff'); R(X + 7, Y - 6, 2, 20, '#8a5a3b'); oval(X + 8, Y - 9, 11, 5, '#ff8fa8', INK); oval(X + 8, Y - 10, 9, 3, '#ffb3c4'); R(X + 3, Y - 12, 3, 5, '#ffffff'); R(X + 10, Y - 12, 3, 5, '#ffffff'); R(X + 7, Y - 14, 2, 3, '#8a5a3b'); break;
     case 'beach:p': R(X + 6, Y - 10, 4, 25, '#8a5a3b'); R(X + 7, Y - 10, 1, 25, '#a6714b'); for (let i = -8; i < 14; i += 5) R(X + 6, Y + i, 4, 1, '#6b4228'); oval(X + 8, Y - 16, 12, 4, '#2f8f63'); oval(X + 2, Y - 13, 7, 3, '#3fae7c'); oval(X + 14, Y - 13, 7, 3, '#3fae7c'); oval(X + 8, Y - 19, 7, 3, '#56c28c'); R(X + 6, Y - 12, 2, 2, '#c9a27a'); R(X + 9, Y - 12, 2, 2, '#c9a27a'); break;
     case 'beach:s': box(5, 7, 7, 5, '#ff9fb8'); R(X + 7, Y + 8, 1, 3, '#e27a98'); R(X + 9, Y + 8, 1, 3, '#e27a98'); break;
+    case 'shop:S': { box(0, -8, W, H + 7, '#c9b18e'); const cols = ['#e2554f', '#ffd166', '#3fae7c', '#7fc8f8', '#ff9fb8', '#c9b6f2']; [-6, 1, 8].forEach((sy, si) => { for (let bx = 2, i = 0; bx < W - 3; bx += 3, i++) R(X + bx, Y + sy + 1, 2, 4, cols[(i + si) % cols.length]); R(X + 1, Y + sy + 6, W - 2, 1, shade('#c9b18e', 0.7)); }); break; }
+    case 'shop:z': { box(0, -6, W, H + 5, '#cfe7f5'); R(X + 2, Y - 4, W - 4, H + 1, '#bfe3ff'); R(X + 2, Y - 4, W - 4, 1, '#eaf6ff'); for (let i = 3; i < W - 3; i += 5) R(X + i, Y - 2, 3, 3, '#ffffff'); R(X + 1, Y + H - 3, W - 2, 2, '#9fc3d8'); break; }
+    case 'shop:c': { box(0, 2, W, H - 2, '#b9c2cf'); R(X + 1, Y + 3, W - 2, 1, '#d6dee8'); box(2, -4, 7, 6, '#3f4258'); R(X + 3, Y - 3, 5, 3, '#7fb7e8'); R(X + 3, Y + 1, 5, 1, '#2b2d42'); R(X + W - 6, Y, 4, 2, '#e2554f'); break; }
+    case 'shop:p': case 'home:p': box(4, 8, 8, 7, '#c55a3a'); R(X + 5, Y + 9, 6, 1, '#e28a68'); oval(X + 5, Y + 5, 3, 3, '#3fae7c'); oval(X + 11, Y + 3, 3.5, 4, '#2f8f63'); oval(X + 8, Y + 6, 3, 2.5, '#56c28c'); R(X + 8, Y + 2, 1, 6, '#2f8f63'); R(X + 10, Y + 1, 1, 1, '#a8e6c4'); break;
+    case 'park:T': { R(X + 6, Y - 2, 4, H + 2, '#8a5a3b'); R(X + 7, Y - 2, 1, H + 2, '#a6714b'); oval(X + 8, Y - 8, 11, 7, '#3fae7c', INK); oval(X + 3, Y - 5, 6, 4, '#56c28c'); oval(X + 13, Y - 5, 6, 4, '#2f8f63'); oval(X + 8, Y - 12, 7, 4, '#56c28c'); break; }
+    case 'park:b': R(X + 1, Y + 1, W - 2, 2, '#b07a4a'); R(X + 1, Y + 3, W - 2, 1, '#c48d5a'); R(X + 1, Y + 4, W - 2, 2, '#a06d40'); R(X + 2, Y + 6, 2, 4, '#7a5230'); R(X + W - 4, Y + 6, 2, 4, '#7a5230'); break;
+    case 'park:g': oval(X + 8, Y + 10, 3.5, 3.5, '#c7e05a', INK); R(X + 6, Y + 9, 5, 1, '#eaf5a8'); break;
+    case 'home:w': box(1, 1, W - 2, 11, '#bfe3ff'); R(X + 2, Y + 2, W - 4, 4, '#dff3ff'); R(X + 3, Y + 7, W - 6, 3, '#a8dc86'); R(X + 1, Y + 6, W - 2, 1, '#ffffff'); for (let i = 16; i < W - 2; i += 16) R(X + i, Y + 1, 1, 11, '#ffffff'); R(X, Y + 12, W, 2, '#b07a4a'); break;
+    case 'home:V': { box(1, 1, W - 2, H - 8, '#2b2d42'); R(X + 3, Y + 3, W - 6, H - 14, F.wkMovie ? '#6fa8dc' : '#3a3d5c'); if (F.wkMovie) { R(X + 5, Y + 6, W - 12, 2, '#ffe7a8'); R(X + 6, Y + H - 16, W - 14, 1, '#a9d1ef'); } R(X + W / 2 - 3, Y + H - 7, 6, 2, '#4d4764'); R(X + W / 2 - 6, Y + H - 5, 12, 2, '#3f4258'); break; }
+    case 'home:H': { box(2, 4, W - 4, H - 6, '#8a5a3b'); R(X + 3, Y + 5, W - 6, 1, '#a06d40'); const bs = Math.max(1, Math.floor((W - 10) / 8)); for (let r = 0; r < 3; r++) for (let cc = 0; cc < 8; cc++) R(X + 5 + cc * bs, Y - 2 + r, bs, 1, (r + cc) % 2 ? '#3a2a1a' : '#f0e4d0'); R(X + 7, Y - 4, 1, 2, '#f0e4d0'); R(X + W - 9, Y - 4, 1, 2, '#3a2a1a'); break; }
+    case 'home:k': { box(0, 2, W, H - 2, '#e7ebf1'); R(X + 1, Y + 3, W - 2, 1, '#f4f7fb'); R(X + 3, Y + 6, 4, 3, '#e2554f'); R(X + 9, Y + 7, 3, 4, '#3fae7c'); R(X + 2, Y + H - 8, W - 4, 2, '#c9d3e0'); break; }
   }
 }
 // rugs under the cast, lighting over the top: small touches that make rooms feel lived in
@@ -1309,6 +1585,8 @@ function mapDecor(th, layer) {
     if (th === 'gym') { R(57, 34, 94, 44, '#c24a6a'); R(56, 35, 96, 42, '#c24a6a'); R(57, 35, 94, 42, '#ff9fb4'); R(59, 37, 90, 38, '#565c74'); for (let x = 63; x < 148; x += 8) R(x, 37, 1, 38, '#5f657e'); }
     if (th === 'botanist') { oval(128, 108, 34, 15, '#7a1f33', INK); oval(128, 108, 29, 11, '#a3304a'); for (let i = -2; i <= 2; i++) R(128 + i * 10, 104, 2, 8, '#e0b35a'); }
     if (th === 'office') { R(18, 138, 204, 1, 'rgba(35,29,51,.08)'); }
+    if (th === 'home') { oval(96, 108, 42, 16, '#c9b6f2', INK); oval(96, 108, 35, 12, '#ddd0fa'); oval(96, 108, 22, 7, '#f3edff'); }
+    if (th === 'shop') { R(10, 30, 220, 1, 'rgba(35,29,51,.06)'); R(10, 90, 220, 1, 'rgba(35,29,51,.06)'); }
   } else {
     if (th === 'botanist') {
       ctx.strokeStyle = INK; ctx.lineWidth = 1; ctx.beginPath();
@@ -1317,7 +1595,10 @@ function mapDecor(th, layer) {
       R(0, 0, 240, 160, 'rgba(255,170,80,.07)');
       const tl = G.map.tiles; for (let ty = 0; ty < tl.length; ty++) for (let tx = 0; tx < tl[0].length; tx++) if (tl[ty][tx] === 't' && isOrigin(tl, tx, ty, 't')) { const [W] = extent(tl, tx, ty, 't'); const f = 1 + (Math.floor(G.t * 6 + tx) % 2); oval(tx * 16 + W / 2, ty * 16 - 2, 8 + f, 6 + f, 'rgba(255,200,90,.16)'); }
     }
-    if (th === 'beach') { R(0, 0, 240, 160, 'rgba(255,150,70,.09)'); R(0, 0, 240, 34, 'rgba(255,130,90,.08)'); }
+    if (th === 'beach' && G.mapId !== 'baths') { R(0, 0, 240, 160, 'rgba(255,150,70,.09)'); R(0, 0, 240, 34, 'rgba(255,130,90,.08)'); }
+    if (th === 'beach' && G.mapId === 'baths') { R(0, 0, 240, 34, 'rgba(180,220,255,.10)'); }
+    if (th === 'park') { R(0, 0, 240, 160, 'rgba(255,240,150,.06)'); for (let i = 0; i < 5; i++) oval(20 + i * 52, 20 + (i % 2) * 10, 16, 6, 'rgba(255,255,255,.05)'); }
+    if (th === 'home') { R(0, 0, 240, 160, 'rgba(255,190,120,.06)'); R(0, 0, 240, 30, 'rgba(255,210,140,.05)'); }
     if (th === 'office') { for (let i = 0; i < 4; i++) R(18 + i * 48, 16, 30, 70, 'rgba(255,255,255,.05)'); }
   }
 }
@@ -1466,6 +1747,31 @@ function renderFinale() {
   drawSpr(sprite('paulo'), 108, 108, false, 2);
   drawSpr(sprite('heart'), 99, 94 + Math.round(Math.sin(G.t * 3) * 2), false, 2);
 }
+function renderWNight() {
+  R(0, 0, 240, 90, '#3a2f5c'); R(0, 0, 240, 26, '#2a2350'); R(0, 26, 240, 20, '#5a3f6e'); R(0, 44, 240, 18, '#8a5a6e');
+  for (let i = 0; i < 24; i++) if ((Math.floor(G.t * 2) + i) % 6) R(Math.floor(hsh(i, 9, 1) * 240), Math.floor(hsh(i, 8, 2) * 60), 1, 1, '#fdf3d0');
+  for (let x = 0; x < 240; x += 14) { const h = 20 + Math.floor(hsh(x, 3, 1) * 30); R(x, 90 - h, 12, h, '#241d3a'); for (let wy = 90 - h + 3; wy < 88; wy += 6) if (hsh(x, wy, 2) > 0.4) R(x + 3, wy, 2, 2, '#ffd166'); }
+  R(0, 90, 240, 70, '#2a2436');
+  ctx.strokeStyle = '#4a4055'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, 10); ctx.quadraticCurveTo(120, 30, 240, 10); ctx.stroke();
+  for (let i = 0; i < 16; i++) { const x = 8 + i * 15, y = 10 + Math.sin(Math.PI * x / 240) * 12; R(x, y, 2, 2, (Math.floor(G.t * 3) + i) % 4 ? '#ffd166' : '#fff5d6'); }
+  R(96, 120, 48, 4, INK); R(97, 121, 46, 2, '#c9a27a'); R(116, 124, 6, 26, INK);
+  oval(90, 122, 10, 3, 'rgba(35,29,51,.25)'); oval(150, 122, 10, 3, 'rgba(35,29,51,.25)');
+  drawSpr(annetteSprite(false, G.wearing), 78, 104, false, 2);
+  drawSpr(sprite('paulo'), 134, 104, true, 2);
+  drawSpr(sprite('heart'), 116, 92 + Math.round(Math.sin(G.t * 3) * 2), false, 1);
+}
+function renderWEnd() {
+  const bands = ['#ffb38a', '#ff9f8a', '#ff8f9c', '#ffc0b0', '#ffd9c0'];
+  bands.forEach((c, i) => R(0, i * 14, 240, 14, c));
+  oval(120, 74, 20, 20, '#ffd166', shade('#ffd166', 0.7));
+  R(0, 72, 240, 30, '#4f7fc4'); for (let i = 0; i < 8; i++) R(((i * 37 + G.t * 10) % 260) - 20, 80 + (i % 3) * 7, 10, 1, '#ffb38a');
+  R(0, 100, 240, 3, '#ffffff'); R(0, 103, 240, 57, '#f6dfa6');
+  for (let i = 0; i < 4; i++) { const x = 30 + i * 60 + Math.round(Math.sin(G.t * 1.5 + i) * 4), y = 120 - ((G.t * 12 + i * 30) % 120); drawSpr(sprite('heart'), x, Math.round(y), false); }
+  const bob = o => Math.round(Math.sin(G.t * 3 + o));
+  oval(96, 140, 20, 4, 'rgba(35,29,51,.2)'); drawSpr(annetteSprite(false, G.wearing), 84, 112 + bob(0), false, 2);
+  oval(148, 140, 20, 4, 'rgba(35,29,51,.2)'); drawSpr(sprite('paulo'), 136, 112 + bob(1), false, 2);
+  oval(60, 138, 16, 3, 'rgba(35,29,51,.2)'); drawSpr(lucaSpr(), 52, 120, false, 2);
+}
 
 /* ---------------- loop ---------------- */
 let last = performance.now();
@@ -1484,6 +1790,7 @@ function loop(now) {
   else if (G.scene === 'drive') updateDrive(dt);
   else if (G.scene === 'finale' || G.scene === 'credits') updateFinale(dt);
   if (G.mode === 'lift') updateLift(dt);
+  if (G.mode === 'fetch') updateFetch(dt);
   nowPlaying(); tickClock(dt);
   ctx.setTransform(2, 0, 0, 2, 0, 0); ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, 240, 160);
   if (G.scene === 'title') renderTitle();
@@ -1492,6 +1799,8 @@ function loop(now) {
   else if (G.scene === 'lunch') renderLunch();
   else if (G.scene === 'battle') renderBattle();
   else if (G.scene === 'finale' || G.scene === 'credits') renderFinale();
+  else if (G.scene === 'wnight') renderWNight();
+  else if (G.scene === 'wend') renderWEnd();
   requestAnimationFrame(loop);
 }
 
@@ -1500,7 +1809,9 @@ function showTitle() {
   G.scene = 'title'; clearUI(); setChapter(CONFIG.name + "'s Big Day");
   ui.append(el('div', 'titlecard', '<h1>' + esc(CONFIG.name.toUpperCase()) + "'S<span>BIG DAY</span></h1><p class='keys'>Arrows to move · A to interact · B for your collection</p>"));
   const b = makeBtn('Press start', () => fade(() => loadMap('bedroom'))); b.classList.add('start');
-  ui.append(b); setMenu([b]); music('title');
+  const w = makeBtn('Weekend Adventure', () => startWeekend()); w.classList.add('start');
+  w.style.bottom = '14cqw'; w.style.animation = 'none'; w.style.background = 'var(--leaf)'; w.style.borderColor = '#fff'; w.style.boxShadow = '0 .6cqw 0 #2f7d59'; w.style.fontSize = 'max(11px,3cqw)'; w.style.padding = '1cqw 4cqw';
+  ui.append(b, w); setMenu([b, w]); music('title');
 }
 showTitle();
 requestAnimationFrame(loop);
