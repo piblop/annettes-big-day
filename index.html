@@ -282,8 +282,8 @@ const LOWER = {
   crop: ["...KKsSSSSsKK...", "....KPPPPPPK....", "....KPpKKpPK....", "....KBBKKBBK....", "....KKK..KKK...."],
   dress: ["...KtTTTTTTtK...", "..KtTTTTTTTTtK..", "..KKKKKKKKKKKK..", "....KSsKKsSK....", "....KKK..KKK...."]
 };
-// Luca the cavoodle: apricot curls, floppy ear, plume tail. Faces right; flip to face left.
-const LUCA_PAL = { K: INK, A: "#e0a866", a: "#f3c68f", g: "#b3763a", d: "#8f5a2b", C: "#f7e6c8", E: INK, W: "#ffffff", N: INK, R: "#f28b9b" };
+// Luca the cavoodle: teddy-bear face, long floppy ear, curly apricot coat, plume tail. 16x16, faces right; flip to face left.
+const LUCA_PAL = { K: INK, A: "#f1cfa0", a: "#fbe6c6", g: "#d7a76e", d: "#c28c55", C: "#fff6e8", E: INK, W: "#ffffff", N: INK, R: "#f6a4b0" };
 const SPR = {
   annette_pants: { pal: girlPal, rows: HEAD_F.concat(LOWER.pants) },
   annette_crop: { pal: girlPal, rows: HEAD_F.concat(LOWER.crop) },
@@ -293,9 +293,9 @@ const SPR = {
   annette_back_dress: { pal: girlPal, rows: HEAD_B.concat(LOWER.dress) },
   paulo: { pal: { K: INK, S: "#b57848", D: "#2a1d12", d: "#170f08", E: "#3a2414", T: "#1f1a24", t: "#141019", P: "#3f6fb0", p: "#2d5088", B: "#f4f6fb", b: "#15121c", s: "#9a6238" }, rows: ["................", "....KKKKKKKK....", "...KDDdDDdDDK...", "..KDDDDDDDDDDK..", "..KDdSSSSSSdDK..", "..KSSSSSSSSSSK..", ".KsSEESSSSEESsK.", "..KSSSSSSSSSSK..", "..KSSSsSSsSSSK..", "...KSSSKKSSSK...", "....KKsSSsKK...."].concat(BODY) },
   mum: { pal: { K: INK, S: "#f5cfae", R: "#eea0a0", L: "#c55a6c", E: "#6b4a32", M: "#4a3226", m: "#2f1f18", T: "#7fa383", t: "#5c7d60", P: "#5b5566", p: "#433f4c", B: "#f4f6fb", s: "#e2b28f" }, rows: ["................", "....KKKKKKKK....", "...KMMMmMMMMK...", "..KMMmMMMMmMMK..", "..KMMSSSSSSMMK..", "..KMSSSSSSSSMK..", "..KMSEESSEESMK..", "..KMRSSSSSSRMK..", "..KMSSSLLSSSMK..", "..KmKsSSSSsKmK..", "..KKKKsSSsKKKK..", "...KTTtSStTTK...", "..KTTTTTTTTTTK..", "..KTTtTTTTtTTK..", "..KSKTTTTTTKSK..", "...KKtttttKK....", "....KPPPPPPK....", "....KPpKKpPK....", "....KBBKKBBK....", "....KKK..KKK...."] },
-  luca: { pal: LUCA_PAL, rows: ["..........KKK...", ".KK......KaAaK..", "KaAK....KgAAAAK.", "KAaAK..KggAEWAK.", "KAAgK.KggdAEEAAK", ".KAgK.KgdgAAACCN", "..KAK.KggdAACRK.", "..KAKKKdgdAAAK..", "..KAaAaAgggACK..", "..KAAAAaAAAACK..", "..KAaAAAAAACCK..", "..KAgggggggCK...", "..KAAKKKKKAAK...", "..KAAK...KAAK...", "..KKKK...KKKK..."] },
-  luca_walk: { pal: LUCA_PAL, rows: ["..........KKK...", ".KK......KaAaK..", "KaAK....KgAAAAK.", "KAaAK..KggAEWAK.", "KAAgK.KggdAEEAAK", ".KAgK.KgdgAAACCN", "..KAK.KggdAACRK.", "..KAKKKdgdAAAK..", "..KAaAaAgggACK..", "..KAAAAaAAAACK..", "..KAaAAAAAACCK..", "..KAgggggggCK...", "..KAAKKKKKAAK...", "...KAAK.KAAK....", "...KKKK.KKKK...."] },
-  luca_wag: { pal: LUCA_PAL, rows: ["..........KKK...", "..KK.....KaAaK..", ".KaAK...KgAAAAK.", ".KAaAK.KggAEWAK.", ".KAAgKKggdAEEAAK", "..KAgKKgdgAAACCN", "..KAK.KggdAACRK.", "..KAKKKdgdAAAK..", "..KAaAaAgggACK..", "..KAAAAaAAAACK..", "..KAaAAAAAACCK..", "..KAgggggggCK...", "..KAAKKKKKAAK...", "..KAAK...KAAK...", "..KKKK...KKKK..."] },
+  luca: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gdAAAAAAa", "......gddAAKWAAA", ".aa...gdgdAAKAAA", "aAAa..gddAAAAACN", "AgAAa.gdgdAAACCK", "aAAAa.ggdAAACRC.", ".aAAAaagdgAAACa.", "..aAAAAAAaAAAAA.", "..AAgAAAgAAAAAa.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "...AAA...aAAA...", "...gAg...gAg....", "...KKK...KKK...."] },
+  luca_walk: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gdAAAAAAa", "......gddAAKWAAA", ".aa...gdgdAAKAAA", "aAAa..gddAAAAACN", "AgAAa.gdgdAAACCK", "aAAAa.ggdAAACRC.", ".aAAAaagdgAAACa.", "..aAAAAAAaAAAAA.", "..AAgAAAgAAAAAa.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "....AAA.aAAA....", "....gAg.gAg.....", "....KKK.KKK....."] },
+  luca_wag: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gdAAAAAAa", ".aa...gddAAKWAAA", "aAAa..gdgdAAKAAA", "AgAAa.gddAAAAACN", "aAAAa.gdgdAAACCK", ".aAAAaggdAAACRC.", "..aAAaagdgAAACa.", "..aAAAAAAaAAAAA.", "..AAgAAAgAAAAAa.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "...AAA...aAAA...", "...gAg...gAg....", "...KKK...KKK...."] },
   corolla: { pal: { K: INK, C: "#2f6fd1", c: "#1f4d99", V: "#cdeaf7", A: "#a7b0bf", Y: "#ffd966", R: "#e2554f", L: "#5b93e6", W: "#ffffff" }, rows: ["........KKKKKKKK........", ".......KVWVKVVWVK.......", "......KVWVVKVWVVVK......", "..KKKKLLLLLLLLLLLLKKKK..", ".KLLCCCCCCCCCCCCCCCCCCK.", "KYCCCCcCCCKCCCCcCCCCCRK.", "KCCCCCCCCCKCCCCCCCCCCCK.", "KcccKKKccccccccccKKKcccK", ".KcKAWAKccccccccKAWAKcK.", "..KKAKAK........KAKAK...", "....KKK..........KKK...."] },
   dumbbell: { pal: { K: INK, X: "#3a3d5c", A: "#a7b0bf", a: "#6f7788" }, rows: [".KK......KK.", "KXXK....KXXK", "KXXKAAAAKXXK", "KXXKaaaaKXXK", "KXXK....KXXK", ".KK......KK."] },
   cake: { pal: { K: INK, F: "#f7a8c4", W: "#ffffff", B: "#f3d9a8", Y: "#ffc53d", C: "#6ec3e8" }, rows: ["......YY......", "......CC......", "......CC......", "..KKKKKKKKKK..", ".KWWFWWFWWFWK.", ".KFFFFFFFFFFK.", ".KBBBBBBBBBBK.", ".KFFFFFFFFFFK.", ".KBBBBBBBBBBK.", "KKKKKKKKKKKKKK", "KWWWWWWWWWWWWK", ".KKKKKKKKKKKK."] },
@@ -1406,7 +1406,7 @@ function renderTitle() {
   // Annette front and centre
   sh(96, 48); drawSpr(annetteSprite(false, 'dress'), 96, 57 + bob(0), false, 3);
   // Luca out front, looking up at her
-  sh(64, 32); drawSpr(lucaSpr(), 64, 88, false, 2);
+  sh(64, 32); drawSpr(lucaSpr(), 64, 86, false, 2);
 }
 function renderFinale() {
   R(0, 0, 240, 30, '#141a3a'); R(0, 30, 240, 30, '#1c2346'); R(0, 60, 240, 30, '#28305c');
