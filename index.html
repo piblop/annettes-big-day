@@ -406,6 +406,34 @@ const OUTFITS = {
   dress: { name: "Blue dress", style: "dress", top: "#3b5bdb", bottom: "#3b5bdb" }
 };
 function lucaSpr(moving, t) { if (moving) return sprite(Math.floor((t != null ? t : G.t) * 4) % 2 ? 'luca_walk' : 'luca'); return sprite(Math.floor(G.t * 3) % 2 ? 'luca_wag' : 'luca'); }
+function lucaFrame(moving, t, ov) { const key = moving ? (Math.floor(t * 8) % 2 ? 'luca_walk' : 'luca') : (Math.floor(t * 3) % 2 ? 'luca_wag' : 'luca'); return sprite(key, ov || undefined); }
+// Luca is a very good, very expressive boy: bounces, wiggles, spins and does big squash-and-stretch jumps
+function drawLuca(x, y, opts) {
+  opts = opts || {};
+  const scale = opts.scale || 1;
+  const t = (opts.t != null ? opts.t : G.t) + (opts.phase || 0);
+  let flip = !!opts.flip, dy = 0, rot = 0, sx = 1, sy = 1, moving = !!opts.moving, frameMoving = moving;
+  if (moving) {
+    dy = -Math.abs(Math.sin(t * 12)) * 1.5 * scale;                 // trotting bob
+  } else if (opts.dance !== false) {
+    const c = t % 4.6;
+    if (c < 1.5) { const h = Math.abs(Math.sin(t * 6)); dy = -h * 5 * scale; sy = 1 + h * 0.16; sx = 1 - h * 0.12; }   // bouncy hops
+    else if (c < 2.4) { rot = Math.sin(t * 12) * 0.24; dy = -Math.abs(Math.sin(t * 6)) * 2 * scale; }                 // happy wiggle
+    else if (c < 3.3) { rot = ((c - 2.4) / 0.9) * Math.PI * 2; dy = -3 * scale; }                                     // spin
+    else { const h = Math.abs(Math.sin(t * 4.2)); dy = -h * 10 * scale; sy = 1 + h * 0.22; sx = 1 - h * 0.18; frameMoving = true; if (h < 0.12) { sy = 0.82; sx = 1.18; } }   // big jumps + landing squash
+  } else {
+    sy = 1 + Math.sin(t * 3) * 0.03;                                // gentle idle breathing
+  }
+  const img = lucaFrame(frameMoving, t, opts.ov);
+  const sc = scale / (img.hi || 1), iw = img.width * sc, ih = img.height * sc;
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.translate(Math.round(x) + iw / 2, Math.round(y) + ih + dy);
+  ctx.rotate(rot);
+  ctx.scale(flip ? -sx : sx, sy);
+  ctx.drawImage(img, -iw / 2, -ih, iw, ih);
+  ctx.restore();
+}
 function annetteSprite(back, outfit) { const o = OUTFITS[outfit || G.wearing]; return sprite((back ? 'annette_back_' : 'annette_') + o.style, { T: o.top, P: o.bottom }); }
 
 /* ---------------- state ---------------- */
@@ -1476,10 +1504,10 @@ function renderFetch() {
   for (let ty = 0; ty < 10; ty++) for (let tx = 0; tx < 15; tx++) drawFloor('park', tx * 16, ty * 16, tx, ty);
   R(0, 0, 240, 8, '#8fd36b'); for (let i = 2; i < 240; i += 6) { R(i, 1, 2, 7, '#dab77f'); R(i, 1, 2, 1, '#efd4a2'); }
   drawObject('park', 'T', 8, 40, 16, 16); drawObject('park', 'T', 216, 46, 16, 16);
-  L.dogs.forEach(d => { oval(d.x + 8, d.y + 15, 5, 2, 'rgba(35,29,51,.18)'); drawSpr(sprite(Math.floor(G.t * 3 + d.p) % 2 ? 'luca_wag' : 'luca', d.ov), d.x, d.y, d.flip); });
+  L.dogs.forEach(d => { oval(d.x + 8, d.y + 15, 5, 2, 'rgba(35,29,51,.18)'); drawLuca(d.x, d.y, { ov: d.ov, flip: d.flip, phase: d.p * 1.5 }); });
   const b = L.ball, ents = [];
   ents.push({ y: L.ann.y, d: () => { oval(L.ann.x + 8, L.ann.y + 15, 6, 2, 'rgba(35,29,51,.18)'); drawSpr(annetteSprite(true), L.ann.x, L.ann.y - 4); } });
-  ents.push({ y: L.luca.y, d: () => { oval(L.luca.x + 8, L.luca.y + 15, 6, 2, 'rgba(35,29,51,.18)'); drawSpr(lucaSpr(L.luca.run, L.t), L.luca.x, L.luca.y); } });
+  ents.push({ y: L.luca.y, d: () => { oval(L.luca.x + 8, L.luca.y + 15, 6, 2, 'rgba(35,29,51,.18)'); drawLuca(L.luca.x, L.luca.y, { moving: L.luca.run, flip: L.luca.flip, t: L.t }); } });
   ents.push({ y: b.gy, d: () => { oval(b.gx, b.gy, 3 + b.z * 0.03, 1.6, 'rgba(35,29,51,.2)'); oval(b.gx, b.gy - b.z, 3.2, 3.2, '#c7e05a', INK); R(Math.round(b.gx - 2), Math.round(b.gy - b.z - 1), 3, 1, '#eaf5a8'); } });
   ents.sort((a, c) => a.y - c.y).forEach(e => e.d());
   if (L.phase === 'aim') {
@@ -1690,13 +1718,13 @@ function renderMap() {
   for (let ty = 0; ty < tiles.length; ty++) for (let tx = 0; tx < tiles[0].length; tx++) {
     const c = tiles[ty][tx];
     const n = def.npc && def.npc(c, tx, ty);
-    if (n) ents.push({ y: ty * 16, d: () => { oval(tx * 16 + 8, ty * 16 + 15, 6, 2, 'rgba(35,29,51,.18)'); drawSpr(sprite(n[0], n[1]), tx * 16, ty * 16 - 4, false); } });
+    if (n) ents.push({ y: ty * 16, d: () => { oval(tx * 16 + 8, ty * 16 + 15, 6, 2, 'rgba(35,29,51,.18)'); if (n[0] && n[0].indexOf('luca') === 0) drawLuca(tx * 16, ty * 16 - 4, { ov: n[1], phase: tx * 0.8 + ty * 0.3 }); else drawSpr(sprite(n[0], n[1]), tx * 16, ty * 16 - 4, false); } });
     if (c === 'h') ents.push({ y: ty * 16, d: () => drawSpr(sprite('heart'), tx * 16 + 4, ty * 16 + 5 + Math.round(Math.sin(G.t * 4 + tx) * 1.5), false) });
     if (c === 'q') ents.push({ y: ty * 16, d: () => drawSpr(sprite('cake'), tx * 16 + 1, ty * 16 + 3, false) });
   }
   const p = G.p, l = G.l;
   const pb = p.mv ? (Math.floor(p.mv.t * 4) % 2) : 0;
-  if (l) ents.push({ y: l.py, d: () => { oval(l.px + 8, l.py + 15, 6, 2, 'rgba(35,29,51,.18)'); drawSpr(lucaSpr(!!l.mv, l.mv ? l.mv.t : null), l.px, l.py + 1, l.flip); } });
+  if (l) ents.push({ y: l.py, d: () => { oval(l.px + 8, l.py + 15, 6, 2, 'rgba(35,29,51,.18)'); drawLuca(l.px, l.py + 1, { moving: !!l.mv, flip: l.flip }); } });
   ents.push({ y: p.py + 0.5, d: () => { oval(p.px + 8, p.py + 15, 6, 2, 'rgba(35,29,51,.18)'); drawSpr(annetteSprite(p.dir === 'up'), p.px, p.py - 4 - pb, false); } });
   ents.sort((a, b) => a.y - b.y).forEach(e => e.d());
   // life-sim touch: a little speech bubble floats over whoever is talking
@@ -1782,7 +1810,7 @@ function renderTitle() {
   // Annette front and centre
   sh(96, 48); drawSpr(annetteSprite(false, 'dress'), 96, 57 + bob(0), false, 3);
   // Luca out front, looking up at her
-  sh(64, 32); drawSpr(lucaSpr(), 64, 86, false, 2);
+  sh(64, 32); drawLuca(64, 86, { scale: 2 });
 }
 function renderFinale() {
   R(0, 0, 240, 30, '#141a3a'); R(0, 30, 240, 30, '#1c2346'); R(0, 60, 240, 30, '#28305c');
@@ -1837,7 +1865,7 @@ function renderWEnd() {
   const bob = o => Math.round(Math.sin(G.t * 3 + o));
   oval(96, 140, 20, 4, 'rgba(35,29,51,.2)'); drawSpr(annetteSprite(false, G.wearing), 84, 112 + bob(0), false, 2);
   oval(148, 140, 20, 4, 'rgba(35,29,51,.2)'); drawSpr(sprite('paulo'), 136, 112 + bob(1), false, 2);
-  oval(60, 138, 16, 3, 'rgba(35,29,51,.2)'); drawSpr(lucaSpr(), 52, 120, false, 2);
+  oval(60, 138, 16, 3, 'rgba(35,29,51,.2)'); drawLuca(52, 120, { scale: 2 });
 }
 
 /* ---------------- loop ---------------- */
