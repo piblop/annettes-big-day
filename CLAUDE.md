@@ -19,7 +19,7 @@ A birthday gift game for Annette, built by Paulo. A top-down, handheld-style pix
 
 ## How index.html is organised (search for these banners)
 - `EDIT ME` / `CONFIG`: all personal content (names, car, company, drinks, dishes, inside jokes, secrets, finale speech)
-- `sprites`: pixel sprites as string rows. Each char maps to a palette key, `.` is transparent. Annette is built from `HEAD_F`/`HEAD_B` plus a `LOWER` style (`pants`, `crop`, `dress`). Lower-case keys are shades: when an override recolours `T`, `P`, `H`, `D` or `M`, the matching lower-case key is darkened automatically, so shading follows every outfit and NPC
+- `sprites`: pixel sprites as string rows. Each char maps to a palette key, `.` is transparent. Annette is built from `HEAD_F`/`HEAD_B` plus a `LOWER` style (`pants`, `crop`, `dress`). Characters use villager proportions: a big round head (12 of 20 rows), tall 2x3 oval eyes with a `W` highlight in the top-right pixel, a tiny mouth, stubby arms and a short body. Lower-case keys are shades: when an override recolours `T`, `P`, `H`, `D` or `M`, the matching lower-case key is darkened automatically, so shading follows every outfit and NPC
 - Luca: `luca`, `luca_walk`, `luca_wag` (side view, faces right, flip to face left). Use `lucaSpr(moving)` to pick the frame
 - `state`, `HUD` (needs-style bars coloured by level via `needColour`, in-game clock via `SCENE_TIME` / `setClock`), `audio` (WebAudio SFX + tiny chiptune sequencer), `input` (keyboard + on-screen D-pad/A/B)
 - `UI primitives`: `say()` dialogue with typewriter, `setMenu()` keyboard/touch menus, `fade()`
