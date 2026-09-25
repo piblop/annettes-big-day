@@ -792,11 +792,15 @@ const MAPS = {
   },
   park: {
     theme: 'park', title: 'Weekend Pack: the dog park',
-    rows: ["###############", "#T....T.....T.#", "#.............#", "#....g........#", "#.......A.....#", "#.............#", "#..b.......b..#", "#.............#", "#.............#", "######D########"],
+    rows: ["###############", "#T....T.....T.#", "#..........y..#", "#....g....k...#", "#.......A.....#", "#..o.......y..#", "#..b.......b..#", "#....k........#", "#.............#", "######D########"],
     start: { x: 7, y: 8, dir: 'up' }, luca: { x: 9, y: 8 },
-    npc: c => c === 'A' ? ['paulo', {}] : null,
+    npc: (c, x) => {
+      if (c === 'A') return ['paulo', {}];
+      if (c === 'y' || c === 'k' || c === 'o') { const wag = Math.floor(G.t * 3 + x) % 2 ? 'luca_wag' : 'luca'; const ov = c === 'y' ? { A: '#e8b84e' } : c === 'k' ? { A: '#4a4a4a' } : { A: '#e9e4dd', g: '#b8b0a6', d: '#8f867c' }; return [wag, ov]; }
+      return null;
+    },
     hints: () => [!F.wkFetch && 'g', F.wkFetch && 'D'],
-    onEnter() { G.wearing = 'sunny'; if (!G.lucaPat.park) { G.lucaPat.park = true; stat('happy', 5); } say(["Off-leash heaven. Luca does a full lap of zoomies.", { n: CONFIG.boyfriend, t: "Grab the ball. He's already staring at it." }]); },
+    onEnter() { G.wearing = 'sunny'; if (!G.lucaPat.park) { G.lucaPat.park = true; stat('happy', 5); } say(["Off-leash heaven. The park is full of happy dogs today.", "Luca does a lap of zoomies to say hello to everyone.", { n: CONFIG.boyfriend, t: "Grab the ball. He's already staring at it." }]); },
     doorOpen: () => F.wkFetch,
     doorLocked: () => "One round of fetch first, Luca's begging.",
     onDoor() { G.mode = 'busy'; say(["Luca trots home happy and worn out.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(() => loadMap('home'))); },
@@ -804,6 +808,9 @@ const MAPS = {
       g: () => F.wkFetch ? say("The ball's thoroughly slobbered. Luca is content.") : fetchGame(),
       T: () => say("A big shady gum. Cicadas going nuts."),
       b: () => say("A park bench. Prime dog-watching seat."),
+      y: () => say("A golden retriever, utterly ball-obsessed."),
+      k: () => say("A sleek black lab nailing every recall."),
+      o: () => say("A fluffy grey pup, all bounce and zero chill."),
       A: () => say(F.wkFetch ? { n: CONFIG.boyfriend, t: "He's going to sleep the whole way home." } : { n: CONFIG.boyfriend, t: "Off the leash! Go on, Luca!" })
     }
   },
@@ -1385,43 +1392,103 @@ function groceryGame() {
   p.querySelector('.grid2').append(...btns); upd();
   setMenu(btns, { cols: 2, onBack: () => { clearUI(); G.mode = 'map'; } });
 }
-/* fetch: a timing bar, modeled on the squat-rack lift game */
+/* fetch: throw the ball across the field and Luca actually chases it and brings it back */
+const FETCH_DOGS = [
+  { x: 18, y: 44, ov: { A: '#e8b84e' }, p: 0, flip: false },
+  { x: 206, y: 56, ov: { A: '#4a4a4a' }, p: 1, flip: true },
+  { x: 150, y: 30, ov: { A: '#e9e4dd', g: '#b8b0a6', d: '#8f867c' }, p: 2, flip: false }
+];
 function fetchGame() {
   clearUI();
-  G.fetch = { round: 0, pos: 0, dir: 1, speed: 1.0, zc: 0.5, zw: 0.2, res: [], lock: 0, end: 0 };
-  const p = el('div', 'panel');
-  p.innerHTML = '<h2>Fetch with Luca</h2><p class="sub">Press A when the marker is in the pink zone. Three throws for the goodest boy.</p><div class="bar"><div class="zone"></div><div class="mark"></div></div><p class="result">Throw 1 of 3</p><div class="reps">' + '<span class="rep"></span>'.repeat(3) + '</div>';
-  const tap = el('button', 'opt', 'Throw!'); tap.type = 'button'; tap.style.alignItems = 'center';
-  tap.addEventListener('pointerdown', e => { e.preventDefault(); fetchPress(); });
-  p.append(tap); ui.append(p);
-  G.fetch.el = p; G.mode = 'fetch'; placeFetchZone();
+  G.scene = 'fetch'; G.mode = 'fetch';
+  const ann = { x: 54, y: 116 }, luca = { x: 74, y: 118, run: false, flip: false, has: false };
+  G.fetch = {
+    round: 0, total: 3, results: [], phase: 'aim',
+    power: 0, pdir: 1, lastPower: 0, t: 0, endTimer: 0,
+    ann, luca, dogs: FETCH_DOGS,
+    ball: { gx: 70, gy: 116, z: 9, gvx: 0, gvy: 0, vz: 0, held: true, stopped: false }
+  };
+  const h = el('div', 'hint', 'Throw 1 of 3 — press A to throw. A bigger throw is a happier Luca!');
+  ui.append(h); G.fetch.hint = h;
+  sfx('blip');
 }
-function placeFetchZone() { const L = G.fetch, z = L.el.querySelector('.zone'); z.style.left = ((L.zc - L.zw / 2) * 100) + '%'; z.style.width = (L.zw * 100) + '%'; }
+function fetchTier(p) { return p >= 0.72 ? 'great' : p >= 0.42 ? 'good' : 'short'; }
+function fetchHint(t) { if (G.fetch && G.fetch.hint) G.fetch.hint.textContent = t; }
+function fetchThrow() {
+  const L = G.fetch, b = L.ball, P = L.power;
+  L.lastPower = P; L.phase = 'fly';
+  b.held = false; b.stopped = false;
+  b.gvx = Math.random() * 24 - 12; b.gvy = -(70 + P * 95); b.vz = 55 + P * 45;
+  L.luca.run = true; sfx('select'); fetchHint('Go get it, Luca!');
+}
+function fetchPress() { const L = G.fetch; if (L && L.phase === 'aim') fetchThrow(); }
 function updateFetch(dt) {
-  const L = G.fetch; if (!L) return;
-  if (L.end) { L.end -= dt; if (L.end <= 0) { L.end = 0; finishFetch(); } return; }
-  if (L.lock > 0) { L.lock -= dt; return; }
-  L.pos += L.dir * L.speed * dt;
-  if (L.pos > 1) { L.pos = 1; L.dir = -1; } if (L.pos < 0) { L.pos = 0; L.dir = 1; }
-  L.el.querySelector('.mark').style.left = (L.pos * 100) + '%';
+  const L = G.fetch; if (!L) return; L.t += dt;
+  const b = L.ball, lu = L.luca;
+  if (L.phase === 'aim') {
+    L.power += L.pdir * 1.1 * dt;
+    if (L.power >= 1) { L.power = 1; L.pdir = -1; } if (L.power <= 0) { L.power = 0; L.pdir = 1; }
+    b.gx = L.ann.x + 16; b.gy = L.ann.y; b.z = 9;
+    return;
+  }
+  if (L.phase === 'done') { L.endTimer -= dt; if (L.endTimer <= 0) finishFetch(); return; }
+  if (L.phase === 'fly') {
+    if (!b.stopped) {
+      b.gx += b.gvx * dt; b.gy += b.gvy * dt;
+      b.z += b.vz * dt; b.vz -= 150 * dt;
+      if (b.z <= 0) { b.z = 0; if (b.vz < -25) { b.vz = -b.vz * 0.4; sfx('blip'); } else { b.vz = 0; b.gvy *= 0.8; b.gvx *= 0.8; } }
+      b.gy = clamp(b.gy, 22, 150); b.gx = clamp(b.gx, 12, 226);
+      if (b.z === 0 && Math.abs(b.gvy) < 10 && Math.abs(b.gvx) < 10) { b.gvx = 0; b.gvy = 0; b.stopped = true; }
+    }
+    const dx = b.gx - lu.x, dy = b.gy - lu.y, d = Math.hypot(dx, dy) || 1;
+    if (d > 3) { const s = 108 * dt; lu.x += dx / d * s; lu.y += dy / d * s; lu.flip = dx < 0; lu.run = true; }
+    if (b.stopped && d < 9) { lu.has = true; b.held = true; L.phase = 'return'; sfx('pickup'); fetchHint('Good boy! Bringing it back...'); }
+    return;
+  }
+  if (L.phase === 'return') {
+    const tx = L.ann.x + 18, ty = L.ann.y, dx = tx - lu.x, dy = ty - lu.y, d = Math.hypot(dx, dy) || 1;
+    if (d > 4) { const s = 100 * dt; lu.x += dx / d * s; lu.y += dy / d * s; lu.flip = dx < 0; lu.run = true; }
+    else { lu.run = false; fetchRoundDone(); }
+    b.gx = lu.x + (lu.flip ? 0 : 14); b.gy = lu.y + 8; b.z = 6;
+    return;
+  }
 }
-function fetchPress() {
-  const L = G.fetch; if (!L || L.lock > 0 || L.end || L.round >= 3) return;
-  const d = Math.abs(L.pos - L.zc), half = L.zw / 2;
-  const r = d <= half * 0.4 ? 'perfect' : d <= half ? 'good' : 'miss';
-  L.res.push(r); L.el.querySelectorAll('.rep')[L.round].classList.add(r);
-  sfx(r === 'miss' ? 'bad' : 'good');
-  L.round++;
-  L.el.querySelector('.result').textContent = (r === 'perfect' ? 'Perfect throw!' : r === 'good' ? 'Good throw.' : 'Luca lost it in the bushes.') + (L.round < 3 ? '  Throw ' + (L.round + 1) + ' of 3' : '');
-  if (L.round >= 3) { L.end = 0.8; return; }
-  L.lock = 0.4; L.speed += 0.18; L.zw = Math.max(0.12, L.zw - 0.02); L.zc = 0.25 + Math.random() * 0.5; placeFetchZone();
+function fetchRoundDone() {
+  const L = G.fetch, tier = fetchTier(L.lastPower);
+  L.results.push(tier); L.round++;
+  sfx(tier === 'great' ? 'good' : 'blip');
+  if (L.round >= L.total) { L.phase = 'done'; L.endTimer = 0.7; fetchHint('What a team!'); return; }
+  L.phase = 'aim'; L.power = 0; L.pdir = 1;
+  L.luca.has = false; L.ball.held = true; L.ball.stopped = false;
+  L.luca.x = L.ann.x + 20; L.luca.y = L.ann.y + 2; L.luca.flip = false; L.luca.run = false;
+  fetchHint('Throw ' + (L.round + 1) + ' of 3 — press A to throw!');
 }
 function finishFetch() {
-  const L = G.fetch, good = L.res.filter(r => r !== 'miss').length;
-  G.fetch = null; clearUI(); F.wkFetch = true; G.mode = 'map';
-  stat('happy', good * 3 + 3);
-  if (good >= 3) { sfx('pr'); say(["Every throw, perfect fetch. Luca is BUZZING.", { n: CONFIG.boyfriend, t: "Olympic level, both of you." }]); }
-  else say([good + " good throw" + (good === 1 ? '' : 's') + ". Luca had the time of his life.", "Tongue out, tail spinning. Very good boy."]);
+  const L = G.fetch, great = L.results.filter(r => r === 'great').length, ok = L.results.filter(r => r !== 'short').length;
+  G.fetch = null; clearUI(); F.wkFetch = true; G.scene = 'map'; G.mode = 'map';
+  stat('happy', ok * 3 + great * 2 + 3);
+  if (great >= 3) { sfx('pr'); say(["Three huge throws, three perfect fetches. Luca is BUZZING.", { n: CONFIG.boyfriend, t: "Olympic level, both of you." }]); }
+  else if (ok >= 2) say(["Great session. Luca chased down every one.", "Tongue out, tail spinning. Very good boy."]);
+  else say(["A few gentle lobs. Luca still had the time of his life.", "He flops down, thoroughly pleased."]);
+}
+function renderFetch() {
+  const L = G.fetch; if (!L) return;
+  for (let ty = 0; ty < 10; ty++) for (let tx = 0; tx < 15; tx++) drawFloor('park', tx * 16, ty * 16, tx, ty);
+  R(0, 0, 240, 8, '#8fd36b'); for (let i = 2; i < 240; i += 6) { R(i, 1, 2, 7, '#dab77f'); R(i, 1, 2, 1, '#efd4a2'); }
+  drawObject('park', 'T', 8, 40, 16, 16); drawObject('park', 'T', 216, 46, 16, 16);
+  L.dogs.forEach(d => { oval(d.x + 8, d.y + 15, 5, 2, 'rgba(35,29,51,.18)'); drawSpr(sprite(Math.floor(G.t * 3 + d.p) % 2 ? 'luca_wag' : 'luca', d.ov), d.x, d.y, d.flip); });
+  const b = L.ball, ents = [];
+  ents.push({ y: L.ann.y, d: () => { oval(L.ann.x + 8, L.ann.y + 15, 6, 2, 'rgba(35,29,51,.18)'); drawSpr(annetteSprite(true), L.ann.x, L.ann.y - 4); } });
+  ents.push({ y: L.luca.y, d: () => { oval(L.luca.x + 8, L.luca.y + 15, 6, 2, 'rgba(35,29,51,.18)'); drawSpr(lucaSpr(L.luca.run, L.t), L.luca.x, L.luca.y); } });
+  ents.push({ y: b.gy, d: () => { oval(b.gx, b.gy, 3 + b.z * 0.03, 1.6, 'rgba(35,29,51,.2)'); oval(b.gx, b.gy - b.z, 3.2, 3.2, '#c7e05a', INK); R(Math.round(b.gx - 2), Math.round(b.gy - b.z - 1), 3, 1, '#eaf5a8'); } });
+  ents.sort((a, c) => a.y - c.y).forEach(e => e.d());
+  if (L.phase === 'aim') {
+    const bw = 150, bx = (240 - bw) / 2, by = 146;
+    R(bx - 2, by - 2, bw + 4, 9, INK); R(bx, by, bw, 5, '#efe6d2');
+    R(bx, by, bw * L.power, 5, L.power > 0.72 ? '#e2554f' : L.power > 0.42 ? '#ffd166' : '#3fae7c');
+    R(bx + bw * 0.72, by - 2, 1, 9, 'rgba(35,29,51,.4)');
+  }
+  for (let i = 0; i < L.total; i++) { const done = L.results[i]; const c = !done ? '#efe6d2' : done === 'great' ? '#3fae7c' : done === 'good' ? '#ffd166' : '#c9b18e'; R(8 + i * 8, 8, 6, 6, INK); R(9 + i * 8, 9, 4, 4, c); }
 }
 function weekendOut() {
   clearUI(); G.scene = 'wnight'; G.mode = 'busy'; clockMin = 19 * 60; drawClock(); setChapter('Weekend Pack: a night out');
@@ -1801,6 +1868,7 @@ function loop(now) {
   else if (G.scene === 'finale' || G.scene === 'credits') renderFinale();
   else if (G.scene === 'wnight') renderWNight();
   else if (G.scene === 'wend') renderWEnd();
+  else if (G.scene === 'fetch') renderFetch();
   requestAnimationFrame(loop);
 }
 
