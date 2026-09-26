@@ -340,6 +340,7 @@ const SPR = {
   luca: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gddAAAAAa", "......gddAANWAAA", ".aa...gdgdAANAAA", "aAAa..gddAAAAACN", "AgAAa.gdgdAAACCN", "aAAAa.ggdAAACRC.", ".aAAAaagdgAAACC.", "..aAAgAAaAAAAAA.", "..AAgAAAgAAAaAA.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "...AAA...aAAA...", "...gAg...gAg....", "...KKK...KKK...."] },
   luca_walk: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gddAAAAAa", "......gddAANWAAA", ".aa...gdgdAANAAA", "aAAa..gddAAAAACN", "AgAAa.gdgdAAACCN", "aAAAa.ggdAAACRC.", ".aAAAaagdgAAACC.", "..aAAgAAaAAAAAA.", "..AAgAAAgAAAaAA.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "....AAA.aAAA....", "....gAg.gAg.....", "....KKK.KKK....."] },
   luca_wag: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gddAAAAAa", ".aa...gddAANWAAA", "aAAa..gdgdAANAAA", "AgAAa.gddAAAAACN", "aAAAa.gdgdAAACCN", ".aAAAaggdAAACRC.", "..aAAaagdgAAACC.", "..aAAgAAaAAAAAA.", "..AAgAAAgAAAaAA.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "...AAA...aAAA...", "...gAg...gAg....", "...KKK...KKK...."] },
+  luca_wag2: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gddAAAAAa", "......gddAANWAAA", "......gdgdAANAAA", ".aa...gddAAAAACN", "aAAa..gdgdAAACCN", "AgAAa.ggdAAACRC.", "aAAAa.agdgAAACC.", ".aAAAaAAaAAAAAA.", "..AAgAAAgAAAaAA.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "...AAA...aAAA...", "...gAg...gAg....", "...KKK...KKK...."] },
   corolla: { pal: { K: INK, C: "#2f6fd1", c: "#1f4d99", V: "#cdeaf7", A: "#a7b0bf", Y: "#ffd966", R: "#e2554f", L: "#5b93e6", W: "#ffffff" }, rows: ["........KKKKKKKK........", ".......KVWVKVVWVK.......", "......KVWVVKVWVVVK......", "..KKKKLLLLLLLLLLLLKKKK..", ".KLLCCCCCCCCCCCCCCCCCCK.", "KYCCCCcCCCKCCCCcCCCCCRK.", "KCCCCCCCCCKCCCCCCCCCCCK.", "KcccKKKccccccccccKKKcccK", ".KcKAWAKccccccccKAWAKcK.", "..KKAKAK........KAKAK...", "....KKK..........KKK...."] },
   dumbbell: { pal: { K: INK, X: "#3a3d5c", A: "#a7b0bf", a: "#6f7788" }, rows: [".KK......KK.", "KXXK....KXXK", "KXXKAAAAKXXK", "KXXKaaaaKXXK", "KXXK....KXXK", ".KK......KK."] },
   cake: { pal: { K: INK, F: "#f7a8c4", W: "#ffffff", B: "#f3d9a8", Y: "#ffc53d", C: "#6ec3e8" }, rows: ["......YY......", "......CC......", "......CC......", "..KKKKKKKKKK..", ".KWWFWWFWWFWK.", ".KFFFFFFFFFFK.", ".KBBBBBBBBBBK.", ".KFFFFFFFFFFK.", ".KBBBBBBBBBBK.", "KKKKKKKKKKKKKK", "KWWWWWWWWWWWWK", ".KKKKKKKKKKKK."] },
@@ -415,8 +416,10 @@ const OUTFITS = {
   pink: { name: "Pink power", style: "pants", note: "Pink knit, white pants", top: "#ff9fb8", bottom: "#f4f6fb" },
   dress: { name: "Blue dress", style: "dress", top: "#3b5bdb", bottom: "#3b5bdb" }
 };
-function lucaSpr(moving, t) { if (moving) return sprite(Math.floor((t != null ? t : G.t) * 4) % 2 ? 'luca_walk' : 'luca'); return sprite(Math.floor(G.t * 3) % 2 ? 'luca_wag' : 'luca'); }
-function lucaFrame(moving, t, ov) { const key = moving ? (Math.floor(t * 8) % 2 ? 'luca_walk' : 'luca') : (Math.floor(t * 3) % 2 ? 'luca_wag' : 'luca'); return sprite(key, ov || undefined); }
+// tail wag: cycle the plume up > mid > down > mid for a proper side-view wag
+function wagKey(t) { return ['luca_wag', 'luca', 'luca_wag2', 'luca'][Math.floor(t * 8) % 4]; }
+function lucaSpr(moving, t) { const tt = t != null ? t : G.t; if (moving) return sprite(Math.floor(tt * 4) % 2 ? 'luca_walk' : wagKey(tt)); return sprite(wagKey(G.t)); }
+function lucaFrame(moving, t, ov) { const key = moving ? (Math.floor(t * 8) % 2 ? 'luca_walk' : wagKey(t)) : wagKey(t); return sprite(key, ov || undefined); }
 // Luca is a very good boy: a calm continuous bounce, with an occasional happy jump or a quick spin.
 // Motion is spaced out and quantised to whole pixels so it reads clean, not frantic.
 function drawLuca(x, y, opts) {
@@ -835,7 +838,7 @@ const MAPS = {
     start: { x: 7, y: 8, dir: 'up' }, luca: { x: 9, y: 8 },
     npc: (c, x) => {
       if (c === 'A') return ['paulo', {}];
-      if (c === 'y' || c === 'k' || c === 'o') { const wag = Math.floor(G.t * 3 + x) % 2 ? 'luca_wag' : 'luca'; const ov = c === 'y' ? { A: '#e8b84e' } : c === 'k' ? { A: '#4a4a4a' } : { A: '#e9e4dd', g: '#b8b0a6', d: '#8f867c' }; return [wag, ov]; }
+      if (c === 'y' || c === 'k' || c === 'o') { const wag = wagKey(G.t + x * 0.4); const ov = c === 'y' ? { A: '#e8b84e' } : c === 'k' ? { A: '#4a4a4a' } : { A: '#e9e4dd', g: '#b8b0a6', d: '#8f867c' }; return [wag, ov]; }
       return null;
     },
     hints: () => [!F.wkFetch && 'g', F.wkFetch && 'D'],
