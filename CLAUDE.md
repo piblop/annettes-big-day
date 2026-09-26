@@ -26,6 +26,7 @@ A birthday gift game for Annette, built by Paulo. A top-down, handheld-style pix
 - `maps`: `MAPS` object. Each map is 15x10 tiles of 16px on a 240x160 canvas
 - Chapter logic: bedroom, drive, gym + lift mini-game, battles, office report sprint, beach, The Botanist, finale, credits
 - `tile art`: `drawFloor`, `drawWall`, `drawObject` per theme, plus `mapDecor(theme, 'under'|'over')` for rugs (drawn before furniture) and lighting overlays (fairy lights, golden hour)
+- Pet Luca mini-game: interacting with Luca (facing him and pressing A) calls `lucaTalk()` which launches `petGame()` (scene/mode `pet`). Time each pat to the moving paw hitting the green sweet-spot on the timing bar (reuses the fetch/lift timing-bar pattern) to fill a heart love meter; at 100% Luca flops for a cuddle finale with a heart shower. First cuddle per map grants happy (tracked by `G.lucaPat[mapId]`); replays give a tiny bump. Works anywhere Luca appears (bedroom, and the weekend maps where he tags along).
 - `loop`: update + render per `G.scene`
 
 ## Map legend (per theme)

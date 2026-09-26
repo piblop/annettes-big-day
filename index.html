@@ -337,9 +337,9 @@ const SPR = {
   mum: { pal: { K: INK, S: "#f5cfae", R: "#eea0a0", L: "#c55a6c", E: "#6b4a32", M: "#4a3226", m: "#2f1f18", T: "#7fa383", t: "#5c7d60", P: "#5b5566", p: "#433f4c", B: "#f4f6fb", s: "#e2b28f", W: "#ffffff" }, rows: ["....KKKKKKKK....", "...KMMMmMMMMK...", "..KMMmMMMMmMMK..", ".KMMMMMMMMMMMMK.", ".KMMmSSSSSSmMMK.", ".KMmSSSSSSSSmMK.", ".KMmSEWSSEWSSMK.", ".KMmSEESSEESSMK.", ".KMmSEESSEESSMK.", ".KMmRSSSSSSRmMK.", ".KMmSSSLLSSSmMK.", ".KMMmSSSSSSmMMK.", ".KmMKTTTTTTKMmK.", ".KmMTtTTTTtTMmK.", "..KSKtTTTTtKSK..", "...KKtTTTTtKK...", "....KPPPPPPK....", "....KPpKKpPK....", "....KBBKKBBK....", "....KKK..KKK...."] },
   npc_a: { pal: GEN_PAL, rows: GEN_HEAD.concat(BODY) },
   npc_b: { pal: GEN_PAL, rows: GEN_HEAD_BUN.concat(BODY) },
-  luca: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gdAAAAAAa", "......gddAAKWAAA", ".aa...gdgdAAKAAA", "aAAa..gddAAAAACN", "AgAAa.gdgdAAACCK", "aAAAa.ggdAAACRC.", ".aAAAaagdgAAACa.", "..aAAAAAAaAAAAA.", "..AAgAAAgAAAAAa.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "...AAA...aAAA...", "...gAg...gAg....", "...KKK...KKK...."] },
-  luca_walk: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gdAAAAAAa", "......gddAAKWAAA", ".aa...gdgdAAKAAA", "aAAa..gddAAAAACN", "AgAAa.gdgdAAACCK", "aAAAa.ggdAAACRC.", ".aAAAaagdgAAACa.", "..aAAAAAAaAAAAA.", "..AAgAAAgAAAAAa.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "....AAA.aAAA....", "....gAg.gAg.....", "....KKK.KKK....."] },
-  luca_wag: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gdAAAAAAa", ".aa...gddAAKWAAA", "aAAa..gdgdAAKAAA", "AgAAa.gddAAAAACN", "aAAAa.gdgdAAACCK", ".aAAAaggdAAACRC.", "..aAAaagdgAAACa.", "..aAAAAAAaAAAAA.", "..AAgAAAgAAAAAa.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "...AAA...aAAA...", "...gAg...gAg....", "...KKK...KKK...."] },
+  luca: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gddAAAAAa", "......gddAANWAAA", ".aa...gdgdAANAAA", "aAAa..gddAAAAACN", "AgAAa.gdgdAAACCN", "aAAAa.ggdAAACRC.", ".aAAAaagdgAAACC.", "..aAAgAAaAAAAAA.", "..AAgAAAgAAAaAA.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "...AAA...aAAA...", "...gAg...gAg....", "...KKK...KKK...."] },
+  luca_walk: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gddAAAAAa", "......gddAANWAAA", ".aa...gdgdAANAAA", "aAAa..gddAAAAACN", "AgAAa.gdgdAAACCN", "aAAAa.ggdAAACRC.", ".aAAAaagdgAAACC.", "..aAAgAAaAAAAAA.", "..AAgAAAgAAAaAA.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "....AAA.aAAA....", "....gAg.gAg.....", "....KKK.KKK....."] },
+  luca_wag: { pal: LUCA_PAL, rows: [".........aAAAa..", "........aAaAAAa.", ".......gddAAAAAa", ".aa...gddAANWAAA", "aAAa..gdgdAANAAA", "AgAAa.gddAAAAACN", "aAAAa.gdgdAAACCN", ".aAAAaggdAAACRC.", "..aAAaagdgAAACC.", "..aAAgAAaAAAAAA.", "..AAgAAAgAAAaAA.", "..AAAAAAAAgAAAA.", "..aAgAAAAAAAAa..", "...AAA...aAAA...", "...gAg...gAg....", "...KKK...KKK...."] },
   corolla: { pal: { K: INK, C: "#2f6fd1", c: "#1f4d99", V: "#cdeaf7", A: "#a7b0bf", Y: "#ffd966", R: "#e2554f", L: "#5b93e6", W: "#ffffff" }, rows: ["........KKKKKKKK........", ".......KVWVKVVWVK.......", "......KVWVVKVWVVVK......", "..KKKKLLLLLLLLLLLLKKKK..", ".KLLCCCCCCCCCCCCCCCCCCK.", "KYCCCCcCCCKCCCCcCCCCCRK.", "KCCCCCCCCCKCCCCCCCCCCCK.", "KcccKKKccccccccccKKKcccK", ".KcKAWAKccccccccKAWAKcK.", "..KKAKAK........KAKAK...", "....KKK..........KKK...."] },
   dumbbell: { pal: { K: INK, X: "#3a3d5c", A: "#a7b0bf", a: "#6f7788" }, rows: [".KK......KK.", "KXXK....KXXK", "KXXKAAAAKXXK", "KXXKaaaaKXXK", "KXXK....KXXK", ".KK......KK."] },
   cake: { pal: { K: INK, F: "#f7a8c4", W: "#ffffff", B: "#f3d9a8", Y: "#ffc53d", C: "#6ec3e8" }, rows: ["......YY......", "......CC......", "......CC......", "..KKKKKKKKKK..", ".KWWFWWFWWFWK.", ".KFFFFFFFFFFK.", ".KBBBBBBBBBBK.", ".KFFFFFFFFFFK.", ".KBBBBBBBBBBK.", "KKKKKKKKKKKKKK", "KWWWWWWWWWWWWK", ".KKKKKKKKKKKK."] },
@@ -622,6 +622,7 @@ function onA() {
     case 'menu': menuPick(); break;
     case 'lift': liftPress(); break;
     case 'fetch': fetchPress(); break;
+    case 'pet': petPress(); break;
     case 'drive': changeStation(); break;
     case 'bmsg': { const n = G.bnext; G.bnext = null; sfx('blip'); if (n) n(); break; }
   }
@@ -892,11 +893,7 @@ function interact() {
   const c = tileAt(tx, ty), f = c && G.map.def.act && G.map.def.act[c];
   if (f) f(tx, ty);
 }
-function lucaTalk() {
-  sfx('woof');
-  if (!G.lucaPat[G.mapId]) { G.lucaPat[G.mapId] = true; stat('happy', 2); }
-  say({ n: 'Luca', t: ["Woof! (Translation: happy birthday. Also, snacks?)", "Luca does a little spin. Very good boy.", "Luca leans on Annette's leg. Maximum loyalty."][Math.floor(Math.random() * 3)] });
-}
+function lucaTalk() { petGame(); }
 const STEP = 0.15;
 function updateMap(dt) {
   const p = G.p, l = G.l;
@@ -1541,6 +1538,116 @@ function renderFetch() {
   }
   for (let i = 0; i < L.total; i++) { const done = L.results[i]; const c = !done ? '#efe6d2' : done === 'great' ? '#3fae7c' : done === 'good' ? '#ffd166' : '#c9b18e'; R(8 + i * 8, 8, 6, 6, INK); R(9 + i * 8, 9, 4, 4, c); }
 }
+/* pet: give Luca scritches and cuddles. Time each pat to the green patch to fill the love meter, then a big cuddle. */
+const PET_WANTS = [
+  "Luca tilts his head for ear scritches.",
+  "He nudges your hand for head pats.",
+  "He half rolls over, hoping for a belly rub.",
+  "Chin scratches, please. His leg is ready to kick.",
+  "He leans in for a proper cuddle."
+];
+const PET_YAY = ["Perfect! Tail going a mile a minute.", "Good boy! He melts into your hand.", "Bliss. His eyes go all soft.", "He wriggles with pure joy."];
+const PET_OK = ["A happy little pat.", "He wags anyway. Good boy.", "Soft ears, soft heart.", "Content wag noises."];
+function petGame() {
+  clearUI(); sfx('woof'); setChapter('Cuddles with Luca');
+  G.scene = 'pet'; G.mode = 'pet';
+  G.pet = {
+    love: 0, pats: 0, t: 0, phase: 'pet', cur: 0.5, cdir: 1, speed: 1.1,
+    zoneX: 0.4, zoneW: 0.2, want: 0, wantShown: true,
+    react: 0, reactKind: 'idle', hearts: [], endTimer: 0, cuddleTick: 0
+  };
+  petNewZone(); G.pet.wantShown = true;
+  const h = el('div', 'hint', 'Tap A when the paw is on the green patch to give Luca the perfect scritch.');
+  h.style.animation = 'none';
+  ui.append(h); G.pet.hint = h;
+}
+function petNewZone() {
+  const P = G.pet;
+  P.zoneW = 0.2 - Math.min(0.09, P.pats * 0.015);
+  P.zoneX = 0.08 + Math.random() * (0.92 - P.zoneW - 0.08);
+  P.speed = 1.0 + Math.random() * 0.4 + Math.min(0.5, P.pats * 0.06);
+  P.cdir = Math.random() < 0.5 ? 1 : -1;
+  P.want = Math.floor(Math.random() * PET_WANTS.length);
+  P.wantShown = false;
+}
+function petHint(t) { if (G.pet && G.pet.hint) G.pet.hint.textContent = t; }
+function petHearts(n, big) {
+  const P = G.pet;
+  for (let i = 0; i < n; i++) P.hearts.push({
+    x: 116 + (Math.random() * 54 - 27), y: 74 + (Math.random() * 22 - 11),
+    vx: Math.random() * 34 - 17, vy: -28 - Math.random() * 34,
+    life: 0.9 + Math.random() * 0.6, s: big ? 1.4 : 1
+  });
+}
+function petPress() {
+  const P = G.pet; if (!P || P.phase !== 'pet') return;
+  const inZone = P.cur >= P.zoneX && P.cur <= P.zoneX + P.zoneW;
+  P.pats++;
+  if (inZone) {
+    P.love = Math.min(100, P.love + 22); P.react = 0.7; P.reactKind = 'happy';
+    petHearts(6, true); sfx('good'); petHint(PET_YAY[Math.floor(Math.random() * PET_YAY.length)]);
+  } else {
+    P.love = Math.min(100, P.love + 8); P.react = 0.45; P.reactKind = 'wag';
+    petHearts(2); sfx('blip'); petHint(PET_OK[Math.floor(Math.random() * PET_OK.length)]);
+  }
+  if (P.love >= 100) petCuddle(); else petNewZone();
+}
+function petCuddle() {
+  const P = G.pet; P.phase = 'cuddle'; P.endTimer = 2.8; P.react = 3; P.reactKind = 'cuddle';
+  petHearts(18, true); sfx('pr'); petHint('Cuddle time. Luca flops into your lap for belly rubs.');
+}
+function updatePet(dt) {
+  const P = G.pet; if (!P) return; P.t += dt;
+  P.hearts.forEach(h => { h.x += h.vx * dt; h.y += h.vy * dt; h.vy += 22 * dt; h.life -= dt; });
+  P.hearts = P.hearts.filter(h => h.life > 0);
+  if (P.react > 0) P.react -= dt;
+  if (P.phase === 'pet') {
+    P.cur += P.cdir * P.speed * dt;
+    if (P.cur >= 1) { P.cur = 1; P.cdir = -1; } if (P.cur <= 0) { P.cur = 0; P.cdir = 1; }
+    if (P.react <= 0 && !P.wantShown) { petHint(PET_WANTS[P.want]); P.wantShown = true; }
+  } else if (P.phase === 'cuddle') {
+    P.cuddleTick -= dt; if (P.cuddleTick <= 0) { petHearts(2, true); P.cuddleTick = 0.4; }
+    P.endTimer -= dt; if (P.endTimer <= 0) finishPet();
+  }
+}
+function finishPet() {
+  G.pet = null; clearUI(); G.scene = 'map'; G.mode = 'map';
+  const first = !G.lucaPat[G.mapId]; G.lucaPat[G.mapId] = true;
+  if (first) stat('happy', 6); else stat('happy', 1, false);
+  say(first
+    ? ["Luca is thoroughly cuddled and completely, blissfully yours.", { n: 'Luca', t: "Woof! (Best. Human. Ever.)" }]
+    : ["More cuddles are always welcome.", { n: 'Luca', t: "Woof! (Again? Yes please.)" }]);
+}
+function renderPet() {
+  const P = G.pet; if (!P) return;
+  const th = (G.map && G.map.def && G.map.def.theme) || 'home';
+  for (let ty = 0; ty < 10; ty++) for (let tx = 0; tx < 15; tx++) drawFloor(th, tx * 16, ty * 16, tx, ty);
+  R(0, 0, 240, 160, 'rgba(255,240,230,.35)');
+  // Luca big in the centre, reacting to the pats
+  const cx = 100, ground = 122;
+  oval(116, ground + 12, 27, 5, 'rgba(35,29,51,.18)');
+  const opts = { scale: 3, dance: false };
+  if (P.phase === 'cuddle') { opts.dance = true; opts.t = P.t * 1.25; }
+  else if (P.react > 0 && P.reactKind === 'happy') { opts.moving = true; opts.t = P.t * 1.7; }
+  else { opts.t = P.t; }
+  drawLuca(cx, ground - 48, opts);
+  // floating hearts
+  P.hearts.forEach(h => { ctx.globalAlpha = clamp(h.life, 0, 1); drawSpr(sprite('heart'), h.x - 3, h.y - 3, false, h.s); });
+  ctx.globalAlpha = 1;
+  // love meter
+  const mw = 150, mx = (240 - mw) / 2, my = 12;
+  drawSpr(sprite('heart'), mx - 13, my - 1, false);
+  R(mx - 2, my - 2, mw + 4, 12, INK); R(mx, my, mw, 8, '#efe6d2');
+  R(mx, my, mw * (P.love / 100), 8, P.love >= 100 ? '#ff4f7f' : '#ff6f91');
+  // petting timing bar
+  if (P.phase === 'pet') {
+    const bw = 172, bx = (240 - bw) / 2, by = 140;
+    R(bx - 2, by - 2, bw + 4, 11, INK); R(bx, by, bw, 7, '#efe6d2');
+    R(bx + bw * P.zoneX, by, bw * P.zoneW, 7, '#8fd36b');
+    const px = bx + bw * P.cur;
+    R(px - 3, by - 5, 6, 4, '#c99b6c'); R(px - 4, by - 2, 8, 4, '#a97c52'); R(px - 4, by - 6, 2, 2, '#e0bd92'); R(px + 2, by - 6, 2, 2, '#e0bd92');
+  }
+}
 function weekendOut() {
   clearUI(); G.scene = 'wnight'; G.mode = 'busy'; clockMin = 19 * 60; drawClock(); setChapter('Weekend Pack: a night out');
   const p = el('div', 'panel', '<h2>Head out for the night</h2><p class="sub">Dinner out, or a cosy wine bar?</p><div class="grid2"></div>');
@@ -1919,6 +2026,7 @@ function loop(now) {
   else if (G.scene === 'finale' || G.scene === 'credits') updateFinale(dt);
   if (G.mode === 'lift') updateLift(dt);
   if (G.mode === 'fetch') updateFetch(dt);
+  if (G.mode === 'pet') updatePet(dt);
   nowPlaying(); tickClock(dt);
   ctx.setTransform(2, 0, 0, 2, 0, 0); ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, 240, 160);
   if (G.scene === 'title') renderTitle();
@@ -1930,6 +2038,7 @@ function loop(now) {
   else if (G.scene === 'wnight') renderWNight();
   else if (G.scene === 'wend') renderWEnd();
   else if (G.scene === 'fetch') renderFetch();
+  else if (G.scene === 'pet') renderPet();
   requestAnimationFrame(loop);
 }
 
