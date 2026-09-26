@@ -1541,13 +1541,13 @@ function renderFetch() {
   }
   for (let i = 0; i < L.total; i++) { const done = L.results[i]; const c = !done ? '#efe6d2' : done === 'great' ? '#3fae7c' : done === 'good' ? '#ffd166' : '#c9b18e'; R(8 + i * 8, 8, 6, 6, INK); R(9 + i * 8, 9, 4, 4, c); }
 }
-/* pet: give Luca scritches and cuddles. Time each pat to the green patch to fill the love meter, then a big cuddle. */
-const PET_WANTS = [
-  "Luca tilts his head for ear scritches.",
-  "He nudges your hand for head pats.",
-  "He half rolls over, hoping for a belly rub.",
-  "Chin scratches, please. His leg is ready to kick.",
-  "He leans in for a proper cuddle."
+/* pet: a zoomed-in Luca fills the screen and you stroke him with the cursor (or a finger). His favourite spot sparkles. */
+const PET_LX = 76, PET_LY = 34, PET_SC = 5.5; // big Luca's box: 88x88 from (76,34)
+const PET_SPOTS = [
+  { x: 120, y: 61, t: "Luca tilts his head for ear scritches." },
+  { x: 139, y: 43, t: "He nudges your hand for head pats." },
+  { x: 111, y: 99, t: "He half rolls over, hoping for a belly rub." },
+  { x: 147, y: 80, t: "Chin scratches, please. His leg is ready to kick." }
 ];
 const PET_YAY = ["Perfect! Tail going a mile a minute.", "Good boy! He melts into your hand.", "Bliss. His eyes go all soft.", "He wriggles with pure joy."];
 const PET_OK = ["A happy little pat.", "He wags anyway. Good boy.", "Soft ears, soft heart.", "Content wag noises."];
@@ -1555,59 +1555,76 @@ function petGame() {
   clearUI(); sfx('woof'); setChapter('Cuddles with Luca');
   G.scene = 'pet'; G.mode = 'pet';
   G.pet = {
-    love: 0, pats: 0, t: 0, phase: 'pet', cur: 0.5, cdir: 1, speed: 1.1,
-    zoneX: 0.4, zoneW: 0.2, want: 0, wantShown: true,
-    react: 0, reactKind: 'idle', hearts: [], endTimer: 0, cuddleTick: 0
+    love: 0, t: 0, phase: 'pet', spot: Math.floor(Math.random() * PET_SPOTS.length),
+    px: null, py: null, lx: null, ly: null, stroke: 0, idle: 0,
+    react: 0, hearts: [], endTimer: 0, cuddleTick: 0
   };
-  petNewZone(); G.pet.wantShown = true;
-  const h = el('div', 'hint', 'Tap A when the paw is on the green patch to give Luca the perfect scritch.');
-  h.style.animation = 'none';
+  const h = el('div', 'hint', 'Stroke Luca with your cursor or finger to pet him. His favourite spot sparkles!');
+  h.style.animation = 'none'; h.style.top = 'auto'; h.style.bottom = '3cqw';
   ui.append(h); G.pet.hint = h;
+  $('#screen').style.cursor = 'none'; cv.style.touchAction = 'none';
 }
-function petNewZone() {
-  const P = G.pet;
-  P.zoneW = 0.2 - Math.min(0.09, P.pats * 0.015);
-  P.zoneX = 0.08 + Math.random() * (0.92 - P.zoneW - 0.08);
-  P.speed = 1.0 + Math.random() * 0.4 + Math.min(0.5, P.pats * 0.06);
-  P.cdir = Math.random() < 0.5 ? 1 : -1;
-  P.want = Math.floor(Math.random() * PET_WANTS.length);
-  P.wantShown = false;
+function petNewSpot() {
+  const P = G.pet, old = P.spot;
+  while (P.spot === old) P.spot = Math.floor(Math.random() * PET_SPOTS.length);
+  petHint(PET_SPOTS[P.spot].t);
 }
 function petHint(t) { if (G.pet && G.pet.hint) G.pet.hint.textContent = t; }
-function petHearts(n, big) {
-  const P = G.pet;
+function petHearts(n, big, x, y) {
+  const P = G.pet, cx = x != null ? x : 120, cy = y != null ? y : 78;
   for (let i = 0; i < n; i++) P.hearts.push({
-    x: 116 + (Math.random() * 54 - 27), y: 74 + (Math.random() * 22 - 11),
+    x: cx + (Math.random() * 26 - 13), y: cy + (Math.random() * 12 - 6),
     vx: Math.random() * 34 - 17, vy: -28 - Math.random() * 34,
     life: 0.9 + Math.random() * 0.6, s: big ? 1.4 : 1
   });
 }
-function petPress() {
+function petStroke(gx, gy) {
   const P = G.pet; if (!P || P.phase !== 'pet') return;
-  const inZone = P.cur >= P.zoneX && P.cur <= P.zoneX + P.zoneW;
-  P.pats++;
-  if (inZone) {
-    P.love = Math.min(100, P.love + 22); P.react = 0.7; P.reactKind = 'happy';
-    petHearts(6, true); sfx('good'); petHint(PET_YAY[Math.floor(Math.random() * PET_YAY.length)]);
-  } else {
-    P.love = Math.min(100, P.love + 8); P.react = 0.45; P.reactKind = 'wag';
-    petHearts(2); sfx('blip'); petHint(PET_OK[Math.floor(Math.random() * PET_OK.length)]);
+  P.px = gx; P.py = gy; P.idle = 0;
+  if (P.lx != null) {
+    const d = Math.min(14, Math.hypot(gx - P.lx, gy - P.ly));
+    const onLuca = gx > PET_LX - 6 && gx < PET_LX + 94 && gy > PET_LY - 4 && gy < PET_LY + 92;
+    if (d > 0.5 && onLuca) {
+      const sp = PET_SPOTS[P.spot], sweet = Math.hypot(gx - sp.x, gy - sp.y) < 17;
+      P.love = Math.min(100, P.love + d * (sweet ? 0.55 : 0.2));
+      P.react = Math.max(P.react, sweet ? 0.6 : 0.3);
+      P.stroke += d;
+      if (P.stroke > 30) {
+        P.stroke = 0; petHearts(sweet ? 3 : 1, sweet, gx, gy); sfx(sweet ? 'good' : 'blip');
+        petHint((sweet ? PET_YAY : PET_OK)[Math.floor(Math.random() * 4)]);
+        if (sweet && Math.random() < 0.45) petNewSpot();
+      }
+      if (P.love >= 100) petCuddle();
+    }
   }
-  if (P.love >= 100) petCuddle(); else petNewZone();
+  P.lx = gx; P.ly = gy;
+}
+function petPointer(e) {
+  if (!G.pet || G.pet.phase !== 'pet') return;
+  const r = cv.getBoundingClientRect();
+  petStroke((e.clientX - r.left) / r.width * 240, (e.clientY - r.top) / r.height * 160);
+}
+addEventListener('pointermove', petPointer, { passive: true });
+addEventListener('pointerdown', e => { if (G.pet) { G.pet.lx = null; G.pet.ly = null; } petPointer(e); }, { passive: true });
+function petPress() { // keyboard fallback: A lands a pat right on the favourite spot
+  const P = G.pet; if (!P || P.phase !== 'pet') return;
+  const sp = PET_SPOTS[P.spot];
+  P.love = Math.min(100, P.love + 10); P.react = 0.6;
+  petHearts(2, true, sp.x, sp.y); sfx('blip');
+  petHint(PET_YAY[Math.floor(Math.random() * 4)]);
+  if (P.love >= 100) petCuddle();
 }
 function petCuddle() {
-  const P = G.pet; P.phase = 'cuddle'; P.endTimer = 2.8; P.react = 3; P.reactKind = 'cuddle';
+  const P = G.pet; P.phase = 'cuddle'; P.endTimer = 2.8; P.react = 3;
   petHearts(18, true); sfx('pr'); petHint('Cuddle time. Luca flops into your lap for belly rubs.');
 }
 function updatePet(dt) {
-  const P = G.pet; if (!P) return; P.t += dt;
+  const P = G.pet; if (!P) return; P.t += dt; P.idle += dt;
   P.hearts.forEach(h => { h.x += h.vx * dt; h.y += h.vy * dt; h.vy += 22 * dt; h.life -= dt; });
   P.hearts = P.hearts.filter(h => h.life > 0);
   if (P.react > 0) P.react -= dt;
   if (P.phase === 'pet') {
-    P.cur += P.cdir * P.speed * dt;
-    if (P.cur >= 1) { P.cur = 1; P.cdir = -1; } if (P.cur <= 0) { P.cur = 0; P.cdir = 1; }
-    if (P.react <= 0 && !P.wantShown) { petHint(PET_WANTS[P.want]); P.wantShown = true; }
+    if (P.idle > 5) { P.idle = 0; petHint(PET_SPOTS[P.spot].t); }
   } else if (P.phase === 'cuddle') {
     P.cuddleTick -= dt; if (P.cuddleTick <= 0) { petHearts(2, true); P.cuddleTick = 0.4; }
     P.endTimer -= dt; if (P.endTimer <= 0) finishPet();
@@ -1615,26 +1632,37 @@ function updatePet(dt) {
 }
 function finishPet() {
   G.pet = null; clearUI(); G.scene = 'map'; G.mode = 'map';
+  $('#screen').style.cursor = ''; cv.style.touchAction = '';
   const first = !G.lucaPat[G.mapId]; G.lucaPat[G.mapId] = true;
   if (first) stat('happy', 6); else stat('happy', 1, false);
   say(first
     ? ["Luca is thoroughly cuddled and completely, blissfully yours.", { n: 'Luca', t: "Woof! (Best. Human. Ever.)" }]
     : ["More cuddles are always welcome.", { n: 'Luca', t: "Woof! (Again? Yes please.)" }]);
 }
+function drawPetHand(x, y) { // Annette's hand as the petting cursor
+  oval(x, y + 4, 5, 3.8, '#f2c9a4', INK);
+  oval(x - 3.4, y - 0.5, 1.7, 2.3, '#f2c9a4');
+  oval(x, y - 1.4, 1.7, 2.4, '#f2c9a4');
+  oval(x + 3.4, y - 0.5, 1.7, 2.3, '#f2c9a4');
+}
 function renderPet() {
   const P = G.pet; if (!P) return;
   const th = (G.map && G.map.def && G.map.def.theme) || 'home';
   for (let ty = 0; ty < 10; ty++) for (let tx = 0; tx < 15; tx++) drawFloor(th, tx * 16, ty * 16, tx, ty);
   R(0, 0, 240, 160, 'rgba(255,240,230,.35)');
-  // Luca big in the centre, reacting to the pats
-  const cx = 100, ground = 122;
-  oval(116, ground + 12, 27, 5, 'rgba(35,29,51,.18)');
-  const opts = { scale: 3, dance: false };
-  if (P.phase === 'cuddle') { opts.dance = true; opts.t = P.t * 1.25; }
-  else if (P.react > 0 && P.reactKind === 'happy') { opts.moving = true; opts.t = P.t * 1.7; }
-  else { opts.t = P.t; }
-  drawLuca(cx, ground - 48, opts);
-  // floating hearts
+  oval(120, 126, 40, 6, 'rgba(35,29,51,.18)');
+  // Luca fills the screen; his wag speeds up while he's being petted
+  if (P.phase === 'cuddle') drawLuca(84, 52, { scale: 4.5, t: P.t * 1.25 });
+  else drawLuca(PET_LX, PET_LY, { scale: PET_SC, dance: false, t: P.react > 0 ? P.t * 2 : P.t });
+  // sparkles mark his favourite spot: little plus-shaped twinkles circling it
+  if (P.phase === 'pet') {
+    const sp = PET_SPOTS[P.spot];
+    for (let i = 0; i < 5; i++) {
+      const a = G.t * 2.2 + i * Math.PI * 2 / 5, r = 14 + Math.sin(G.t * 5 + i * 2) * 2;
+      const x = sp.x + Math.cos(a) * r, y = sp.y + Math.sin(a) * r * 0.8, c = i % 2 ? '#ffd166' : '#ffffff';
+      R(x - 1, y, 3, 1, c); R(x, y - 1, 1, 3, c);
+    }
+  }
   P.hearts.forEach(h => { ctx.globalAlpha = clamp(h.life, 0, 1); drawSpr(sprite('heart'), h.x - 3, h.y - 3, false, h.s); });
   ctx.globalAlpha = 1;
   // love meter
@@ -1642,14 +1670,7 @@ function renderPet() {
   drawSpr(sprite('heart'), mx - 13, my - 1, false);
   R(mx - 2, my - 2, mw + 4, 12, INK); R(mx, my, mw, 8, '#efe6d2');
   R(mx, my, mw * (P.love / 100), 8, P.love >= 100 ? '#ff4f7f' : '#ff6f91');
-  // petting timing bar
-  if (P.phase === 'pet') {
-    const bw = 172, bx = (240 - bw) / 2, by = 140;
-    R(bx - 2, by - 2, bw + 4, 11, INK); R(bx, by, bw, 7, '#efe6d2');
-    R(bx + bw * P.zoneX, by, bw * P.zoneW, 7, '#8fd36b');
-    const px = bx + bw * P.cur;
-    R(px - 3, by - 5, 6, 4, '#c99b6c'); R(px - 4, by - 2, 8, 4, '#a97c52'); R(px - 4, by - 6, 2, 2, '#e0bd92'); R(px + 2, by - 6, 2, 2, '#e0bd92');
-  }
+  if (P.px != null && P.phase === 'pet') drawPetHand(P.px, P.py);
 }
 function weekendOut() {
   clearUI(); G.scene = 'wnight'; G.mode = 'busy'; clockMin = 19 * 60; drawClock(); setChapter('Weekend Pack: a night out');
