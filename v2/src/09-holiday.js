@@ -140,7 +140,6 @@ function makeSnowman(parent, x, z) {
   mk(G_BOX, '#7fc8f8', [0.4, 0.06, 0.1], [0, 0.88, 0.1], g);
   return g;
 }
-const holPerson = makePerson, holAnnette = makeAnnette;
 function makeKiwiBird(parent) {
   const g = grp(parent);
   mk(G_SPH, '#8a6a4a', [0.42, 0.36, 0.5], [0, 0.26, 0], g); mk(G_SPH, '#9c7a56', [0.24, 0.22, 0.24], [0, 0.38, 0.22], g);
@@ -338,7 +337,7 @@ function updateQtown(dt, t) {
 function gearMenu() {
   pickMenu('Winter clothing', 'Which jacket made it into the suitcase?', HOL.qt.jackets, d => {
     OUTFITS.snow.top = d.c; G.outfit = 'snow'; HLOG.jacket = d.n; stat('glow', 8, true);
-    const old = W.player.g, g = holAnnette('snow'); g.position.copy(old.position); g.rotation.copy(old.rotation); world.remove(old); world.add(W.player.g = g); popIn(g); confetti(g.position.x, 0.8, g.position.z, 36); sfx('pop'); G.wearing = 'snow';
+    const old = W.player.g, g = makeAnnette('snow'); g.position.copy(old.position); g.rotation.copy(old.rotation); world.remove(old); world.add(W.player.g = g); popIn(g); confetti(g.position.x, 0.8, g.position.z, 36); sfx('pop'); G.wearing = 'snow';
     say([{ n: CONFIG.name, t: "The " + d.n + ". " + d.d }, { n: 'Greentoad', t: "Now, board or skis today?" }], () => pickMenu('Greentoad rentals', 'Boots, pants and a helmet included.', HOL.qt.gear, e => {
       G.ride = e.k; HLOG.ride = e.n; F.qtGear = true;
       say([e.k === 'board' ? "A snowboard, boots and a helmet. $244 each for four days." : "Skis, poles, boots and a helmet. Pizza, French fries, pizza.", { n: CONFIG.boyfriend, t: "You look like a pro. Bus stop's by The Station." }], refreshHints);
@@ -399,7 +398,7 @@ function buildSnowRun(k) {
   if (T.lights) for (let i = 0; i < 8; i++) moving.push(makeStreetLamp(world, i % 2 ? 2.1 : -2.3, 5 - i * 5));
   const far = grp(world, 0, -0.3, -SB_LEN - 4); for (let i = 0; i < 7; i++) makeMountain(far, -18 + i * 6, 0, 5, 6 + hsh(i, 2) * 5, T.sky === 'night' ? '#6a6f8c' : '#8e95a8');
   const rider = grp(world, SB_LANES[1], 0, 3);
-  const ski = G.ride === 'ski', a = holAnnette('snow'); a.position.y = 0.07; rider.add(a);
+  const ski = G.ride === 'ski', a = makeAnnette('snow'); a.position.y = 0.07; rider.add(a);
   let board;
   if (ski) {
     board = grp(rider); [-0.1, 0.1].forEach(x => { mk(G_BOX, OUTFITS.snow.top, [0.09, 0.04, 1.05], [x, 0.03, -0.05], board); mk(G_BOX, OUTFITS.snow.top, [0.09, 0.04, 0.12], [x, 0.06, -0.58], board).rotation.x = 0.5; });
@@ -517,7 +516,7 @@ function holidayEnd() {
   const tbl = grp(world, 0, 0, 0.35); mk(G_CYL, '#c89f7a', [1.1, 0.06, 0.8], [0, 0.6, 0], tbl); mk(G_CYL, '#6b4a32', [0.08, 0.6, 0.08], [0, 0.3, 0], tbl);
   makeGlass(tbl, -0.25, 0.63, 0.1, qt ? '#8a4a2a' : '#6b1e3a'); makeGlass(tbl, 0.25, 0.63, 0.1, qt ? '#8a4a2a' : '#6b1e3a');
   makeFairyLights(world, -3, -2.8, 3, -2.8, 2.2, 22);
-  const a = qt ? holAnnette('snow') : makeAnnette('sunny'), p = qt ? holPerson(LOOK.pauloSnow) : makePerson(LOOK.paulo);
+  const a = qt ? makeAnnette('snow') : makeAnnette('sunny'), p = qt ? makePerson(LOOK.pauloSnow) : makePerson(LOOK.paulo);
   a.position.set(-0.9, 0, 0.35); a.rotation.y = 0.7; p.position.set(0.9, 0, 0.35); p.rotation.y = -0.7; world.add(a, p); W.cast = [a, p];
   for (let i = 0; i < 6; i++) makeCloud(world, -20 + i * 7, -5 + hsh(i, 1) * 1.5, -8 + hsh(i, 2) * 16, 1.3);
   cam.base = 11; cam.pitch = 0.55; cam.zoomGoal = 1.4; cam.zoom = 1.4; cam.goal.set(0, 1.1, -0.2); cam.target.copy(cam.goal); cam.orbit = SET.calm ? 0.02 : 0.05;

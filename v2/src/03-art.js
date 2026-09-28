@@ -58,18 +58,10 @@ const LOOK = {
 };
 function makeAnnette(outfitKey) { return makePerson(LOOK.annette(OUTFITS[outfitKey] || OUTFITS.office)); }
 
-/* ---------------- Luca the cavoodle: apricot curls all over, long curly ears, teddy face, plume tail ---------------- */
+/* ---------------- Luca the cavoodle: golden caramel shag, a cream bib and beard, a fringe over the eyes and long feathered ears ---------------- */
 const G_CURL = geo('curl', () => new THREE.SphereGeometry(0.5, 10, 8));
-// evenly spread points over a unit sphere (fibonacci), used to cover a shape in curls
+// evenly spread points over a unit sphere (fibonacci), used to cover a shape in fur
 function fibPts(n) { const o = [], ga = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < n; i++) { const y = 1 - (i + 0.5) / n * 2, r = Math.sqrt(1 - y * y), a = i * ga; o.push([Math.cos(a) * r, y, Math.sin(a) * r]); } return o; }
-function curls(parent, c, r, n, cols, size, skip) {
-  fibPts(n).forEach((p, i) => {
-    if (skip && skip(p)) return;
-    const s = size * (0.85 + hsh(i, n, 7) * 0.35), col = cols[Math.floor(hsh(i, n, 3) * cols.length)];
-    mk(G_CURL, col, [s, s * 0.92, s], [c[0] + p[0] * r[0], c[1] + p[1] * r[1], c[2] + p[2] * r[2]], parent, { noShadow: true });
-  });
-}
-// Luca the cavoodle: golden caramel shag, a cream bib and beard, a fringe over the eyes and long feathered ears
 const UP = new THREE.Vector3(0, 1, 0), WISP_D = new THREE.Vector3();
 // long soft strands that point outward and droop with gravity, so the coat reads shaggy rather than curly
 function wisps(parent, c, r, n, cols, size, droop, skip, seed) {

@@ -40,12 +40,6 @@ function makeTower(parent, x, z, i) {
   if (i % 3 === 0) { mk(G_CYL, '#8a8fa0', [0.03, 0.6, 0.03], [0.3, h + 0.35, 0], g); mk(G_SPH, '#ff5c7a', [0.08, 0.08, 0.08], [0.3, h + 0.66, 0], g, { glow: true }); }
   return g;
 }
-function makeGum(parent, x, z, s) {
-  const g = grp(parent, x, 0, z); s = s || 1;
-  const t = mk(G_CYL, '#e8dccb', [0.16 * s, 1.3 * s, 0.16 * s], [0, 0.65 * s, 0], g); t.rotation.z = 0.08;
-  [[0, 1.45, 0, 0.9], [0.35, 1.25, 0.1, 0.6], [-0.3, 1.3, -0.1, 0.65], [0.1, 1.75, -0.05, 0.55]].forEach(([a, b, c, r], i) => mk(G_SPH, i % 2 ? '#8fb59a' : '#7aa88a', [r * s, r * 0.7 * s, r * s], [a * s, b * s, c * s], g));
-  g.userData.sway = Math.random() * TAU; return g;
-}
 function buildDrive(theme, next, dest) {
   clearWorld(); clearUI(); G.scene = 'drive'; G.mode = 'drive'; showHUD(true);
   const T = DRIVE_THEMES[theme] || DRIVE_THEMES.suburb; setSky(T.sky); setChapter(dest === CONFIG.dinnerSpot ? 'Driving to date night' : 'On the road to ' + dest); fitSun(0, -8, 16);
