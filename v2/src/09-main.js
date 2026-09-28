@@ -24,11 +24,12 @@ function titleScreen() {
 
   const t = el('div', 'title', `<div class="logo"><h1>${esc(CONFIG.name)}'s Big Day</h1><span class="v2">v2 &middot; the whimsical edition</span></div>`);
   const w = el('div', 'tbtns'), btns = [];
-  const save = loadCheckpoint();
-  if (save) btns.push(makeBtn('Continue', () => { audioInit(); fade(() => resumeGame(save)); }, 'big'));
+  const saves = allCheckpoints(), save = saves.find(s => s.campaign === 'day');
+  if (saves.length) btns.push(makeBtn('Continue', () => { audioInit(); if (saves.length === 1) return fade(() => resumeGame(saves[0])); pickMenu('Continue', 'Which adventure?', saves.map(s => ({ n: CAMPAIGNS[s.campaign], d: (MAPS[s.map].title || '').replace(/^.*?: /, ''), s })), d => fade(() => resumeGame(d.s))); G.mode = 'title'; }, 'big'));
   btns.push(makeBtn(save ? 'New day' : 'Start the day', () => { audioInit(); fade(startGame); }, save ? 'big sky' : 'big'));
   if (typeof startWeekend === 'function') btns.push(makeBtn('Weekend Adventure', () => { audioInit(); fade(startWeekend); }, 'big alt'));
   if (typeof startHoliday === 'function') btns.push(makeBtn('Go on holiday', () => { audioInit(); fade(startHoliday); }, 'big sky'));
+  if (Object.keys(loadAlbum()).length) btns.push(makeBtn('Album', () => { audioInit(); openAlbum(() => { G.mode = 'title'; titleScreen(); }); }, 'big alt'));
   btns.push(makeBtn('Settings', () => { audioInit(); openSettings(); }, 'big sky'));
   w.append(...btns); t.append(w); ui.append(t);
   setMenu(btns, { cols: btns.length });
@@ -36,11 +37,13 @@ function titleScreen() {
 function resetDay() {
   Object.assign(G.stats, { happy: 60, glow: 40, energy: 70, gains: 30 }); updateHUD();
   [G.F, G.secrets, G.badges, G.hearts, G.lucaPat].forEach(o => Object.keys(o).forEach(k => delete o[k]));
-  Object.assign(G, { outfit: 'office', wearing: 'pj', radio: null, tidied: 0, balloons: 0, b: null, lift: null });
+  Object.assign(G, { outfit: 'office', wearing: 'pj', radio: null, tidied: 0, balloons: 0, b: null, lift: null, lunch: null, dish: null, drink: null });
+  restorePackBadges();
 }
-function startGame() { cam.orbit = 0; resetDay(); loadMap('bedroom'); }
+function startGame() { cam.orbit = 0; resetDay(); G.campaign = 'day'; loadMap('bedroom'); }
 function resumeGame(s) {
-  cam.orbit = 0; resetDay();
+  cam.orbit = 0; resetDay(); G.campaign = s.campaign || 'day';
+  if (CAMPAIGN_STATE[G.campaign]) CAMPAIGN_STATE[G.campaign].load(s.extra || {});
   Object.assign(G.stats, s.stats); Object.assign(G.F, s.F); Object.assign(G.secrets, s.secrets); Object.assign(G.badges, s.badges); Object.assign(G.hearts, s.hearts); Object.assign(G.lucaPat, s.lucaPat || {});
   Object.assign(G, { outfit: s.outfit || 'office', radio: s.radio, tidied: s.tidied || 0, balloons: s.balloons || 0 });
   if (s.map === 'bedroom' && G.tidied) MAPS.bedroom.rows = MAPS.bedroom.rows.map(r => r.replace(/x/g, () => '.'));
@@ -135,7 +138,7 @@ function frame(now) {
   try {
     if (G.mode === 'map' && G.scene === 'map') G.clock += dt * TUNE.minutesPerTick / TUNE.tick;
     const c = fmtClock(G.clock); if (c !== clockShown) { clockShown = c; $('#clock').textContent = c; }
-    if (G.scene === 'map') { updatePlayer(dt); updateWorld(dt, t); updateLift(dt); updateBattle(dt, t); updatePet(dt, t); if (W && W.player && !PET) { const p = W.player.g.position; if (!G.b && !G.lift) cam.goal.set(p.x, 0.5, p.z - 0.3); } updateBuddy(dt, t); }
+    if (G.scene === 'map') { updatePlayer(dt); updateWorld(dt, t); updateLift(dt); updateBattle(dt, t); updatePet(dt, t); if (W && W.introUntil && G.t >= W.introUntil) { W.introUntil = 0; cam.zoomGoal = 1; } if (W && W.player && !PET && !W.introUntil) { const p = W.player.g.position; if (!G.b && !G.lift) cam.goal.set(p.x, 0.5, p.z - 0.3); } updateBuddy(dt, t); }
     else if (G.scene === 'lunch') { updateWorld(dt, t); if (W && W.steam && Math.random() < dt * 8) FX.emit(3 + (Math.random() - 0.5) * 0.3, 1, 2, ['#ffffff', '#f5eef8'], 1, 0.4, { g: -0.8, life: 1.4 }); }
     else if (G.scene === 'drive') updateDrive(dt);
     else if (G.scene === 'snow') updateSnow(dt);
@@ -149,6 +152,12 @@ function frame(now) {
 function resize() { renderer.setSize(innerWidth, innerHeight); updateCamera(0.016); }
 addEventListener('resize', resize);
 saveSettings(); updateHUD(); resize();
+
+/* ---------------- static props are merged as they are built (they only ever move or sway as a whole) ---------------- */
+['makeFlower', 'makeTree', 'makePlant', 'makeGum', 'makePine', 'makeMountain', 'makeCloud', 'makeStreetLamp', 'makeHouse', 'makeTower', 'makeSnowman', 'makePalm'].forEach(n => {
+  const fn = window[n]; if (typeof fn !== 'function') return;
+  window[n] = function () { return mergeStatic(fn.apply(this, arguments)); };
+});
 
 /* ---------------- QA hook: ?qa=<scene> jumps straight in (for screenshots and tests) ---------------- */
 (function boot() {

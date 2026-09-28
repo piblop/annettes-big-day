@@ -38,6 +38,7 @@ CONFIG.weekend = {
   ]
 };
 const WK = CONFIG.weekend;
+BADGES.aisle = { n: 'Centre aisle victim', how: 'Grab an ALDI special buy', pack: true };
 const WK_FLAGS = ['wkBaths', 'wkGroceries', 'wkFetch', 'wkMovie', 'wkActivity'];
 Object.assign(SCENE_TIME, { baths: 9 * 60 + 10, aldi: 11 * 60 + 20, park: 14 * 60, home: 16 * 60 + 30, wnight: 19 * 60, wend: 22 * 60 + 30 });
 Object.assign(NPC_CHARS, { baths: 'A', shop: 'A', park: 'Ayko', home: 'A' });
@@ -56,8 +57,12 @@ const V3 = new THREE.Vector3();
 /* ---------------- shared weekend art ---------------- */
 function recolorDog(g, kind) {
   const hsl = {}, c = new THREE.Color();
+  const shift = () => { if (hsl.h < 0.04 || hsl.h > 0.16 || hsl.s < 0.3) return false; if (kind === 'y') c.setHSL(0.115, 0.72, Math.min(0.8, hsl.l * 0.98)); else if (kind === 'k') c.setHSL(0.07, 0.1, 0.1 + (hsl.l - 0.55) * 0.35); else c.setHSL(0.6, 0.05, Math.min(0.9, hsl.l + 0.12)); return true; };
   g.traverse(o => {
-    if (!o.isMesh || !o.material || !o.material.color || o.material.isMeshBasicMaterial) return;
+    if (!o.isMesh || !o.material || o.material.isMeshBasicMaterial) return;
+    const ca = o.geometry.attributes.color;
+    if (ca) { o.geometry = o.geometry.clone(); MERGED.push(o.geometry); const a = o.geometry.attributes.color; for (let i = 0; i < a.count; i++) { c.setRGB(a.getX(i), a.getY(i), a.getZ(i)).getHSL(hsl); if (shift()) a.setXYZ(i, c.r, c.g, c.b); } a.needsUpdate = true; return; }
+    if (!o.material.color) return;
     o.material.color.getHSL(hsl); if (hsl.h < 0.04 || hsl.h > 0.16 || hsl.s < 0.3) return;
     if (kind === 'y') c.setHSL(0.115, 0.72, Math.min(0.8, hsl.l * 0.98));
     else if (kind === 'k') c.setHSL(0.07, 0.1, 0.1 + (hsl.l - 0.55) * 0.35);
@@ -228,7 +233,7 @@ WALL_BUILDERS['home:w'] = w => {
 const npcPaulo = c => c === 'A' ? LOOK.paulo : null;
 MAPS.baths = {
   theme: 'baths', title: 'Weekend Pack: ' + WK.baths, sky: 'day', outdoor: true, edge: '#a6dc8f',
-  floor: ['#b5e39a', '#aadd8e'], wet: '#f3dca6', wall: ['#fff', '#fff'],
+  floor: ['#b5e39a', '#aadd8e'], wet: '#f3dca6', wall: ['#fff', '#fff'], water: ['#4fb3e0', '#5cbde6'], intro: { x: 7, z: 1, zoom: 0.7 }, ambient: 'water',
   rows: ["~~~~~~~~~~~~~~~", "~~~~~~~~~~~~~~~", "_______________", "...u.......p...", "......A........", "............KK.", "....s.....s....", "...............", "..........JJ...", "..............."],
   start: { x: 8, z: 4, dir: 'up' }, luca: { x: 5, z: 5 },
   npcs: npcPaulo,
@@ -266,7 +271,7 @@ MAPS.baths = {
 };
 MAPS.aldi = {
   theme: 'shop', title: 'Weekend Pack: ' + WK.grocer, sky: 'day', edge: '#a6dc8f',
-  floor: ['#e4e8ee', '#d6dde6'], wall: ['#dfe9f5', '#d4e2f2'], trim: '#ffffff',
+  floor: ['#d8e0ea', '#cbd5e2'], wall: ['#dfe9f5', '#d4e2f2'], trim: '#ffffff',
   rows: ["###############", "#SS..SS..SS.p.#", "#.............#", "#SS..SS..zz...#", "#......A......#", "#SS..SS..BB...#", "#.............#", "#..cc.....cc..#", "#.............#", "######D########"],
   start: { x: 7, z: 8, dir: 'up' },
   npcs: npcPaulo,
@@ -295,7 +300,7 @@ MAPS.aldi = {
   }
 };
 MAPS.park = {
-  theme: 'park', title: 'Weekend Pack: the dog park', sky: 'day', outdoor: true, edge: '#a6dc8f',
+  theme: 'park', title: 'Weekend Pack: the dog park', sky: 'day', outdoor: true, edge: '#a6dc8f', ambient: 'cicada',
   floor: ['#a6dc8f', '#9bd483'], wall: ['#fff', '#fff'],
   rows: ["###############", "#T....T.....T.#", "#..........y..#", "#....g....k...#", "#.......A.....#", "#..o.......y..#", "#..b.......b..#", "#....k........#", "#.............#", "######D########"],
   start: { x: 7, z: 8, dir: 'up' }, luca: { x: 9, z: 8 },
@@ -364,7 +369,11 @@ function resetWeekend() {
   G.weekend = true; G.wearing = 'sunny'; G.outfit = 'sunny'; G.wkImpulse = null; cam.orbit = 0;
   WKLOG = { list: 0, impulse: [], fetch: [], movie: null, activity: null, night: null };
 }
-function startWeekend() { resetWeekend(); clearUI(); fade(() => loadMap('baths')); }
+CAMPAIGN_STATE.weekend = {
+  save: () => ({ log: WKLOG, impulse: G.wkImpulse }),
+  load: x => { resetWeekend(); Object.assign(WKLOG, x.log || {}); G.wkImpulse = x.impulse || null; }
+};
+function startWeekend() { G.campaign = 'weekend'; resetWeekend(); clearUI(); fade(() => loadMap('baths')); }
 
 /* ---------------- Greenwich Baths: the morning dip ---------------- */
 function swimBaths() {
@@ -434,7 +443,7 @@ function groceryGame() {
         if (got >= need.length) finish();
         else { const n = MENU && MENU.b.findIndex(x => !x.disabled); if (MENU && MENU.b[MENU.i].disabled && n >= 0) focusMenu(n); }
       } else if (it.k === 'special') {
-        b.classList.add('done'); chaos++; G.wkImpulse = it.n.toLowerCase(); WKLOG.impulse.push(it.n); sfx('pop'); toast(react(it.n)); upd(); trolleyAdd(CONFETTI[i % 5], true); flyPic(b, cnt); const ic = iconFor(it.n); if (ic && !bag.includes(ic.e)) bag.push(ic.e);
+        b.classList.add('done'); chaos++; earn('aisle'); G.wkImpulse = it.n.toLowerCase(); WKLOG.impulse.push(it.n); sfx('pop'); toast(react(it.n)); upd(); trolleyAdd(CONFETTI[i % 5], true); flyPic(b, cnt); const ic = iconFor(it.n); if (ic && !bag.includes(ic.e)) bag.push(ic.e);
       } else { sfx('bad'); p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake'); toast('Not on the list!'); }
     });
   });
@@ -710,18 +719,11 @@ function weekendEnd() {
     ['Afternoon', L.activity || 'Lazy and perfect'],
     ['Night out', L.night || 'Out on the town']
   ];
-  const t = el('div', 'title', `<div class="logo"><h1>What a weekend, ${esc(CONFIG.name)}!</h1><span class="v2">The best kind of ordinary</span></div>`);
-  const card = el('div', 'panel', '<h2>Weekend highlights</h2><div class="logs">' + rows.map(([k, v]) => `<div class="got"><b>${esc(k)}</b>${esc(v)}</div>`).join('') + '</div>');
-  card.style.animationDelay = '.4s'; card.style.maxHeight = '46vh';
-  const w = el('div', 'tbtns');
-  const b1 = makeBtn('Play the weekend again', () => fade(() => { resetWeekend(); loadMap('baths'); }), 'big alt');
-  const b2 = makeBtn('Back to title', () => fade(titleScreen), 'big');
-  w.append(b1, b2); t.append(card, w); ui.append(t);
-  setMenu([b1, b2], { cols: 2, keepMode: true });
+  memoriesCard('weekend', { title: 'What a weekend, ' + CONFIG.name + '!', sub: 'The best kind of ordinary', head: 'Weekend highlights', rows }, [makeBtn('Play again', () => fade(() => { G.campaign = 'weekend'; resetWeekend(); loadMap('baths'); }), 'big alt'), makeBtn('Back to title', () => fade(titleScreen), 'big')]);
 }
 
 /* ---------------- QA jumps: ?qa=<name> ---------------- */
-function wkQA(map, fn) { resetWeekend(); if (map === 'aldi' || map === 'park' || map === 'home') { F.wkBaths = true; } if (map === 'park' || map === 'home') F.wkGroceries = true; if (map === 'home') F.wkFetch = true; loadMap(map); if (fn) setTimeout(() => { if (DLG) { DLG.q = []; nextLine(); } fn(); }, 950); }
+function wkQA(map, fn) { G.campaign = 'weekend'; resetWeekend(); if (map === 'aldi' || map === 'park' || map === 'home') { F.wkBaths = true; } if (map === 'park' || map === 'home') F.wkGroceries = true; if (map === 'home') F.wkFetch = true; loadMap(map); if (fn) setTimeout(() => { if (DLG) { DLG.q = []; nextLine(); } fn(); }, 950); }
 Object.assign(QA_EXTRA, {
   wkbaths: () => wkQA('baths'),
   wkshop: () => wkQA('aldi'),

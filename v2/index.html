@@ -44,6 +44,13 @@ button { font-family:'Fredoka', system-ui, sans-serif; }
 #hudBtns { margin-left:auto; display:flex; gap:6px; }
 .ib { border:2px solid var(--tan); background:var(--paper); color:var(--ink); border-radius:999px; box-shadow:var(--shadow); padding:6px 12px; font:600 14px 'Fredoka', sans-serif; cursor:pointer; }
 .ib:active { transform:scale(.94); }
+@media (max-width:520px) { #chapter { position:absolute; left:12px; top:calc(54px + env(safe-area-inset-top,0px)); max-width:calc(100vw - 24px); } }
+.photo { position:fixed; inset:0; z-index:70; display:grid; place-items:center; background:rgba(58,40,30,.45); animation:fadeIn .2s; padding:16px; }
+.photo .snap { background:#fffdf8; padding:12px 12px 16px; border-radius:18px; box-shadow:var(--shadow); max-width:min(560px, 100%); transform:rotate(-1.5deg); animation:popIn .35s cubic-bezier(.3,1.6,.5,1); text-align:center; }
+.photo img { width:100%; border-radius:10px; display:block; }
+.photo p { font:500 13px 'Figtree', sans-serif; color:var(--ink2); margin:8px 0 10px; }
+.photo a.big { text-decoration:none; display:inline-block; }
+.album .logs .got { animation:optIn .4s backwards; }
 @media (max-width:700px) { #needs { display:none; } #chapter { max-width:40vw; } .pill, .ib { font-size:13px; padding:5px 10px; } }
 
 /* ---------- overlays ---------- */
@@ -414,6 +421,41 @@ function mk(g, color, s, p, parent, o) {
   if (parent) parent.add(m);
   return m;
 }
+/* ---------------- draw-call diet: merge a rig's static meshes per material, keeping every group (joint) intact ---------------- */
+let MERGED = []; // merged geometries owned by the current scene, freed by clearWorld
+function mergeGeos(list, vc) {
+  const pos = [], nor = [], uv = [], idx = [], col = []; let off = 0;
+  list.forEach(c => {
+    const cc = c.material.color || { r: 1, g: 1, b: 1 };
+    const g = c.geometry.clone(); g.applyMatrix4(c.matrix);
+    const p = g.attributes.position, n = g.attributes.normal, u = g.attributes.uv;
+    for (let i = 0; i < p.count; i++) { pos.push(p.getX(i), p.getY(i), p.getZ(i)); nor.push(n ? n.getX(i) : 0, n ? n.getY(i) : 1, n ? n.getZ(i) : 0); uv.push(u ? u.getX(i) : 0, u ? u.getY(i) : 0); if (vc) col.push(cc.r, cc.g, cc.b); }
+    if (g.index) for (let i = 0; i < g.index.count; i++) idx.push(g.index.getX(i) + off); else for (let i = 0; i < p.count; i++) idx.push(i + off);
+    off += p.count; g.dispose();
+  });
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); out.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); out.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  if (vc) out.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  out.setIndex(idx); out.computeBoundingSphere(); return out;
+}
+// one shared vertex-colour material per material kind, so differently tinted pieces merge into one mesh
+const VCMATS = {};
+function vcMat(m) {
+  const k = m.type + ':' + m.opacity;
+  return VCMATS[k] || (VCMATS[k] = m.isMeshBasicMaterial ? new THREE.MeshBasicMaterial({ vertexColors: true, transparent: m.transparent, opacity: m.opacity }) : new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: TOON, transparent: m.transparent, opacity: m.opacity }));
+}
+function mergeStatic(obj, keep, own, flat) {
+  if (!flat) obj.children.slice().forEach(c => { if (!c.isMesh && c.children.length) mergeStatic(c, keep, own); });
+  const buckets = new Map();
+  obj.children.forEach(c => { if (!c.isMesh || c.isInstancedMesh || c.children.length || (keep && keep.has(c)) || c.onBeforeRender !== THREE.Object3D.prototype.onBeforeRender) return; c.updateMatrix(); const mt = c.material, k = mt.type + ':' + mt.opacity + ':' + (c.castShadow ? 's' : ''); if (!buckets.has(k)) buckets.set(k, []); buckets.get(k).push(c); });
+  buckets.forEach(list => {
+    if (list.length < 2) return;
+    const same = list.every(c => c.material === list[0].material), m0 = list[0].material;
+    const m = new THREE.Mesh(mergeGeos(list, !same), same ? m0 : vcMat(m0)); m.castShadow = list[0].castShadow; m.receiveShadow = true;
+    list.forEach(c => obj.remove(c)); obj.add(m); if (own !== false) MERGED.push(m.geometry);
+  });
+  return obj;
+}
 function grp(parent, x, y, z) { const g = new THREE.Group(); g.position.set(x || 0, y || 0, z || 0); if (parent) parent.add(g); return g; }
 
 /* ---------------- diorama camera: orthographic, fixed pitch, 90 degree yaw steps ---------------- */
@@ -432,7 +474,8 @@ function updateCamera(dt) {
   camera.position.set(cam.target.x + r * Math.cos(cam.pitch) * Math.sin(cam.yaw) + sx, cam.target.y + r * Math.sin(cam.pitch), cam.target.z + r * Math.cos(cam.pitch) * Math.cos(cam.yaw));
   camera.lookAt(cam.target.x + sx, cam.target.y, cam.target.z);
   const a = innerWidth / innerHeight;
-  const base = a < 1.1 ? Math.min(cam.base * 1.25 / a, cam.base * 2.1) : cam.base;
+  // tall phones: maps get a closer follow-cam (Annette stays big on screen), set pieces keep the wide framing
+  const base = a < 1.1 ? (G.scene === 'map' ? cam.base * (a < 0.7 ? 1.45 : 1.3) : Math.min(cam.base * 1.25 / a, cam.base * 2.1)) : cam.base;
   const s = base / cam.zoom;
   camera.left = -s * a / 2; camera.right = s * a / 2; camera.top = s / 2; camera.bottom = -s / 2; camera.updateProjectionMatrix();
 }
@@ -542,6 +585,29 @@ const SFX = {
   blow: () => tone(1200, 0.35, 'sine', 0.03, 0, 300),
   woof: () => { tone(420, 0.08, 'sawtooth', 0.04, 0, 260); tone(460, 0.09, 'sawtooth', 0.04, 0.14, 280); }
 };
+/* ---------------- ambient beds: soft looping sound per place (lake water, cicadas, mountain wind, chairlift) ---------------- */
+let AMB = null, NOISE = null;
+function noiseBuf() { if (NOISE) return NOISE; const n = actx.sampleRate * 2, b = actx.createBuffer(1, n, actx.sampleRate), d = b.getChannelData(0); let last = 0; for (let i = 0; i < n; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; } return (NOISE = b); }
+function stopAmbient() { if (!AMB) return; const a = AMB; AMB = null; clearInterval(a.timer); try { const t = actx.currentTime; a.gain.gain.setTargetAtTime(0.0001, t, 0.3); setTimeout(() => a.srcs.forEach(s => { try { s.stop(); } catch (e) {} }), 1200); } catch (e) {} }
+function ambient(kind) {
+  stopAmbient(); if (!kind || !actx || !SET.sfx) return;
+  try {
+    const t = actx.currentTime, gain = actx.createGain(); gain.gain.setValueAtTime(0.0001, t); gain.connect(actx.destination);
+    const A = AMB = { kind, gain, srcs: [], timer: 0 };
+    const bed = (freq, q, vol, lfo) => {
+      const s = actx.createBufferSource(); s.buffer = noiseBuf(); s.loop = true;
+      const f = actx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = freq; f.Q.value = q;
+      const g = actx.createGain(); g.gain.value = vol; s.connect(f).connect(g).connect(gain); s.start(); A.srcs.push(s);
+      if (lfo) { const o = actx.createOscillator(), og = actx.createGain(); o.frequency.value = lfo; og.gain.value = vol * 0.8; o.connect(og).connect(g.gain); o.start(); A.srcs.push(o); }
+    };
+    if (kind === 'water') bed(520, 0.7, 0.5, 0.13);
+    if (kind === 'wind' || kind === 'lift') bed(380, 1.2, 0.45, 0.07);
+    if (kind === 'engine') bed(220, 0.9, 0.6, 0);
+    if (kind === 'cicada') A.timer = setInterval(() => { if (!AMB || Math.random() < 0.35) return; for (let i = 0; i < 16; i++) tone(4200 + Math.random() * 300, 0.05, 'sine', 0.006, i * 0.06); }, 1400);
+    if (kind === 'lift') A.timer = setInterval(() => { if (AMB) { tone(95, 0.12, 'triangle', 0.03); tone(140, 0.08, 'triangle', 0.02, 0.14); } }, 2600);
+    gain.gain.setTargetAtTime(0.35, t, 0.6);
+  } catch (e) { AMB = null; }
+}
 function sfx(n) { try { SFX[n] && SFX[n](); } catch (e) {} if (n === 'bad' || n === 'hit') buzz(30); if (n === 'heart' || n === 'badge') buzz([20, 40, 20]); }
 // Instanced meshes get their own material (never the shared cache) and a pre-filled colour per
 // instance: r128 binds instanceColor per program, so mixing coloured and uncoloured instanced
@@ -606,7 +672,7 @@ function makePerson(o) {
   if (o.beanie) { mk(G_SPH, o.beanie, [0.57, 0.36, 0.57], [0, 0.21, -0.04], head); mk(G_CYL, '#ffffff', [0.57, 0.08, 0.57], [0, 0.13, -0.03], head, { noShadow: true }); mk(G_SPH, '#ffffff', [0.15, 0.15, 0.15], [0, 0.4, -0.05], head); }
   if (o.apron) mk(G_BOX, o.apron, [0.24, 0.26, 0.02], [0, 0.34, 0.16], body);
   g.userData = { kind: 'person', body, head, legL, legR, armL, armR, walk: 0, bounce: 0 };
-  return g;
+  return mergeStatic(g);
 }
 const LOOK = {
   annette: o => ({ skin: '#f9d1b0', hair: '#f5d271', brow: '#d9a94a', lashes: true, hairStyle: 'long', eye: '#3d7be0', bow: '#ff7aa8', top: o.top, bottom: o.bottom, style: o.style, shoe: '#ffffff', beanie: o.beanie }),
@@ -626,7 +692,7 @@ function wisps(parent, c, r, n, cols, size, droop, skip, seed) {
     if (skip && skip(p)) return;
     const h = hsh(i, n, seed || 5), s = size * (0.8 + h * 0.45), col = cols[Math.floor(hsh(i, n, 3) * cols.length)];
     WISP_D.set(p[0] + (hsh(i, n, 9) - 0.5) * 0.5, p[1] - droop, p[2] + (hsh(i, n, 11) - 0.5) * 0.5).normalize();
-    const t = mk(G_CURL, col, [s * 0.78, s * 1.25, s * 0.8], [c[0] + p[0] * r[0] + WISP_D.x * s * 0.35, c[1] + p[1] * r[1] + WISP_D.y * s * 0.35, c[2] + p[2] * r[2] + WISP_D.z * s * 0.35], parent, { noShadow: true });
+    const t = mk(G_CURL, col, [s * 0.78, s * 1.25, s * 0.8], [c[0] + p[0] * r[0] + WISP_D.x * s * 0.12, c[1] + p[1] * r[1] + WISP_D.y * s * 0.12, c[2] + p[2] * r[2] + WISP_D.z * s * 0.12], parent, { noShadow: true });
     t.quaternion.setFromUnitVectors(UP, WISP_D);
   });
 }
@@ -635,12 +701,12 @@ function strand(parent, col, pos, dir, len, w) {
   const t = mk(G_CURL, col, [Math.max(w, len * 0.55), len, Math.max(w, len * 0.55) * 1.1], [pos[0] + WISP_D.x * len * 0.4, pos[1] + WISP_D.y * len * 0.4, pos[2] + WISP_D.z * len * 0.4], parent, { noShadow: true });
   t.quaternion.setFromUnitVectors(UP, WISP_D); return t;
 }
-function makeLuca() {
-  const g = new THREE.Group(), body = grp(g);
-  const A = '#d9a066', a = '#e8bb84', b = '#f7ecdc', d = '#cc9156', r = '#bd7f45', C = [A, A, a, '#cf955a'];
+function buildLuca() {
+  const g = new THREE.Group(), body = grp(g); body.name = 'body';
+  const A = '#e6bd88', a = '#f1d2a4', b = '#fbf3e6', d = '#dcaa74', r = '#cd9a64', C = [A, A, a, '#e0b27c'];
   // compact torso under a shaggy coat, with a cream bib down the chest
-  mk(G_SPH, A, [0.42, 0.36, 0.52], [0, 0.32, -0.02], body);
-  wisps(body, [0, 0.34, -0.02], [0.19, 0.16, 0.24], 52, C, 0.13, 0.7);
+  mk(G_SPH, A, [0.46, 0.4, 0.56], [0, 0.32, -0.02], body);
+  wisps(body, [0, 0.34, -0.02], [0.19, 0.16, 0.24], 34, C, 0.15, 0.7);
   wisps(body, [0, 0.3, 0.2], [0.11, 0.13, 0.06], 18, [b, b, '#efdcc2'], 0.12, 1.3, p => p[2] < -0.3, 6);
   const legs = [];
   [[-0.12, 0.15], [0.12, 0.15], [-0.12, -0.17], [0.12, -0.17]].forEach(([x, z], k) => {
@@ -652,9 +718,9 @@ function makeLuca() {
   });
   // head: a round dome under a mop of shaggy hair
   const head = grp(body, 0, 0.64, 0.28);
-  mk(G_SPH, A, [0.44, 0.4, 0.4], [0, 0, 0], head);
-  wisps(head, [0, 0.02, -0.02], [0.2, 0.18, 0.17], 40, C, 0.12, 0.3, p => p[2] > 0.3 && p[1] < 0.55);
-  wisps(head, [0, 0.19, 0.03], [0.1, 0.04, 0.08], 12, [a, A, '#f0cf9f'], 0.1, -0.9, null, 7);
+  mk(G_SPH, A, [0.47, 0.43, 0.43], [0, 0, 0], head);
+  wisps(head, [0, 0.02, -0.02], [0.2, 0.18, 0.17], 28, C, 0.13, 0.3, p => p[2] > 0.3 && p[1] < 0.55);
+  wisps(head, [0, 0.17, 0.03], [0.1, 0.04, 0.08], 8, [a, A, '#f0cf9f'], 0.08, -0.4, null, 7);
   // short cream muzzle with a long scruffy beard
   mk(G_SPH, b, [0.25, 0.16, 0.17], [0, -0.08, 0.16], head);
   mk(G_SPH, b, [0.16, 0.1, 0.1], [0, 0.0, 0.18], head);
@@ -691,7 +757,21 @@ function makeLuca() {
     mk(G_CURL, i % 2 ? a : A, [0.1, 0.1, 0.1], p, tail, { noShadow: true });
     [-1, 1].forEach(s => strand(tail, i > 3 ? b : i % 2 ? A : a, p, [s * 0.9, -0.3, 0.2], 0.12 + i * 0.015, 0.05));
   });
-  g.userData = { kind: 'dog', body, head, ears, tail, legs, tongue, walk: 0 };
+  head.name = 'head'; ears[0].name = 'earL'; ears[1].name = 'earR'; tail.name = 'tail'; legs.forEach((l, i) => l.name = 'leg' + i); tongue.name = 'tongue';
+  return g;
+}
+// Luca is built once, merged down to a handful of draw calls, then cloned (clones share geometry)
+let LUCA_T = null;
+const FUR_RAMP = (() => { const d = new Uint8Array([178, 204, 226, 242, 255]); const t = new THREE.DataTexture(d, 5, 1, THREE.LuminanceFormat); t.minFilter = t.magFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();
+function makeLuca() {
+  if (!LUCA_T) {
+    LUCA_T = buildLuca(); mergeStatic(LUCA_T, new Set([LUCA_T.getObjectByName('tongue')]), false);
+    // fur gets a soft, bright light ramp: shadows stay light and blend, so the tufts read as one fluffy coat instead of bubbles
+    const soft = {};
+    LUCA_T.traverse(o => { if (o.isMesh) o.receiveShadow = false; if (o.isMesh && o.material.isMeshToonMaterial) { const m = o.material, k = (m.vertexColors ? 'vc' : m.color.getHexString()) + m.opacity; o.material = soft[k] || (soft[k] = new THREE.MeshToonMaterial({ color: m.vertexColors ? '#ffffff' : m.color, vertexColors: m.vertexColors, gradientMap: FUR_RAMP, transparent: m.transparent, opacity: m.opacity })); } });
+  }
+  const g = LUCA_T.clone(), f = n => g.getObjectByName(n);
+  g.userData = { kind: 'dog', body: f('body'), head: f('head'), ears: [f('earL'), f('earR')], tail: f('tail'), legs: [0, 1, 2, 3].map(i => f('leg' + i)), tongue: f('tongue'), walk: 0 };
   return g;
 }
 
@@ -910,6 +990,7 @@ let W = null; // the live map
 function clearWorld() {
   while (world.children.length) world.remove(world.children[0]);
   (W && W.dispose || []).forEach(o => o.dispose());
+  MERGED.forEach(g => g.dispose()); MERGED = []; stopAmbient();
   clouds.length = 0; FX.clear();
   W = null;
 }
@@ -992,7 +1073,7 @@ function buildMap(id) {
   for (let z = 0; z < H; z++) for (let x = 0; x < Wd; x++) {
     const ch = grid[z][x];
     const isWall = !W.outdoor && (z === 0 || x === 0 || x === Wd - 1 || z === H - 1) && ch !== 'D';
-    if (ch === '~') { dm.position.set(x, -0.12, z); dm.scale.set(1, 1, 1); dm.updateMatrix(); water.setMatrixAt(nw, dm.matrix); water.setColorAt(nw++, col.set((x + z) % 2 ? '#8fd3f0' : '#9fdcf5')); continue; }
+    if (ch === '~') { dm.position.set(x, -0.12, z); dm.scale.set(1, 1, 1); dm.updateMatrix(); water.setMatrixAt(nw, dm.matrix); water.setColorAt(nw++, col.set(def.water ? def.water[(x + z) % 2] : (x + z) % 2 ? '#8fd3f0' : '#9fdcf5')); continue; }
     dm.position.set(x, 0, z); dm.scale.set(1, 1, 1); dm.updateMatrix(); floor.setMatrixAt(nf, dm.matrix);
     const c = ch === '_' ? def.wet : (isWall ? def.floor[1] : def.floor[(x + z) % 2]);
     floor.setColorAt(nf++, col.set(c));
@@ -1023,7 +1104,7 @@ function buildMap(id) {
     const onWall = !W.outdoor && z === 0;
     const o = { ch, x, z, w, h, onWall };
     if (onWall) { o.g = wallDecor(def.theme, ch, w); o.g.position.set(x + (w - 1) / 2, 0, z + 0.5); world.add(o.g); W.decor.push(o); }
-    else { o.g = buildObj(def.theme, ch, w, h); o.g.position.set(x + (w - 1) / 2, 0, z + (h - 1) / 2); world.add(o.g); popIn(o.g, 0.02 * (x + z)); }
+    else { o.g = buildObj(def.theme, ch, w, h); if (!Object.keys(o.g.userData).some(k => k !== 'sway')) mergeStatic(o.g); o.g.position.set(x + (w - 1) / 2, 0, z + (h - 1) / 2); world.add(o.g); popIn(o.g, 0.02 * (x + z)); }
     W.objs.push(o);
   }
   if (def.decorate) def.decorate(world);
@@ -1031,6 +1112,7 @@ function buildMap(id) {
   for (let i = 0; i < 26; i++) { const t = hsh(i, 9) * (2 * (Wd + H)); let x, z; if (t < Wd) { x = t - 0.5; z = H - 0.45; } else if (t < Wd + H) { x = Wd - 0.45; z = t - Wd - 0.5; } else if (t < 2 * Wd + H) { x = t - Wd - H - 0.5; z = -0.55; } else { x = -0.55; z = t - 2 * Wd - H - 0.5; } if (W.outdoor || hsh(i, 3) < 0.4) makeFlower(world, x, z, CONFETTI[i % 5]).position.y = W.outdoor ? 0 : -0.02; }
   [[-1.4, -0.8], [Wd + 0.4, -0.8], [-1.4, H + 0.2], [Wd + 0.4, H + 0.2]].forEach(([x, z], i) => { const b = makeBalloon(world, x, -0.3, z, CONFETTI[i], 2.2 + i * 0.3); b.userData.bob = true; W.anim.push(b); });
   for (let i = 0; i < 7; i++) makeCloud(world, -20 + i * 7, -5.5 + hsh(i, 1) * 1.5, -8 + hsh(i, 2) * 22, 1.2 + hsh(i, 3) * 1.4);
+  mergeStatic(world, new Set(W.hearts.map(h => h.m)), true, true); // static scenery meshes on the root, per material
   layoutWalls();
 
   // Annette + Luca
@@ -1283,7 +1365,7 @@ function stat(k, d, quiet) {
   G.stats[k] = clamp(G.stats[k] + d, 0, 100); updateHUD();
   if (!quiet && d > 0 && W && W.player) FX.emit(W.player.g.position.x, 1.3, W.player.g.position.z, STAT_INFO[k][1], 8, 1.4, { g: -1, life: 0.9 });
 }
-function earn(id) { if (G.badges[id]) return; G.badges[id] = true; sfx('badge'); toast(BADGES[id].n + ' earned!', true); }
+function earn(id) { if (G.badges[id]) return; G.badges[id] = true; if (BADGES[id].pack) savePackBadge(id); sfx('badge'); toast(BADGES[id].n + ' earned!', true); }
 function secret(id) {
   const first = !G.secrets[id]; G.secrets[id] = true;
   say(CONFIG.secrets[id].slice(), () => { if (first) { sfx('secret'); toast('Secret found: ' + SECRET_NAMES[id] + ' (' + Object.keys(G.secrets).length + ' of 4)', true); if (W && W.player) confetti(W.player.g.position.x, 1.2, W.player.g.position.z, 30); } });
@@ -1358,10 +1440,54 @@ function menuBack() { if (MENU && MENU.onBack) { const f = MENU.onBack; MENU = n
 function panel(title, sub, gridCls) { clearUI(); const p = el('div', 'panel', `<h2>${title}</h2>${sub ? `<p class="sub">${sub}</p>` : ''}${gridCls ? `<div class="${gridCls}"></div>` : ''}`); ui.append(p); return p; }
 function pickMenu(title, sub, items, onPick, back) {
   const p = panel(esc(title), esc(sub), 'grid2');
-  const btns = items.map(d => makeBtn(`<span>${esc(d.n)}</span>${d.d ? `<small>${esc(d.d)}</small>` : ''}`, () => { clearUI(); G.mode = 'busy'; moment(d.n, null, () => { G.mode = 'map'; onPick(d); }); }));
+  const btns = items.map(d => makeBtn(`<span>${esc(d.n)}</span>${d.d ? `<small>${esc(d.d)}</small>` : ''}`, () => { clearUI(); if (d.quick) { G.mode = 'map'; onPick(d); return; } G.mode = 'busy'; moment(d.n, null, () => { G.mode = 'map'; onPick(d); }); }));
   p.querySelector('.grid2').append(...btns);
   setMenu(btns, { cols: innerWidth > 460 ? 2 : 1, onBack: back === false ? null : () => { clearUI(); G.mode = 'map'; } });
 }
+
+/* ---------------- the memories album: every ending saves a page, the title can flip through them ---------------- */
+const ALBUM_KEY = 'abd2-album-v1';
+function loadAlbum() { try { return JSON.parse(localStorage.getItem(ALBUM_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function saveAlbumPage(key, page) { const a = loadAlbum(); a[key] = Object.assign({ at: Date.now() }, page); try { localStorage.setItem(ALBUM_KEY, JSON.stringify(a)); } catch (e) {} }
+function pageHTML(p) { return `<h2>${esc(p.head || 'Memories')}</h2><div class="logs">` + p.rows.map(([k, v]) => `<div class="got"><b>${esc(k)}</b>${esc(v)}</div>`).join('') + '</div>'; }
+// the shared ending: a big title, one album page and buttons (plus Save photo)
+function memoriesCard(key, page, buttons) {
+  saveAlbumPage(key, page);
+  const t = el('div', 'title', `<div class="logo"><h1>${esc(page.title)}</h1><span class="v2">${esc(page.sub || '')}</span></div>`);
+  const card = el('div', 'panel album', pageHTML(page)); card.style.animationDelay = '.4s'; card.style.maxHeight = '46vh';
+  const w = el('div', 'tbtns'), all = buttons.concat(makeBtn('Save photo', savePhoto, 'big sky'));
+  w.append(...all); t.append(card, w); ui.append(t);
+  setMenu(all, { cols: all.length, keepMode: true });
+}
+function openAlbum(back) {
+  const a = loadAlbum(), keys = ['day', 'weekend', 'holiday-qt', 'holiday-hv'].filter(k => a[k]);
+  if (!keys.length) return;
+  let i = 0;
+  const show = () => {
+    const p = a[keys[i]], pn = panel('Our album', `Page ${i + 1} of ${keys.length} · ${esc(p.title)}`);
+    const body = el('div', 'album', pageHTML(p)); pn.append(body);
+    const row = el('div', 'tbtns'); row.style.marginTop = '14px';
+    const bs = [];
+    if (keys.length > 1) bs.push(makeBtn('Next page', () => { i = (i + 1) % keys.length; sfx('whoosh'); show(); }, 'big alt'));
+    bs.push(makeBtn('Close', () => { clearUI(); back(); }, 'big'));
+    row.append(...bs); pn.append(row); setMenu(bs, { cols: bs.length, keepMode: true, onBack: () => { clearUI(); back(); } });
+  };
+  show();
+}
+// snapshot the 3D scene as a keepsake photo (long-press to save on phones)
+function savePhoto() {
+  let url; try { renderer.render(scene, camera); url = renderer.domElement.toDataURL('image/png'); } catch (e) { toast('Could not take the photo.'); return; }
+  sfx('pop'); buzz(20);
+  const o = el('div', 'photo', `<div class="snap"><img alt="A memory" src="${url}"><p>Tap and hold to save on a phone</p></div>`);
+  const row = el('div', 'tbtns'), dl = el('a', 'big alt', 'Download'); dl.href = url; dl.download = 'annette-memory.png';
+  const close = makeBtn('Close', () => o.remove(), 'big'); row.append(dl, close); o.firstChild.append(row); document.body.append(o);
+  o.addEventListener('pointerdown', e => { if (e.target === o) o.remove(); });
+}
+
+/* ---------------- pack badges persist across playthroughs ---------------- */
+const PACK_BADGE_KEY = 'abd2-badges-v1';
+function restorePackBadges() { try { Object.assign(G.badges, JSON.parse(localStorage.getItem(PACK_BADGE_KEY) || '{}')); } catch (e) {} }
+function savePackBadge(id) { try { const b = JSON.parse(localStorage.getItem(PACK_BADGE_KEY) || '{}'); b[id] = true; localStorage.setItem(PACK_BADGE_KEY, JSON.stringify(b)); } catch (e) {} }
 
 /* ---------------- pictures for options + little animated moments when you pick ---------------- */
 // [pattern, emoji, kind]. First match wins, so specific names go before general ones.
@@ -1375,7 +1501,7 @@ const ICONS = [
   [/cleanser/i, '🧼', 'glow'], [/serum/i, '💧', 'glow'], [/moisturiser/i, '🧴', 'glow'], [/spf/i, '🌞', 'glow'],
   [/exec reports/i, '📊', 'plain'], [/project updates/i, '📋', 'plain'], [/snacks/i, '🍪', 'plain'],
   [/banana/i, '🍌', 'cart'], [/sourdough/i, '🍞', 'cart'], [/oat milk/i, '🥛', 'cart'], [/chocolate/i, '🍫', 'cart'], [/dishwasher/i, '🧽', 'cart'], [/sparkling/i, '💦', 'cart'], [/avocado/i, '🥑', 'cart'], [/party pies/i, '🥧', 'cart'], [/dog treats/i, '🦴', 'cart'], [/candle/i, '🕯️', 'cart'],
-  [/go-kart/i, '🏎️', 'special'], [/tv/i, '📺', 'special'], [/chainsaw/i, '🪚', 'special'], [/spa/i, '🛁', 'special'], [/ski/i, '⛷️', 'special'], [/welding/i, '🥽', 'special'], [/kayak/i, '🛶', 'special'], [/robot/i, '🤖', 'special'], [/snowboard/i, '🏂', 'special'], [/beekeeping/i, '🐝', 'special'], [/scooter/i, '🛴', 'special'],
+  [/go-kart/i, '🏎️', 'special'], [/tv/i, '📺', 'special'], [/chainsaw/i, '🪓', 'special'], [/spa/i, '🛁', 'special'], [/ski/i, '⛷️', 'special'], [/welding/i, '🥽', 'special'], [/kayak/i, '🛶', 'special'], [/robot/i, '🤖', 'special'], [/snowboard/i, '🏂', 'special'], [/beekeeping/i, '🐝', 'special'], [/scooter/i, '🛴', 'special'],
   [/scorsese/i, '🎬', 'movie'], [/nolan/i, '⏳', 'movie'], [/godfather/i, '🌹', 'movie'],
   [/knight/i, '♞', 'chess'], [/queen/i, '♛', 'chess'], [/castle/i, '🏰', 'chess'],
   [/cheese/i, '🧀', 'picnic'], [/strawberr/i, '🍓', 'picnic'],
@@ -1385,7 +1511,7 @@ const ICONS = [
 function iconFor(name) { const t = String(name).replace(/&amp;/g, '&'); const r = ICONS.find(([re]) => re.test(t)); return r ? { e: r[1], k: r[2] } : null; }
 const MOMENT_LINES = { dine: 'Dinner is served', drink: 'Cheers!', wine: 'Cheers to the weekend', food: 'Tuck in', read: 'Just one more chapter', hug: 'Right back at you', outfit: 'Looking good', music: 'Turn it up', glow: 'Glowing', movie: 'Lights down, film on', chess: 'Your move', picnic: 'Picnic time', cart: 'Into the trolley', special: 'Absolutely not on the list' };
 // props that join the main picture on the little stage, per kind
-const MOMENT_PROPS = { dine: ['🕯️', '🕯️'], wine: ['🧀', '🫒'], drink: [], food: [], movie: ['🍿'], music: ['🎵', '🎶', '🎵'], outfit: ['✨', '✨', '✨'], hug: ['💞', '💗', '💖'], glow: ['✨', '✨'], chess: ['👑'], picnic: ['🧺'], read: ['☕'], cart: ['🛒'], special: ['⭐'] };
+const MOMENT_PROPS = { dine: ['🕯️', '🕯️'], wine: ['🧀', '🍇'], drink: [], food: [], movie: ['🍿'], music: ['🎵', '🎶', '🎵'], outfit: ['✨', '✨', '✨'], hug: ['💞', '💗', '💖'], glow: ['✨', '✨'], chess: ['👑'], picnic: ['🧺'], read: ['☕'], cart: ['🛒'], special: ['⭐'] };
 let MOMENT = null;
 function moment(name, o, cb) {
   o = o || {};
@@ -1424,7 +1550,7 @@ function openSettings() {
   if (G.mode !== 'map' && G.mode !== 'title') return;
   const ret = G.mode, p = panel('Settings', 'Saved on this device.');
   const rows = [['sfx', 'Sound effects'], ['buzz', 'Vibration'], ['calm', 'Reduced motion']];
-  const btns = rows.map(([k, n]) => { const r = el('div', 'row', `<span>${n}</span>`); const t = makeBtn('', () => { SET[k] = !SET[k]; t.classList.toggle('on', SET[k]); saveSettings(); }, 'tog' + (SET[k] ? ' on' : '')); t.setAttribute('aria-label', n); r.append(t); p.append(r); return t; });
+  const btns = rows.map(([k, n]) => { const r = el('div', 'row', `<span>${n}</span>`); const t = makeBtn('', () => { SET[k] = !SET[k]; t.classList.toggle('on', SET[k]); saveSettings(); if (k === 'sfx' && !SET.sfx) stopAmbient(); }, 'tog' + (SET[k] ? ' on' : '')); t.setAttribute('aria-label', n); r.append(t); p.append(r); return t; });
   const done = makeBtn('Done', () => { clearUI(); G.mode = ret; }, 'big'); done.style.marginTop = '14px'; p.append(done);
   setMenu(btns.concat(done), { onBack: () => { clearUI(); G.mode = ret; }, keepMode: ret === 'title' });
   if (ret !== 'title') G.mode = 'menu';
@@ -1446,11 +1572,17 @@ $('#rotR').onclick = () => rotateView(-1);
 
 /* ---------------- save / checkpoint ---------------- */
 const SAVE_KEY = 'abd2-save-v1';
+// one save slot per campaign, so a weekend or holiday never overwrites the birthday day
+const CAMPAIGNS = { day: 'The birthday', weekend: 'The weekend', holiday: 'The holiday' };
+const slotKey = c => SAVE_KEY + (c && c !== 'day' ? '-' + c : '');
+const CAMPAIGN_STATE = {}; // campaign -> { save(): extra state, load(s) }
 function saveCheckpoint(mapId) {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 1, map: mapId, stats: G.stats, F: G.F, secrets: G.secrets, badges: G.badges, hearts: G.hearts, outfit: G.outfit, radio: G.radio, tidied: G.tidied, balloons: G.balloons, lucaPat: G.lucaPat })); } catch (e) {}
+  const c = G.campaign || 'day', extra = CAMPAIGN_STATE[c] ? CAMPAIGN_STATE[c].save() : {};
+  try { localStorage.setItem(slotKey(c), JSON.stringify({ v: 1, campaign: c, extra, map: mapId, stats: G.stats, F: G.F, secrets: G.secrets, badges: G.badges, hearts: G.hearts, outfit: G.outfit, radio: G.radio, tidied: G.tidied, balloons: G.balloons, lucaPat: G.lucaPat })); } catch (e) {}
 }
-function loadCheckpoint() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); return s && s.v === 1 && MAPS[s.map] ? s : null; } catch (e) { return null; } }
-function clearCheckpoint() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+function loadCheckpoint(c) { try { const s = JSON.parse(localStorage.getItem(slotKey(c)) || 'null'); return s && s.v === 1 && MAPS[s.map] ? Object.assign({ campaign: c || 'day' }, s) : null; } catch (e) { return null; } }
+function allCheckpoints() { return Object.keys(CAMPAIGNS).map(loadCheckpoint).filter(Boolean); }
+function clearCheckpoint(c) { try { localStorage.removeItem(slotKey(c || G.campaign || 'day')); } catch (e) {} }
 
 /* ===== 06-story.js ===== */
 /* =========================================================
@@ -1573,6 +1705,8 @@ function loadMap(id) {
   buildMap(id);
   showHUD(true); setChapter(def.title); chapterCard(def.title); G.clock = SCENE_TIME[id] || G.clock;
   saveCheckpoint(id);
+  if (def.intro && !SET.calm) { cam.target.set(def.intro.x, 0.5, def.intro.z); cam.goal.copy(cam.target); cam.zoom = cam.zoomGoal = def.intro.zoom; W.introUntil = G.t + 2.2; }
+  ambient(def.ambient || null);
   G.mode = 'map';
   setTimeout(() => { if (G.scene === 'map' && G.mapId === id && G.mode === 'map') def.onEnter && def.onEnter(); }, 900);
 }
@@ -1632,7 +1766,7 @@ function talkMum() {
   const menu = () => pickMenu('Mum', 'Anything before you head off?', [
     { n: 'Flat white by the window', d: 'A slow sip before the big day', k: 'coffee' },
     { n: 'Big birthday hug', d: 'The best kind', k: 'hug' },
-    { n: 'See you tonight', d: 'Off we go', k: 'bye' }
+    { n: 'See you tonight', d: 'Off we go', k: 'bye', quick: true }
   ], d => {
     if (d.k === 'coffee') { if (!F.coffee) { F.coffee = true; stat('energy', 15); } say(["The morning light pours in. Perfect flat white.", { n: CONFIG.name, t: "Okay. Now I'm ready." }], refreshHints); }
     else if (d.k === 'hug') { stat('happy', 5); const m = W.npcs.find(n => n.ch === 'M'); if (m) FX.emit(m.x, 1.2, m.z, '#ff7aa8', 12, 1.2, { g: -1, life: 1.2 }); say({ n: 'Mum', t: "Happy birthday, darling. Go shine." }, refreshHints); }
@@ -1664,7 +1798,7 @@ function lunchScene() {
   cam.goal.set(3, 0.5, 2); cam.target.copy(cam.goal); cam.zoomGoal = 1.5; cam.pitch = 0.96; cam.orbit = 0; cam.base = 11; cam.yawGoal = Math.round(cam.yawGoal / (Math.PI / 2)) * (Math.PI / 2);
   setTimeout(() => {
     pickMenu('Lunch break', 'Midday hunger hits. What are we grabbing?', CONFIG.lunches, d => {
-      G.mode = 'busy'; stat('energy', 20, true); stat('happy', 8, true); confetti(3, 1.2, 2, 30); sfx('good');
+      G.mode = 'busy'; G.lunch = d.n; stat('energy', 20, true); stat('happy', 8, true); confetti(3, 1.2, 2, 30); sfx('good');
       say([{ n: CONFIG.name, t: "Lunch sorted: " + d.n + "." }, "Refuelled and ready. Golden hour at the beach next.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => startDrive('coast', 'beach', 'the beach'));
     }, false);
   }, 1200);
@@ -1680,7 +1814,7 @@ function drinkMenu() {
 }
 function dinnerMenu() {
   pickMenu('Dinner with ' + CONFIG.boyfriend, 'Order anything. It is your night.', CONFIG.dishes, d => {
-    F.dinner = true; stat('energy', 30); refreshHints();
+    F.dinner = true; G.dish = d.n; stat('energy', 30); refreshHints();
     say([{ n: CONFIG.boyfriend, t: "Good choice. The " + d.n.toLowerCase() + " here is unreal." }, d.n + ". Absolutely delicious. Five stars.", { n: CONFIG.boyfriend, t: "Okay. One more thing." }, "The staff bring out a birthday cake, candles lit.", "The whole bar starts singing."], cakeTime);
   });
 }
@@ -1754,7 +1888,11 @@ function credits() {
   ui.append(c);
   const bw = el('div', 'cbtns');
   const b = makeBtn('Play again', () => fade(titleScreen), 'big');
-  const btns = [b];
+  const btns = [b, makeBtn('Save photo', savePhoto, 'big sky')];
+  saveAlbumPage('day', { title: CONFIG.name + "'s Big Day", sub: 'The birthday', head: 'Birthday memories', rows: [
+    ['Outfit', (OUTFITS[G.outfit] || OUTFITS.office).name], ['Lunch', G.lunch || 'Something delicious'], ['Cocktail', G.drink || 'A little something'],
+    ['Dinner', G.dish || 'With ' + CONFIG.boyfriend], ['Collection', heartsFound() + ' of ' + HEARTS_TOTAL + ' hearts, ' + Object.keys(G.secrets).length + ' secrets'],
+    ['Badges', Object.keys(BADGES).filter(k => G.badges[k] && !BADGES[k].pack).length + ' earned'] ] });
   if (typeof startWeekend === 'function') btns.push(makeBtn('Play the weekend', () => fade(startWeekend), 'big alt'));
   if (typeof startHoliday === 'function') btns.push(makeBtn('Go on holiday', () => fade(startHoliday), 'big sky'));
   bw.append(...btns); c.append(bw); setMenu(btns, { cols: btns.length, keepMode: true });
@@ -2160,6 +2298,7 @@ CONFIG.weekend = {
   ]
 };
 const WK = CONFIG.weekend;
+BADGES.aisle = { n: 'Centre aisle victim', how: 'Grab an ALDI special buy', pack: true };
 const WK_FLAGS = ['wkBaths', 'wkGroceries', 'wkFetch', 'wkMovie', 'wkActivity'];
 Object.assign(SCENE_TIME, { baths: 9 * 60 + 10, aldi: 11 * 60 + 20, park: 14 * 60, home: 16 * 60 + 30, wnight: 19 * 60, wend: 22 * 60 + 30 });
 Object.assign(NPC_CHARS, { baths: 'A', shop: 'A', park: 'Ayko', home: 'A' });
@@ -2178,8 +2317,12 @@ const V3 = new THREE.Vector3();
 /* ---------------- shared weekend art ---------------- */
 function recolorDog(g, kind) {
   const hsl = {}, c = new THREE.Color();
+  const shift = () => { if (hsl.h < 0.04 || hsl.h > 0.16 || hsl.s < 0.3) return false; if (kind === 'y') c.setHSL(0.115, 0.72, Math.min(0.8, hsl.l * 0.98)); else if (kind === 'k') c.setHSL(0.07, 0.1, 0.1 + (hsl.l - 0.55) * 0.35); else c.setHSL(0.6, 0.05, Math.min(0.9, hsl.l + 0.12)); return true; };
   g.traverse(o => {
-    if (!o.isMesh || !o.material || !o.material.color || o.material.isMeshBasicMaterial) return;
+    if (!o.isMesh || !o.material || o.material.isMeshBasicMaterial) return;
+    const ca = o.geometry.attributes.color;
+    if (ca) { o.geometry = o.geometry.clone(); MERGED.push(o.geometry); const a = o.geometry.attributes.color; for (let i = 0; i < a.count; i++) { c.setRGB(a.getX(i), a.getY(i), a.getZ(i)).getHSL(hsl); if (shift()) a.setXYZ(i, c.r, c.g, c.b); } a.needsUpdate = true; return; }
+    if (!o.material.color) return;
     o.material.color.getHSL(hsl); if (hsl.h < 0.04 || hsl.h > 0.16 || hsl.s < 0.3) return;
     if (kind === 'y') c.setHSL(0.115, 0.72, Math.min(0.8, hsl.l * 0.98));
     else if (kind === 'k') c.setHSL(0.07, 0.1, 0.1 + (hsl.l - 0.55) * 0.35);
@@ -2350,7 +2493,7 @@ WALL_BUILDERS['home:w'] = w => {
 const npcPaulo = c => c === 'A' ? LOOK.paulo : null;
 MAPS.baths = {
   theme: 'baths', title: 'Weekend Pack: ' + WK.baths, sky: 'day', outdoor: true, edge: '#a6dc8f',
-  floor: ['#b5e39a', '#aadd8e'], wet: '#f3dca6', wall: ['#fff', '#fff'],
+  floor: ['#b5e39a', '#aadd8e'], wet: '#f3dca6', wall: ['#fff', '#fff'], water: ['#4fb3e0', '#5cbde6'], intro: { x: 7, z: 1, zoom: 0.7 }, ambient: 'water',
   rows: ["~~~~~~~~~~~~~~~", "~~~~~~~~~~~~~~~", "_______________", "...u.......p...", "......A........", "............KK.", "....s.....s....", "...............", "..........JJ...", "..............."],
   start: { x: 8, z: 4, dir: 'up' }, luca: { x: 5, z: 5 },
   npcs: npcPaulo,
@@ -2388,7 +2531,7 @@ MAPS.baths = {
 };
 MAPS.aldi = {
   theme: 'shop', title: 'Weekend Pack: ' + WK.grocer, sky: 'day', edge: '#a6dc8f',
-  floor: ['#e4e8ee', '#d6dde6'], wall: ['#dfe9f5', '#d4e2f2'], trim: '#ffffff',
+  floor: ['#d8e0ea', '#cbd5e2'], wall: ['#dfe9f5', '#d4e2f2'], trim: '#ffffff',
   rows: ["###############", "#SS..SS..SS.p.#", "#.............#", "#SS..SS..zz...#", "#......A......#", "#SS..SS..BB...#", "#.............#", "#..cc.....cc..#", "#.............#", "######D########"],
   start: { x: 7, z: 8, dir: 'up' },
   npcs: npcPaulo,
@@ -2417,7 +2560,7 @@ MAPS.aldi = {
   }
 };
 MAPS.park = {
-  theme: 'park', title: 'Weekend Pack: the dog park', sky: 'day', outdoor: true, edge: '#a6dc8f',
+  theme: 'park', title: 'Weekend Pack: the dog park', sky: 'day', outdoor: true, edge: '#a6dc8f', ambient: 'cicada',
   floor: ['#a6dc8f', '#9bd483'], wall: ['#fff', '#fff'],
   rows: ["###############", "#T....T.....T.#", "#..........y..#", "#....g....k...#", "#.......A.....#", "#..o.......y..#", "#..b.......b..#", "#....k........#", "#.............#", "######D########"],
   start: { x: 7, z: 8, dir: 'up' }, luca: { x: 9, z: 8 },
@@ -2486,7 +2629,11 @@ function resetWeekend() {
   G.weekend = true; G.wearing = 'sunny'; G.outfit = 'sunny'; G.wkImpulse = null; cam.orbit = 0;
   WKLOG = { list: 0, impulse: [], fetch: [], movie: null, activity: null, night: null };
 }
-function startWeekend() { resetWeekend(); clearUI(); fade(() => loadMap('baths')); }
+CAMPAIGN_STATE.weekend = {
+  save: () => ({ log: WKLOG, impulse: G.wkImpulse }),
+  load: x => { resetWeekend(); Object.assign(WKLOG, x.log || {}); G.wkImpulse = x.impulse || null; }
+};
+function startWeekend() { G.campaign = 'weekend'; resetWeekend(); clearUI(); fade(() => loadMap('baths')); }
 
 /* ---------------- Greenwich Baths: the morning dip ---------------- */
 function swimBaths() {
@@ -2556,7 +2703,7 @@ function groceryGame() {
         if (got >= need.length) finish();
         else { const n = MENU && MENU.b.findIndex(x => !x.disabled); if (MENU && MENU.b[MENU.i].disabled && n >= 0) focusMenu(n); }
       } else if (it.k === 'special') {
-        b.classList.add('done'); chaos++; G.wkImpulse = it.n.toLowerCase(); WKLOG.impulse.push(it.n); sfx('pop'); toast(react(it.n)); upd(); trolleyAdd(CONFETTI[i % 5], true); flyPic(b, cnt); const ic = iconFor(it.n); if (ic && !bag.includes(ic.e)) bag.push(ic.e);
+        b.classList.add('done'); chaos++; earn('aisle'); G.wkImpulse = it.n.toLowerCase(); WKLOG.impulse.push(it.n); sfx('pop'); toast(react(it.n)); upd(); trolleyAdd(CONFETTI[i % 5], true); flyPic(b, cnt); const ic = iconFor(it.n); if (ic && !bag.includes(ic.e)) bag.push(ic.e);
       } else { sfx('bad'); p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake'); toast('Not on the list!'); }
     });
   });
@@ -2832,18 +2979,11 @@ function weekendEnd() {
     ['Afternoon', L.activity || 'Lazy and perfect'],
     ['Night out', L.night || 'Out on the town']
   ];
-  const t = el('div', 'title', `<div class="logo"><h1>What a weekend, ${esc(CONFIG.name)}!</h1><span class="v2">The best kind of ordinary</span></div>`);
-  const card = el('div', 'panel', '<h2>Weekend highlights</h2><div class="logs">' + rows.map(([k, v]) => `<div class="got"><b>${esc(k)}</b>${esc(v)}</div>`).join('') + '</div>');
-  card.style.animationDelay = '.4s'; card.style.maxHeight = '46vh';
-  const w = el('div', 'tbtns');
-  const b1 = makeBtn('Play the weekend again', () => fade(() => { resetWeekend(); loadMap('baths'); }), 'big alt');
-  const b2 = makeBtn('Back to title', () => fade(titleScreen), 'big');
-  w.append(b1, b2); t.append(card, w); ui.append(t);
-  setMenu([b1, b2], { cols: 2, keepMode: true });
+  memoriesCard('weekend', { title: 'What a weekend, ' + CONFIG.name + '!', sub: 'The best kind of ordinary', head: 'Weekend highlights', rows }, [makeBtn('Play again', () => fade(() => { G.campaign = 'weekend'; resetWeekend(); loadMap('baths'); }), 'big alt'), makeBtn('Back to title', () => fade(titleScreen), 'big')]);
 }
 
 /* ---------------- QA jumps: ?qa=<name> ---------------- */
-function wkQA(map, fn) { resetWeekend(); if (map === 'aldi' || map === 'park' || map === 'home') { F.wkBaths = true; } if (map === 'park' || map === 'home') F.wkGroceries = true; if (map === 'home') F.wkFetch = true; loadMap(map); if (fn) setTimeout(() => { if (DLG) { DLG.q = []; nextLine(); } fn(); }, 950); }
+function wkQA(map, fn) { G.campaign = 'weekend'; resetWeekend(); if (map === 'aldi' || map === 'park' || map === 'home') { F.wkBaths = true; } if (map === 'park' || map === 'home') F.wkGroceries = true; if (map === 'home') F.wkFetch = true; loadMap(map); if (fn) setTimeout(() => { if (DLG) { DLG.q = []; nextLine(); } fn(); }, 950); }
 Object.assign(QA_EXTRA, {
   wkbaths: () => wkQA('baths'),
   wkshop: () => wkQA('aldi'),
@@ -2955,7 +3095,14 @@ Object.assign(NPC_CHARS, { qtown: 'A', hunter: 'A' });
 OUTFITS.winter = { name: "Cosy knit", style: "pants", note: "Cream knit, jeans and a beanie", top: '#f3e2c7', bottom: '#3f6fb0', beanie: '#ff7aa8' };
 OUTFITS.snow = { name: "Snow gear", style: "pants", note: "Greentoad jacket, pants and a helmet", top: '#ff7aa8', bottom: '#3a3148', beanie: '#ffffff' };
 LOOK.pauloSnow = Object.assign({}, LOOK.paulo, { top: '#3f6fb0', bottom: '#2b2d42', beanie: '#ffd166' });
-const HOL_FLAGS = ['qtGear', 'qtSki', 'qtRest', 'hvTaste', 'hvCheese', 'hvMorning'];
+Object.assign(BADGES, {
+  powder: { n: 'Powder hound', how: 'Ride a green, blue, red and black run', pack: true },
+  black: { n: 'Black diamond', how: 'Make it down a black run', pack: true },
+  somm: { n: 'Sommelier', how: 'Guess all four wines at the cellar door', pack: true },
+  luge: { n: 'Luge legend', how: 'Beat Paulo down the Skyline luge', pack: true }
+});
+DRIVE_THEMES.hunter = { sky: 'golden', ground: '#b8d98a', side: 'gum', label: 'Up the M1 to the Hunter' };
+const HOL_FLAGS = ['qtGear', 'qtSki', 'qtRest', 'qtLuge', 'hvTaste', 'hvCheese', 'hvMorning'];
 
 // pictures and moments for the holiday choices (checked before the everyday ones)
 ICONS.unshift(
@@ -3083,7 +3230,8 @@ const npcPauloHol = c => c === 'A' ? (G.holiday === 'qt' ? LOOK.pauloSnow : LOOK
 MAPS.qtown = {
   theme: 'qtown', title: 'Holiday: Queenstown', outdoor: true, edge: '#eef4fa',
   get sky() { return F.qtSki ? 'evening' : 'day'; },
-  floor: ['#f4f8fc', '#e6eef6'], wet: '#d9dee6', wall: ['#fff', '#fff'],
+  floor: ['#f4f8fc', '#e6eef6'], wet: '#d9dee6', wall: ['#fff', '#fff'], water: ['#3f9fd0', '#4aa8d8'],
+  intro: { x: 7, z: -1.5, zoom: 0.62 }, ambient: 'water',
   rows: ["~~~~~~~~~~~~~~~", "~~~~~~~~~~~~~~~", "_______________", ".FF....p...GG..", "...............", "p......A.......", "............LLL", ".BB.........LLL", ".....n........p", "p.............."],
   start: { x: 5, z: 4, dir: 'up' },
   npcs: npcPauloHol,
@@ -3106,6 +3254,7 @@ MAPS.qtown = {
     if (F.qtSki) makeFairyLights(g, 0, 2.6, 14, 2.6, 1.8, 30);
   },
   onEnter() {
+    if (F.qtLuge) { say([HLOG.lugeWin ? "Luge legend! Paulo demands a rematch." : "Paulo won the luge and will not stop talking about it.", { n: CONFIG.boyfriend, t: "Right. Farewell dinner?" }]); return; }
     if (F.qtSki) { say(["Back in town, legs like jelly and cheeks glowing.", { n: CONFIG.boyfriend, t: "Come chat. We need a plan for tomorrow." }]); return; }
     say(["HOLIDAY PACK: Queenstown!", HOL.qt.flight + ". Landed in the snow.", "Checked in at " + HOL.qt.stay + ", a studio with a garden patio.", "Luca is having a sleepover at Mum's. He will be spoiled rotten.", { n: CONFIG.boyfriend, t: "First stop Greentoad for gear, then the ski bus." }]);
   },
@@ -3118,11 +3267,11 @@ MAPS.qtown = {
     '~': () => say("Lake Wakatipu, cold and impossibly blue. The TSS Earnslaw chugs past."),
     _: () => say("Lake Wakatipu, cold and impossibly blue. The TSS Earnslaw chugs past."),
     B: () => !F.qtGear ? say({ n: CONFIG.boyfriend, t: "Gear first! Greentoad is just over there." }) : F.qtSki ? say("The ski bus has finished for the day.") : fieldMenu(),
-    A: () => !F.qtGear ? say({ n: CONFIG.boyfriend, t: "Greentoad first, then the bus from The Station on Duke St." }) : !F.qtSki ? say({ n: CONFIG.boyfriend, t: "Bus stop's over there. Let's go shred." }) : qtEvening()
+    A: () => !F.qtGear ? say({ n: CONFIG.boyfriend, t: "Greentoad first, then the bus from The Station on Duke St." }) : !F.qtSki ? say({ n: CONFIG.boyfriend, t: "Bus stop's over there. Let's go shred." }) : F.qtRest ? qtDinner() : qtEvening()
   }
 };
 MAPS.hunter = {
-  theme: 'hunter', title: 'Holiday: Hunter Valley', sky: 'golden', outdoor: true, edge: '#b8d98a',
+  theme: 'hunter', title: 'Holiday: Hunter Valley', sky: 'golden', outdoor: true, edge: '#b8d98a', intro: { x: 7, z: 2, zoom: 0.68 }, ambient: 'cicada',
   floor: ['#c5e39a', '#b8d98a'], wall: ['#fff', '#fff'],
   rows: ["t.............t", ".vvvvvv..vvvvv.", "...............", ".vvvvvv..vvvvv.", "...............", ".CCC....A...cc.", ".CCC...........", "......bb.......", ".vvvvvv..vvvvv.", "..............."],
   start: { x: 7, z: 9, dir: 'up' },
@@ -3159,8 +3308,12 @@ function resetHoliday() {
   G.holiday = null; G.weekend = false; G.ride = 'board'; G.grade = 'blue'; cam.orbit = 0;
   HLOG = { trip: null, field: null, flakes: 0, snack: null, rest: null, dinner: null, score: 0, fav: null, cheese: null, morning: null };
 }
+CAMPAIGN_STATE.holiday = {
+  save: () => ({ holiday: G.holiday, log: HLOG, ride: G.ride, grade: G.grade, jacket: OUTFITS.snow.top }),
+  load: x => { resetHoliday(); G.holiday = x.holiday; Object.assign(HLOG, x.log || {}); G.ride = x.ride || 'board'; G.grade = x.grade || 'blue'; if (x.jacket) OUTFITS.snow.top = x.jacket; }
+};
 function startHoliday() {
-  resetHoliday(); clearWorld(); clearUI(); G.scene = 'hstart'; G.mode = 'busy'; showHUD(false); setChapter('Holiday Pack');
+  G.campaign = 'holiday'; resetHoliday(); clearWorld(); clearUI(); G.scene = 'hstart'; G.mode = 'busy'; showHUD(false); setChapter('Holiday Pack');
   W = { id: 'hstart', objs: [], npcs: [], hearts: [], markers: [], anim: [], dispose: [], walls: [], decor: [] };
   setSky('morning'); fitSun(0, 0, 8);
   makeIslandBase(world, 8, 6, GRASS, 0, 0); mk(G_BOX, GRASS, [8, 0.2, 6], [0, -0.1, 0], world);
@@ -3177,7 +3330,7 @@ function startHoliday() {
   const btns = trips.map(tr => makeBtn(`<span>${esc(tr.n)}</span><small>${esc(tr.d)}</small>`, () => {
     clearUI(); moment(tr.n, { line: tr.k === 'qt' ? 'SYD to ZQN, window seat' : 'Road trip up the M1', ms: 1900 }, () => {
       G.holiday = tr.k; HLOG.trip = tr.n; G.outfit = tr.k === 'qt' ? 'winter' : 'sunny';
-      say([{ n: 'Mum', t: "Go! Luca and I will be fine. Send photos." }, { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(() => loadMap(tr.k === 'qt' ? 'qtown' : 'hunter')));
+      say([{ n: 'Mum', t: "Go! Luca and I will be fine. Send photos." }, { n: CONFIG.name, t: CONFIG.catchphrase }], () => tr.k === 'qt' ? fade(flightScene) : startDrive('hunter', 'hunter', 'the Hunter Valley'));
     });
   }));
   pn.querySelector('.grid2').append(...btns);
@@ -3214,51 +3367,90 @@ function fieldMenu() {
 function qtEvening() {
   pickMenu('Rest day tomorrow', 'Legs need a break. What are we doing?', HOL.qt.rest, r => {
     HLOG.rest = r.n; F.qtRest = true; stat('happy', 8, true);
-    say([{ n: CONFIG.name, t: r.n + ". Done." }, { n: CONFIG.boyfriend, t: "And for the farewell dinner?" }], () => pickMenu('Farewell dinner', 'Last night in Queenstown.', HOL.qt.dinner, d => {
-      HLOG.dinner = d.n; stat('energy', 15, true);
-      say([{ n: CONFIG.boyfriend, t: d.n + ". Perfect way to finish." }, "Snow falling softly over the lake. What a trip.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(holidayEnd));
-    }, false));
+    if (/luge/i.test(r.n)) { say([{ n: CONFIG.boyfriend, t: "Gondola up Bob's Peak, then a luge race. Loser buys hot chocolate." }, "Steer around the cones. Grab the stars for a speed boost."], () => fade(() => buildSnowRun('luge'))); return; }
+    say([{ n: CONFIG.name, t: r.n + ". Done." }, { n: CONFIG.boyfriend, t: "And for the farewell dinner?" }], qtDinner);
   });
+}
+function qtDinner() {
+  pickMenu('Farewell dinner', 'Last night in Queenstown.', HOL.qt.dinner, d => {
+    HLOG.dinner = d.n; stat('energy', 15, true);
+    say([{ n: CONFIG.boyfriend, t: d.n + ". Perfect way to finish." }, "Snow falling softly over the lake. What a trip.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(holidayEnd));
+  }, false);
+}
+// tiny flight: SYD to ZQN over the clouds and the Southern Alps
+function flightScene() {
+  clearWorld(); clearUI(); G.scene = 'flight'; G.mode = 'busy'; showHUD(true); setChapter('Flying SYD to ZQN'); G.clock = 11 * 60;
+  W = { id: 'flight', objs: [], npcs: [], hearts: [], markers: [], anim: [], dispose: [], walls: [], decor: [] };
+  setSky('day'); fitSun(0, 0, 12);
+  const plane = grp(world, 0, 1.2, 0);
+  mk(G_CYL, '#fffaf0', [0.9, 3.6, 0.9], [0, 0, 0], plane).rotation.z = Math.PI / 2; mk(G_SPH, '#fffaf0', [0.9, 0.9, 0.9], [-1.8, 0, 0], plane);
+  mk(G_CONE, '#fffaf0', [0.9, 0.7, 0.9], [2.1, 0, 0], plane).rotation.z = -Math.PI / 2;
+  const tail = mk(G_BOX, '#e2554f', [0.7, 1.1, 0.08], [-1.7, 0.6, 0], plane); tail.rotation.z = 0.4;
+  mk(G_BOX, '#e2554f', [0.9, 0.06, 1.3], [-1.6, 0.1, 0], plane);
+  mk(G_BOX, '#e8ecf4', [1.2, 0.08, 4.2], [0.1, -0.12, 0], plane);
+  [-1, 1].forEach(s => mk(G_CYL, '#c7ccd6', [0.3, 0.6, 0.3], [0.3, -0.35, s * 1.1], plane).rotation.z = Math.PI / 2);
+  for (let i = 0; i < 7; i++) mk(G_SPH, '#9fd0ff', [0.18, 0.2, 0.05], [1.2 - i * 0.38, 0.12, 0.44], plane, { noShadow: true });
+  // two little faces at the windows
+  [[0.44, '#f9d1b0', '#f5d271'], [0.06, '#b57848', '#2a1d12']].forEach(([x, skin, hair]) => { mk(G_SPH, skin, [0.13, 0.13, 0.05], [x, 0.1, 0.46], plane, { noShadow: true }); mk(G_SPH, hair, [0.15, 0.08, 0.05], [x, 0.17, 0.455], plane, { noShadow: true }); });
+  const below = grp(world, 0, -3, 0), scroll = [];
+  for (let i = 0; i < 14; i++) scroll.push(makeMountain(below, -16 + i * 3.2, -4 + hsh(i, 2) * 3, 2.2, 2 + hsh(i, 3) * 2.5));
+  for (let i = 0; i < 14; i++) scroll.push(makeCloud(world, -18 + i * 3, -0.4 + hsh(i, 4) * 1.2, -2 + hsh(i, 5) * 5, 1 + hsh(i, 6)));
+  cam.base = 11; cam.pitch = 0.3; cam.zoomGoal = 1.25; cam.zoom = 1.25; cam.yawGoal = 0; cam.yaw = 0; cam.goal.set(0, 0.6, 0); cam.target.copy(cam.goal); cam.orbit = 0;
+  ambient('engine');
+  wkTicker((dt, t) => { plane.position.y = 1.2 + Math.sin(t * 1.4) * 0.12; plane.rotation.z = Math.sin(t * 0.9) * 0.04; scroll.forEach(o => { o.position.x -= dt * (o.parent === below ? 1.2 : 3); if (o.position.x < -20) o.position.x += 42; }); });
+  setTimeout(() => say([HOL.qt.flight + ".", "Window seat. The Southern Alps slide by below.", "Paulo is asleep before the drinks trolley.", { n: CONFIG.name, t: "Wake up, we're landing! Look at the snow!" }], () => fade(() => loadMap('qtown'))), 700);
 }
 
 /* ---------------- snowboard run: a floating slope, three lanes ---------------- */
 const SNOW_FIELDS = {
   cardrona: { sky: 'day', speed: 6, obst: 0.25, rock: false, label: 'Cardrona: wide and mellow', lights: false },
   remarks: { sky: 'day', speed: 7.4, obst: 0.4, rock: true, label: 'The Remarkables: sunny bowls, rocky lines', lights: false },
-  coronet: { sky: 'night', speed: 8.2, obst: 0.35, rock: false, label: 'Coronet Peak: night ski under lights', lights: true }
+  coronet: { sky: 'night', speed: 8.2, obst: 0.35, rock: false, label: 'Coronet Peak: night ski under lights', lights: true },
+  luge: { sky: 'day', speed: 7, obst: 0.3, rock: false, label: "Skyline luge: race Paulo down Bob's Peak", lights: false, luge: true }
 };
+const RUNS_KEY = 'abd2-runs-v1';
+function runRecords() { try { return JSON.parse(localStorage.getItem(RUNS_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function saveRunRecords(r) { try { localStorage.setItem(RUNS_KEY, JSON.stringify(r)); } catch (e) {} }
+const SPAWN_Z = -17;
 const SB_LANES = [-1.1, 0, 1.1], SB_LEN = 40;
 const GRADES = { green: { c: '#3fae7c', sp: 0.8, ob: 0.6 }, blue: { c: '#3f6fb0', sp: 1, ob: 1 }, red: { c: '#e2554f', sp: 1.15, ob: 1.3 }, black: { c: '#2b2d42', sp: 1.3, ob: 1.6 } };
 let SB = null;
 function buildSnowRun(k) {
   clearWorld(); clearUI(); G.scene = 'snow'; G.mode = 'drive'; showHUD(true);
-  const base = SNOW_FIELDS[k] || SNOW_FIELDS.cardrona, GR = GRADES[G.grade] || GRADES.blue;
-  const T = Object.assign({}, base, { speed: base.speed * GR.sp, obst: Math.min(0.7, base.obst * GR.ob), rock: base.rock || G.grade === 'black' }); setSky(T.sky); setChapter((HLOG.run ? HLOG.run + ', ' : '') + (HLOG.field || 'Ski day')); fitSun(0, -8, 16); G.clock = k === 'coronet' ? 19 * 60 : SCENE_TIME.snow;
+  const base = SNOW_FIELDS[k] || SNOW_FIELDS.cardrona, GR = k === 'luge' ? GRADES.blue : (GRADES[G.grade] || GRADES.blue);
+  const T = Object.assign({}, base, { speed: base.speed * GR.sp, obst: Math.min(0.7, base.obst * GR.ob), rock: base.rock || G.grade === 'black' }); setSky(T.sky); setChapter(base.luge ? 'Skyline luge' : (HLOG.run ? HLOG.run + ', ' : '') + (HLOG.field || 'Ski day')); fitSun(0, -8, 16); G.clock = k === 'coronet' ? 19 * 60 : SCENE_TIME.snow;
   W = { id: 'snow', objs: [], npcs: [], hearts: [], markers: [], anim: [], dispose: [], walls: [], decor: [] };
   const zc = -SB_LEN / 2 + 6;
   makeIslandBase(world, 11, SB_LEN + 8, '#dfe9f4', 0, zc); mk(G_BOX, '#dfe9f4', [11, 0.2, SB_LEN + 8], [0, -0.1, zc], world);
-  mk(G_BOX, '#f7fbff', [3.6, 0.03, SB_LEN + 8], [0, 0.01, zc], world, { noShadow: true });
+  mk(G_BOX, T.luge ? '#a9aebb' : '#f7fbff', [3.6, 0.03, SB_LEN + 8], [0, 0.01, zc], world, { noShadow: true });
+  if (T.luge) [-1.85, 1.85].forEach(x => mk(G_BOX, '#e2554f', [0.14, 0.2, SB_LEN + 8], [x, 0.1, zc], world));
   [-0.55, 0.55].forEach(x => mk(G_BOX, '#e8f0f8', [0.06, 0.035, SB_LEN + 8], [x, 0.012, zc], world, { noShadow: true }));
   const moving = [];
   for (let i = 0; i < 24; i++) moving.push(mk(G_BOX, '#cddbeb', [0.05, 0.02, 0.9 + hsh(i, 3)], [-1.6 + hsh(i, 1) * 3.2, 0.03, 6 - i * 1.7], world, { noShadow: true }));
   for (let i = 0; i < 16; i++) { const pole = grp(world, i % 2 ? 1.9 : -1.9, 0, 6 - i * 2.5); mk(G_CYL, GR.c, [0.06, 0.9, 0.06], [0, 0.45, 0], pole); mk(G_CYL, '#ffffff', [0.065, 0.1, 0.065], [0, 0.5, 0], pole, { noShadow: true }); mk(G_CYL, '#2b2d42', [0.065, 0.12, 0.065], [0, 0.7, 0], pole, { noShadow: true }); moving.push(pole); }
-  for (let i = 0; i < 18; i++) { const side = i % 2 ? 1 : -1, x = side * (2.4 + hsh(i, 1) * 1.6), z = 6 - i * 2.3; moving.push(T.rock && i % 3 === 0 ? makeMountain(world, x, z, 0.9, 0.8, '#9aa1b3') : makePine(world, x, z, 0.8 + hsh(i, 4) * 0.4, true)); }
+  for (let i = 0; i < 18; i++) { const side = i % 2 ? 1 : -1, x = side * (2.4 + hsh(i, 1) * 1.6), z = 6 - i * 2.3; moving.push(T.rock && i % 3 === 0 ? makeMountain(world, x, z, 0.9, 0.8, '#9aa1b3') : makePine(world, x, z, 0.8 + hsh(i, 4) * 0.4, !T.luge)); }
   // a chairlift running up beside the piste
   const chairs = [];
   for (let i = 0; i < 8; i++) { const tw = grp(world, 3.6, 0, 5 - i * 5); mk(G_CYL, '#8a8fa0', [0.12, 2.6, 0.12], [0, 1.3, 0], tw); mk(G_BOX, '#8a8fa0', [0.9, 0.08, 0.08], [0, 2.6, 0], tw); moving.push(tw); }
   [3.25, 3.95].forEach(x => mk(G_BOX, '#4a4658', [0.02, 0.02, SB_LEN + 8], [x, 2.58, zc], world, { noShadow: true }));
   for (let i = 0; i < 12; i++) {
     const up = i % 2 === 0, c = grp(world, up ? 3.25 : 3.95, 2.1, 6 - i * 3.4);
-    mk(G_CYL, '#4a4658', [0.02, 0.5, 0.02], [0, 0.25, 0], c, { noShadow: true }); mk(G_BOX, ['#3f6fb0', '#e2554f', '#ffd166'][i % 3], [0.5, 0.08, 0.3], [0, 0, 0], c); mk(G_BOX, '#3a3148', [0.5, 0.3, 0.05], [0, 0.15, -0.14], c);
-    if (i % 3 === 0) { const r = makePerson({ top: CONFETTI[i % 5], bottom: '#3a3148', hair: '#6b4a32', beanie: CONFETTI[(i + 2) % 5] }); r.scale.setScalar(0.55); r.position.set(0, -0.05, 0); c.add(r); }
+    mk(G_CYL, '#4a4658', [0.02, 0.5, 0.02], [0, 0.25, 0], c, { noShadow: true });
+    if (T.luge) { mk(G_BOX, '#e2554f', [0.5, 0.45, 0.5], [0, -0.05, 0], c); mk(G_BOX, '#bfe6ff', [0.51, 0.18, 0.4], [0, 0.02, 0], c, { noShadow: true }); }
+    else { mk(G_BOX, ['#3f6fb0', '#e2554f', '#ffd166'][i % 3], [0.5, 0.08, 0.3], [0, 0, 0], c); mk(G_BOX, '#3a3148', [0.5, 0.3, 0.05], [0, 0.15, -0.14], c); }
+    if (i % 3 === 0 && !T.luge) { const r = makePerson({ top: CONFETTI[i % 5], bottom: '#3a3148', hair: '#6b4a32', beanie: CONFETTI[(i + 2) % 5] }); r.scale.setScalar(0.55); r.position.set(0, -0.05, 0); c.add(r); }
     c.userData.up = up; chairs.push(c);
   }
   if (T.lights) for (let i = 0; i < 8; i++) moving.push(makeStreetLamp(world, i % 2 ? 2.1 : -2.3, 5 - i * 5));
   const far = grp(world, 0, -0.3, -SB_LEN - 4); for (let i = 0; i < 7; i++) makeMountain(far, -18 + i * 6, 0, 5, 6 + hsh(i, 2) * 5, T.sky === 'night' ? '#6a6f8c' : '#8e95a8');
   const rider = grp(world, SB_LANES[1], 0, 3);
-  const ski = G.ride === 'ski', a = makeAnnette('snow'); a.position.y = 0.07; rider.add(a);
-  let board;
-  if (ski) {
+  const ski = G.ride === 'ski' && !T.luge, a = makeAnnette(T.luge ? 'winter' : 'snow'); a.position.y = 0.07; rider.add(a);
+  let board, rival = null;
+  const lugeCart = (parent, col) => { const c = grp(parent); mk(G_BOX, col, [0.55, 0.14, 0.9], [0, 0.12, 0], c); mk(G_BOX, '#3a3148', [0.5, 0.25, 0.08], [0, 0.28, -0.4], c); [[-0.28, 0.3], [0.28, 0.3], [-0.28, -0.3], [0.28, -0.3]].forEach(([x, z]) => { const w = mk(G_CYL, '#2b2d42', [0.16, 0.08, 0.16], [x, 0.08, z], c); w.rotation.z = Math.PI / 2; }); return c; };
+  if (T.luge) {
+    board = lugeCart(rider, '#ffd166'); a.position.set(0, 0.12, -0.05); a.rotation.y = Math.PI; a.userData.legL.rotation.x = -1.4; a.userData.legR.rotation.x = -1.4; a.userData.armL.rotation.x = -0.9; a.userData.armR.rotation.x = -0.9;
+    rival = grp(world, SB_LANES[2], 0, 3.2); lugeCart(rival, '#7fc8f8'); const p = makePerson(LOOK.pauloSnow); p.position.set(0, 0.12, -0.05); p.rotation.y = Math.PI; p.userData.legL.rotation.x = -1.4; p.userData.legR.rotation.x = -1.4; rival.add(p); rival.userData.lane = 2;
+  } else if (ski) {
     board = grp(rider); [-0.1, 0.1].forEach(x => { mk(G_BOX, OUTFITS.snow.top, [0.09, 0.04, 1.05], [x, 0.03, -0.05], board); mk(G_BOX, OUTFITS.snow.top, [0.09, 0.04, 0.12], [x, 0.06, -0.58], board).rotation.x = 0.5; });
     a.rotation.y = Math.PI * 0.82; a.userData.armL.rotation.x = -0.6; a.userData.armR.rotation.x = -0.6;
     [-1, 1].forEach(s => { const p = mk(G_CYL, '#c7ccd6', [0.02, 0.7, 0.02], [s * 0.26, 0.3, 0.05], rider, { noShadow: true }); p.rotation.x = -0.5; p.rotation.z = s * -0.15; });
@@ -3267,12 +3459,25 @@ function buildSnowRun(k) {
     a.rotation.y = Math.PI * 0.3; a.userData.armL.rotation.z = 1.0; a.userData.armR.rotation.z = -1.0; a.userData.legL.rotation.z = 0.2; a.userData.legR.rotation.z = -0.2;
   }
   for (let i = 0; i < 8; i++) makeCloud(world, -20 + i * 6, 4 + hsh(i, 1) * 3, -34 + hsh(i, 2) * 30, 1.3);
-  SB = { chairs, k, T, t: 0, dur: 18, lane: 1, x: SB_LANES[1], rider, a, board, moving, items: [], spawn: 0.8, flakes: 0, bumps: 0, done: false, kiwi: null };
+  SB = { chairs, rival, k, T, t: 0, dur: T.luge ? 16 : 18, lane: 1, x: SB_LANES[1], rider, a, board, moving, items: [], spawn: 0.3, flakes: 0, bumps: 0, done: false, kiwi: null, key: (HLOG.run || 'run') + ' @ ' + (HLOG.field || k) };
+  if (T.luge) SB.key = 'Skyline luge';
+  for (let i = 0; i < 4; i++) sbSpawn(-3 - i * 3.5, false);
+  ambient(k === 'luge' ? 'wind' : 'lift');
   cam.goal.set(0, 0.3, -0.6); cam.target.copy(cam.goal); cam.zoomGoal = 1.45; cam.zoom = 1.45; cam.yawGoal = 0; cam.yaw = 0; cam.pitch = 0.36; cam.base = 11; cam.orbit = 0;
-  const dock = el('div', 'dock drv', `<h3 style="margin:0">${esc(HLOG.field || 'Ski day')}</h3><p class="sub" style="margin:2px 0 6px;font-size:14px">${esc(HLOG.run ? HLOG.run + ' · ' : '')}${esc(T.label)}</p><div class="meter"><b id="sbBar"></b></div><p class="sub" style="margin:6px 0 0;font-size:13px"><span id="sbCnt">Snowflakes: 0</span> &middot; Left and right to carve. Grab the snowflakes!</p>`);
+  const dock = el('div', 'dock drv', `<h3 style="margin:0">${esc(T.luge ? 'Skyline luge' : HLOG.field || 'Ski day')}</h3><p class="sub" style="margin:2px 0 6px;font-size:14px">${esc(!T.luge && HLOG.run ? HLOG.run + ' · ' : '')}${esc(T.label)}</p><div class="meter"><b id="sbBar"></b></div><p class="sub" style="margin:6px 0 0;font-size:13px"><span id="sbCnt">${T.luge ? 'Stars' : 'Snowflakes'}: 0</span> &middot; ${(b => b ? 'Best: ' + b + ' &middot; ' : '')(runRecords()[SB.key])}${T.luge ? 'Steer around the cones!' : 'Left and right to carve.'}</p>`);
   ui.append(dock); toast(T.label); sfx('whoosh');
 }
 function sbLane(d) { if (!SB || SB.done) return; const l = clamp(SB.lane + d, 0, 2); if (l !== SB.lane) { SB.lane = l; sfx('whoosh'); } }
+function sbSpawn(z, allowBump) {
+  const S = SB, lane = Math.floor(Math.random() * 3), obst = allowBump !== false && Math.random() < S.T.obst;
+  let g;
+  if (!obst) g = S.T.luge ? (() => { const s = grp(world, SB_LANES[lane], 0.5, z); mk(G_STAR, '#ffd166', [0.4, 0.4, 0.4], [0, 0, 0], s, { glow: true }); return s; })() : makeFlake(world, SB_LANES[lane], z);
+  else if (S.T.luge) { g = grp(world, SB_LANES[lane], 0, z); mk(G_CONE, '#ffa94d', [0.35, 0.5, 0.35], [0, 0.25, 0], g); mk(G_CYL, '#ffffff', [0.26, 0.07, 0.26], [0, 0.25, 0], g); }
+  else if (S.T.rock && Math.random() < 0.6) { g = grp(world, SB_LANES[lane], 0, z); mk(G_SPH, '#8e95a8', [0.7, 0.45, 0.6], [0, 0.18, 0], g); mk(G_SPH, '#ffffff', [0.5, 0.15, 0.45], [0, 0.36, 0], g, { noShadow: true }); }
+  else if (Math.random() < 0.5) g = makeSnowman(world, SB_LANES[lane], z);
+  else g = makePine(world, SB_LANES[lane], z, 0.6, true);
+  S.items.push({ g, lane, kind: obst ? 'bump' : 'flake', ph: Math.random() * TAU });
+}
 function makeFlake(parent, x, z) {
   const g = grp(parent, x, 0.5, z);
   for (let i = 0; i < 3; i++) { const b = mk(G_BOX, '#dff4ff', [0.5, 0.07, 0.07], [0, 0, 0], g, { glow: true, noShadow: true }); b.rotation.z = i * Math.PI / 3; }
@@ -3290,16 +3495,8 @@ function updateSnow(dt) {
   S.chairs.forEach(c => { c.position.z += mv + (c.userData.up ? -2.2 : 2.2) * dt; if (c.position.z > 8) c.position.z -= SB_LEN; if (c.position.z < 8 - SB_LEN) c.position.z += SB_LEN; c.rotation.z = Math.sin(S.t * 2 + c.position.z) * 0.05; });
   if (!SET.calm && Math.random() < dt * 30) FX.emit(S.x + (Math.random() - 0.5) * 0.6, 0.1, 3.4, ['#ffffff', '#eaf6ff'], 1, 1.2, { g: 2, life: 0.5 });
   S.spawn -= dt;
-  if (S.spawn <= 0 && S.t < S.dur - 2) {
-    S.spawn = 0.55 + Math.random() * 0.5;
-    const lane = Math.floor(Math.random() * 3), obst = Math.random() < S.T.obst;
-    let g;
-    if (!obst) g = makeFlake(world, SB_LANES[lane], -28);
-    else if (S.T.rock && Math.random() < 0.6) { g = grp(world, SB_LANES[lane], 0, -28); mk(G_SPH, '#8e95a8', [0.7, 0.45, 0.6], [0, 0.18, 0], g); mk(G_SPH, '#ffffff', [0.5, 0.15, 0.45], [0, 0.36, 0], g, { noShadow: true }); }
-    else if (Math.random() < 0.5) g = makeSnowman(world, SB_LANES[lane], -28);
-    else g = makePine(world, SB_LANES[lane], -28, 0.6, true);
-    S.items.push({ g, lane, kind: obst ? 'bump' : 'flake', ph: Math.random() * TAU });
-  }
+  if (S.spawn <= 0 && S.t < S.dur - 1.5) { S.spawn = 0.5 + Math.random() * 0.45; sbSpawn(SPAWN_Z); }
+  if (S.rival) { const r = S.rival; if (Math.random() < dt * 0.6) r.userData.lane = S.lane === 2 ? Math.floor(Math.random() * 2) : 2; r.position.x = lerp(r.position.x, SB_LANES[r.userData.lane], dt * 2.5); r.position.z = 3.2 + Math.sin(S.t * 0.7) * 0.8; r.position.y = Math.abs(Math.sin(S.t * 6)) * 0.02; }
   S.items = S.items.filter(it => {
     it.g.position.z += mv;
     if (it.kind === 'flake') { it.g.rotation.y += dt * 3; it.g.position.y = 0.5 + Math.sin(S.t * 4 + it.ph) * 0.1; }
@@ -3307,20 +3504,34 @@ function updateSnow(dt) {
       world.remove(it.g);
       if (it.kind === 'flake') { S.flakes++; sfx('pop'); sparkle(S.x, 0.9, 3, 12); }
       else { S.bumps++; sfx('bad'); cam.shake = SET.calm ? 0 : 0.2; FX.emit(S.x, 0.4, 2.6, ['#ffffff'], 16, 2.5, { g: 3, life: 0.8 }); toast(['Wipeout! Straight back up.', 'Face full of powder.', 'Butt pad: worth it.'][S.bumps % 3]); }
-      const c = $('#sbCnt'); if (c) c.textContent = 'Snowflakes: ' + S.flakes;
+      const c = $('#sbCnt'); if (c) c.textContent = (S.T.luge ? 'Stars: ' : 'Snowflakes: ') + S.flakes;
       return false;
     }
     if (it.g.position.z > 8) { world.remove(it.g); return false; }
     return true;
   });
   // the cheeky kiwi who chases you down the maunga for the last stretch
-  if (S.t > S.dur * 0.6 && !S.kiwi) { S.kiwi = makeKiwiBird(world); S.kiwi.position.set(SB_LANES[S.lane === 0 ? 1 : S.lane - 1], 0, 6); toast('Awww churrr bro!', true); sfx('honk'); }
+  if (S.t > S.dur * 0.6 && !S.kiwi && !S.T.luge) { S.kiwi = makeKiwiBird(world); S.kiwi.position.set(SB_LANES[S.lane === 0 ? 1 : S.lane - 1], 0, 6); toast('Awww churrr bro!', true); sfx('honk'); }
   if (S.kiwi) { const kl = SB_LANES[S.lane === 0 ? 1 : S.lane - 1]; S.kiwi.position.x = lerp(S.kiwi.position.x, kl, dt * 3); S.kiwi.position.z = lerp(S.kiwi.position.z, 3.6, dt * 1.5); S.kiwi.position.y = Math.abs(Math.sin(S.t * 12)) * 0.15; }
   const bar = $('#sbBar'); if (bar) bar.style.width = Math.min(100, S.t / S.dur * 100) + '%';
   if (S.t >= S.dur && !S.done) {
-    S.done = true; G.mode = 'busy'; F.qtSki = true; HLOG.flakes = S.flakes; stat('gains', 10, true); stat('happy', Math.min(12, 4 + S.flakes), true);
+    S.done = true; G.mode = 'busy'; stat('happy', Math.min(12, 4 + S.flakes), true);
     sfx('badge'); confetti(S.x, 1.2, 3, 50);
-    const lines = [S.bumps === 0 ? "Top to bottom, not a single fall. Who even are you?!" : "Made it down. Only " + S.bumps + " tumble" + (S.bumps > 1 ? "s" : "") + ", all very stylish.", S.flakes + " snowflake" + (S.flakes === 1 ? "" : "s") + " caught on the way down.", { n: CONFIG.boyfriend, t: "That kiwi chased you the whole last run." }];
+    const rec = runRecords(), bests = rec.bests || (rec.bests = {}), prev = bests[S.key] || 0, best = S.flakes > prev;
+    if (best) bests[S.key] = S.flakes;
+    let lines;
+    if (S.T.luge) {
+      const win = S.flakes - S.bumps * 2 >= 3; HLOG.lugeWin = win; F.qtLuge = true; if (win) earn('luge');
+      lines = [win ? "Across the line first! Paulo is stunned." : "Paulo pips you at the line by a whisker.", S.flakes + " star" + (S.flakes === 1 ? "" : "s") + " grabbed, " + S.bumps + " cone" + (S.bumps === 1 ? "" : "s") + " clipped.", win ? { n: CONFIG.boyfriend, t: "Rematch. Tomorrow. I'm serious." } : { n: CONFIG.boyfriend, t: "Hot chocolate's on you!" }];
+    } else {
+      F.qtSki = true; HLOG.flakes = S.flakes; stat('gains', 10, true);
+      const g = rec.grades || (rec.grades = {}); g[G.grade] = true;
+      if (G.grade === 'black') earn('black');
+      if (['green', 'blue', 'red', 'black'].every(k => g[k])) earn('powder');
+      lines = [S.bumps === 0 ? "Top to bottom, not a single fall. Who even are you?!" : "Made it down. Only " + S.bumps + " tumble" + (S.bumps > 1 ? "s" : "") + ", all very stylish.", S.flakes + " snowflake" + (S.flakes === 1 ? "" : "s") + " caught on the way down.", { n: CONFIG.boyfriend, t: "That kiwi chased you the whole last run." }];
+    }
+    if (best && prev) lines.splice(1, 0, "New best on " + S.key + "! (was " + prev + ")");
+    saveRunRecords(rec);
     say(lines, () => fade(() => { SB = null; loadMap('qtown'); }));
   }
 }
@@ -3342,11 +3553,12 @@ function tastingGame() {
     setMenu(btns, { cols: innerWidth > 460 ? 2 : 1, onBack: null });
   };
   const finish = () => {
-    clearUI(); G.mode = 'busy'; F.hvTaste = true; HLOG.score = score; stat('happy', 6 + score * 2, true);
+    clearUI(); G.mode = 'busy'; F.hvTaste = true; HLOG.score = score; stat('happy', 6 + score * 2, true); if (score === glasses.length) earn('somm');
     moment('Tasting done', { e: '🍇', k: 'wine', title: score + ' of ' + glasses.length + ' guessed', line: score >= 3 ? 'Paulo buys lunch!' : 'Paulo is insufferable about it', ms: 1900 }, () => {
       G.mode = 'map';
-      const fav = HOL.hv.wines[Math.floor(Math.random() * HOL.hv.wines.length)].n; HLOG.fav = fav;
-      say([score >= 3 ? { n: CONFIG.boyfriend, t: "How?! Fine. Lunch is on me." } : { n: CONFIG.boyfriend, t: "Ha! Lunch is on you." }, "Two bottles of " + fav + " go in the boot. Maybe three.", { n: CONFIG.name, t: CONFIG.catchphrase }], refreshHints);
+      say(score >= 3 ? { n: CONFIG.boyfriend, t: "How?! Fine. Lunch is on me." } : { n: CONFIG.boyfriend, t: "Ha! Lunch is on you." }, () => pickMenu('Favourite glass', 'Which one is coming home with us?', HOL.hv.wines.map(w => ({ n: w.n, d: w.note.split('.')[0] })), f => {
+        HLOG.fav = f.n; say(["Two bottles of " + f.n + " go in the boot. Maybe three.", { n: CONFIG.name, t: CONFIG.catchphrase }], refreshHints);
+      }, false));
     });
   };
   round();
@@ -3396,18 +3608,12 @@ function holidayEnd() {
     ['Morning', HLOG.morning || 'A lazy one'],
     ['Dinner', HLOG.dinner || 'Something delicious']
   ];
-  const tt = el('div', 'title', `<div class="logo"><h1>What a trip, ${esc(CONFIG.name)}!</h1><span class="v2">${qt ? 'Snow, lakes and one cheeky kiwi' : 'Vines, wine and golden hour'}</span></div>`);
-  const card = el('div', 'panel', '<h2>Holiday memories</h2><div class="logs">' + rows.map(([k, v]) => `<div class="got"><b>${esc(k)}</b>${esc(v)}</div>`).join('') + '</div>');
-  card.style.animationDelay = '.4s'; card.style.maxHeight = '46vh';
-  const w = el('div', 'tbtns');
-  const b1 = makeBtn('Another holiday', () => fade(startHoliday), 'big alt');
-  const b2 = makeBtn('Back to title', () => fade(titleScreen), 'big');
-  w.append(b1, b2); tt.append(card, w); ui.append(tt);
-  setMenu([b1, b2], { cols: 2, keepMode: true });
+  if (qt && HLOG.lugeWin != null) rows.splice(5, 0, ['Skyline luge', HLOG.lugeWin ? 'Beat Paulo to the bottom' : 'Paulo won. Rematch pending']);
+  memoriesCard(qt ? 'holiday-qt' : 'holiday-hv', { title: 'What a trip, ' + CONFIG.name + '!', sub: qt ? 'Snow, lakes and one cheeky kiwi' : 'Vines, wine and golden hour', head: qt ? 'Queenstown memories' : 'Hunter Valley memories', rows }, [makeBtn('Another holiday', () => fade(startHoliday), 'big alt'), makeBtn('Back to title', () => fade(titleScreen), 'big')]);
 }
 
 /* ---------------- QA jumps ---------------- */
-function holQA(kind, map, fn) { resetHoliday(); G.holiday = kind; G.outfit = kind === 'qt' ? 'winter' : 'sunny'; loadMap(map); if (fn) setTimeout(() => { if (DLG) { DLG.q = []; nextLine(); } fn(); }, 950); }
+function holQA(kind, map, fn) { G.campaign = 'holiday'; resetHoliday(); G.holiday = kind; G.outfit = kind === 'qt' ? 'winter' : 'sunny'; loadMap(map); if (fn) setTimeout(() => { if (DLG) { DLG.q = []; nextLine(); } fn(); }, 950); }
 Object.assign(QA_EXTRA, {
   holiday: () => startHoliday(),
   qtown: () => holQA('qt', 'qtown'),
@@ -3417,6 +3623,8 @@ Object.assign(QA_EXTRA, {
   nightrun: () => { resetHoliday(); G.holiday = 'qt'; G.ride = 'board'; G.grade = 'blue'; Object.assign(HLOG, { field: 'Coronet Peak night ski', run: 'Blue run' }); buildSnowRun('coronet'); },
   qtfield: () => holQA('qt', 'qtown', () => { F.qtGear = true; fieldMenu(); setTimeout(() => MENU && MENU.b[1].click(), 300); }),
   qtjacket: () => holQA('qt', 'qtown', gearMenu),
+  luge: () => { G.campaign = 'holiday'; resetHoliday(); G.holiday = 'qt'; buildSnowRun('luge'); },
+  flight: () => { G.campaign = 'holiday'; resetHoliday(); G.holiday = 'qt'; flightScene(); },
   qtnight: () => { resetHoliday(); G.holiday = 'qt'; F.qtGear = true; F.qtSki = true; G.outfit = 'snow'; loadMap('qtown'); },
   hunter: () => holQA('hv', 'hunter'),
   tasting: () => holQA('hv', 'hunter', tastingGame),
@@ -3451,11 +3659,12 @@ function titleScreen() {
 
   const t = el('div', 'title', `<div class="logo"><h1>${esc(CONFIG.name)}'s Big Day</h1><span class="v2">v2 &middot; the whimsical edition</span></div>`);
   const w = el('div', 'tbtns'), btns = [];
-  const save = loadCheckpoint();
-  if (save) btns.push(makeBtn('Continue', () => { audioInit(); fade(() => resumeGame(save)); }, 'big'));
+  const saves = allCheckpoints(), save = saves.find(s => s.campaign === 'day');
+  if (saves.length) btns.push(makeBtn('Continue', () => { audioInit(); if (saves.length === 1) return fade(() => resumeGame(saves[0])); pickMenu('Continue', 'Which adventure?', saves.map(s => ({ n: CAMPAIGNS[s.campaign], d: (MAPS[s.map].title || '').replace(/^.*?: /, ''), s })), d => fade(() => resumeGame(d.s))); G.mode = 'title'; }, 'big'));
   btns.push(makeBtn(save ? 'New day' : 'Start the day', () => { audioInit(); fade(startGame); }, save ? 'big sky' : 'big'));
   if (typeof startWeekend === 'function') btns.push(makeBtn('Weekend Adventure', () => { audioInit(); fade(startWeekend); }, 'big alt'));
   if (typeof startHoliday === 'function') btns.push(makeBtn('Go on holiday', () => { audioInit(); fade(startHoliday); }, 'big sky'));
+  if (Object.keys(loadAlbum()).length) btns.push(makeBtn('Album', () => { audioInit(); openAlbum(() => { G.mode = 'title'; titleScreen(); }); }, 'big alt'));
   btns.push(makeBtn('Settings', () => { audioInit(); openSettings(); }, 'big sky'));
   w.append(...btns); t.append(w); ui.append(t);
   setMenu(btns, { cols: btns.length });
@@ -3463,11 +3672,13 @@ function titleScreen() {
 function resetDay() {
   Object.assign(G.stats, { happy: 60, glow: 40, energy: 70, gains: 30 }); updateHUD();
   [G.F, G.secrets, G.badges, G.hearts, G.lucaPat].forEach(o => Object.keys(o).forEach(k => delete o[k]));
-  Object.assign(G, { outfit: 'office', wearing: 'pj', radio: null, tidied: 0, balloons: 0, b: null, lift: null });
+  Object.assign(G, { outfit: 'office', wearing: 'pj', radio: null, tidied: 0, balloons: 0, b: null, lift: null, lunch: null, dish: null, drink: null });
+  restorePackBadges();
 }
-function startGame() { cam.orbit = 0; resetDay(); loadMap('bedroom'); }
+function startGame() { cam.orbit = 0; resetDay(); G.campaign = 'day'; loadMap('bedroom'); }
 function resumeGame(s) {
-  cam.orbit = 0; resetDay();
+  cam.orbit = 0; resetDay(); G.campaign = s.campaign || 'day';
+  if (CAMPAIGN_STATE[G.campaign]) CAMPAIGN_STATE[G.campaign].load(s.extra || {});
   Object.assign(G.stats, s.stats); Object.assign(G.F, s.F); Object.assign(G.secrets, s.secrets); Object.assign(G.badges, s.badges); Object.assign(G.hearts, s.hearts); Object.assign(G.lucaPat, s.lucaPat || {});
   Object.assign(G, { outfit: s.outfit || 'office', radio: s.radio, tidied: s.tidied || 0, balloons: s.balloons || 0 });
   if (s.map === 'bedroom' && G.tidied) MAPS.bedroom.rows = MAPS.bedroom.rows.map(r => r.replace(/x/g, () => '.'));
@@ -3562,7 +3773,7 @@ function frame(now) {
   try {
     if (G.mode === 'map' && G.scene === 'map') G.clock += dt * TUNE.minutesPerTick / TUNE.tick;
     const c = fmtClock(G.clock); if (c !== clockShown) { clockShown = c; $('#clock').textContent = c; }
-    if (G.scene === 'map') { updatePlayer(dt); updateWorld(dt, t); updateLift(dt); updateBattle(dt, t); updatePet(dt, t); if (W && W.player && !PET) { const p = W.player.g.position; if (!G.b && !G.lift) cam.goal.set(p.x, 0.5, p.z - 0.3); } updateBuddy(dt, t); }
+    if (G.scene === 'map') { updatePlayer(dt); updateWorld(dt, t); updateLift(dt); updateBattle(dt, t); updatePet(dt, t); if (W && W.introUntil && G.t >= W.introUntil) { W.introUntil = 0; cam.zoomGoal = 1; } if (W && W.player && !PET && !W.introUntil) { const p = W.player.g.position; if (!G.b && !G.lift) cam.goal.set(p.x, 0.5, p.z - 0.3); } updateBuddy(dt, t); }
     else if (G.scene === 'lunch') { updateWorld(dt, t); if (W && W.steam && Math.random() < dt * 8) FX.emit(3 + (Math.random() - 0.5) * 0.3, 1, 2, ['#ffffff', '#f5eef8'], 1, 0.4, { g: -0.8, life: 1.4 }); }
     else if (G.scene === 'drive') updateDrive(dt);
     else if (G.scene === 'snow') updateSnow(dt);
@@ -3576,6 +3787,12 @@ function frame(now) {
 function resize() { renderer.setSize(innerWidth, innerHeight); updateCamera(0.016); }
 addEventListener('resize', resize);
 saveSettings(); updateHUD(); resize();
+
+/* ---------------- static props are merged as they are built (they only ever move or sway as a whole) ---------------- */
+['makeFlower', 'makeTree', 'makePlant', 'makeGum', 'makePine', 'makeMountain', 'makeCloud', 'makeStreetLamp', 'makeHouse', 'makeTower', 'makeSnowman', 'makePalm'].forEach(n => {
+  const fn = window[n]; if (typeof fn !== 'function') return;
+  window[n] = function () { return mergeStatic(fn.apply(this, arguments)); };
+});
 
 /* ---------------- QA hook: ?qa=<scene> jumps straight in (for screenshots and tests) ---------------- */
 (function boot() {

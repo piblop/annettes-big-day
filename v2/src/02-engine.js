@@ -61,6 +61,41 @@ function mk(g, color, s, p, parent, o) {
   if (parent) parent.add(m);
   return m;
 }
+/* ---------------- draw-call diet: merge a rig's static meshes per material, keeping every group (joint) intact ---------------- */
+let MERGED = []; // merged geometries owned by the current scene, freed by clearWorld
+function mergeGeos(list, vc) {
+  const pos = [], nor = [], uv = [], idx = [], col = []; let off = 0;
+  list.forEach(c => {
+    const cc = c.material.color || { r: 1, g: 1, b: 1 };
+    const g = c.geometry.clone(); g.applyMatrix4(c.matrix);
+    const p = g.attributes.position, n = g.attributes.normal, u = g.attributes.uv;
+    for (let i = 0; i < p.count; i++) { pos.push(p.getX(i), p.getY(i), p.getZ(i)); nor.push(n ? n.getX(i) : 0, n ? n.getY(i) : 1, n ? n.getZ(i) : 0); uv.push(u ? u.getX(i) : 0, u ? u.getY(i) : 0); if (vc) col.push(cc.r, cc.g, cc.b); }
+    if (g.index) for (let i = 0; i < g.index.count; i++) idx.push(g.index.getX(i) + off); else for (let i = 0; i < p.count; i++) idx.push(i + off);
+    off += p.count; g.dispose();
+  });
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); out.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); out.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  if (vc) out.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  out.setIndex(idx); out.computeBoundingSphere(); return out;
+}
+// one shared vertex-colour material per material kind, so differently tinted pieces merge into one mesh
+const VCMATS = {};
+function vcMat(m) {
+  const k = m.type + ':' + m.opacity;
+  return VCMATS[k] || (VCMATS[k] = m.isMeshBasicMaterial ? new THREE.MeshBasicMaterial({ vertexColors: true, transparent: m.transparent, opacity: m.opacity }) : new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: TOON, transparent: m.transparent, opacity: m.opacity }));
+}
+function mergeStatic(obj, keep, own, flat) {
+  if (!flat) obj.children.slice().forEach(c => { if (!c.isMesh && c.children.length) mergeStatic(c, keep, own); });
+  const buckets = new Map();
+  obj.children.forEach(c => { if (!c.isMesh || c.isInstancedMesh || c.children.length || (keep && keep.has(c)) || c.onBeforeRender !== THREE.Object3D.prototype.onBeforeRender) return; c.updateMatrix(); const mt = c.material, k = mt.type + ':' + mt.opacity + ':' + (c.castShadow ? 's' : ''); if (!buckets.has(k)) buckets.set(k, []); buckets.get(k).push(c); });
+  buckets.forEach(list => {
+    if (list.length < 2) return;
+    const same = list.every(c => c.material === list[0].material), m0 = list[0].material;
+    const m = new THREE.Mesh(mergeGeos(list, !same), same ? m0 : vcMat(m0)); m.castShadow = list[0].castShadow; m.receiveShadow = true;
+    list.forEach(c => obj.remove(c)); obj.add(m); if (own !== false) MERGED.push(m.geometry);
+  });
+  return obj;
+}
 function grp(parent, x, y, z) { const g = new THREE.Group(); g.position.set(x || 0, y || 0, z || 0); if (parent) parent.add(g); return g; }
 
 /* ---------------- diorama camera: orthographic, fixed pitch, 90 degree yaw steps ---------------- */
@@ -79,7 +114,8 @@ function updateCamera(dt) {
   camera.position.set(cam.target.x + r * Math.cos(cam.pitch) * Math.sin(cam.yaw) + sx, cam.target.y + r * Math.sin(cam.pitch), cam.target.z + r * Math.cos(cam.pitch) * Math.cos(cam.yaw));
   camera.lookAt(cam.target.x + sx, cam.target.y, cam.target.z);
   const a = innerWidth / innerHeight;
-  const base = a < 1.1 ? Math.min(cam.base * 1.25 / a, cam.base * 2.1) : cam.base;
+  // tall phones: maps get a closer follow-cam (Annette stays big on screen), set pieces keep the wide framing
+  const base = a < 1.1 ? (G.scene === 'map' ? cam.base * (a < 0.7 ? 1.45 : 1.3) : Math.min(cam.base * 1.25 / a, cam.base * 2.1)) : cam.base;
   const s = base / cam.zoom;
   camera.left = -s * a / 2; camera.right = s * a / 2; camera.top = s / 2; camera.bottom = -s / 2; camera.updateProjectionMatrix();
 }
@@ -189,6 +225,29 @@ const SFX = {
   blow: () => tone(1200, 0.35, 'sine', 0.03, 0, 300),
   woof: () => { tone(420, 0.08, 'sawtooth', 0.04, 0, 260); tone(460, 0.09, 'sawtooth', 0.04, 0.14, 280); }
 };
+/* ---------------- ambient beds: soft looping sound per place (lake water, cicadas, mountain wind, chairlift) ---------------- */
+let AMB = null, NOISE = null;
+function noiseBuf() { if (NOISE) return NOISE; const n = actx.sampleRate * 2, b = actx.createBuffer(1, n, actx.sampleRate), d = b.getChannelData(0); let last = 0; for (let i = 0; i < n; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; } return (NOISE = b); }
+function stopAmbient() { if (!AMB) return; const a = AMB; AMB = null; clearInterval(a.timer); try { const t = actx.currentTime; a.gain.gain.setTargetAtTime(0.0001, t, 0.3); setTimeout(() => a.srcs.forEach(s => { try { s.stop(); } catch (e) {} }), 1200); } catch (e) {} }
+function ambient(kind) {
+  stopAmbient(); if (!kind || !actx || !SET.sfx) return;
+  try {
+    const t = actx.currentTime, gain = actx.createGain(); gain.gain.setValueAtTime(0.0001, t); gain.connect(actx.destination);
+    const A = AMB = { kind, gain, srcs: [], timer: 0 };
+    const bed = (freq, q, vol, lfo) => {
+      const s = actx.createBufferSource(); s.buffer = noiseBuf(); s.loop = true;
+      const f = actx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = freq; f.Q.value = q;
+      const g = actx.createGain(); g.gain.value = vol; s.connect(f).connect(g).connect(gain); s.start(); A.srcs.push(s);
+      if (lfo) { const o = actx.createOscillator(), og = actx.createGain(); o.frequency.value = lfo; og.gain.value = vol * 0.8; o.connect(og).connect(g.gain); o.start(); A.srcs.push(o); }
+    };
+    if (kind === 'water') bed(520, 0.7, 0.5, 0.13);
+    if (kind === 'wind' || kind === 'lift') bed(380, 1.2, 0.45, 0.07);
+    if (kind === 'engine') bed(220, 0.9, 0.6, 0);
+    if (kind === 'cicada') A.timer = setInterval(() => { if (!AMB || Math.random() < 0.35) return; for (let i = 0; i < 16; i++) tone(4200 + Math.random() * 300, 0.05, 'sine', 0.006, i * 0.06); }, 1400);
+    if (kind === 'lift') A.timer = setInterval(() => { if (AMB) { tone(95, 0.12, 'triangle', 0.03); tone(140, 0.08, 'triangle', 0.02, 0.14); } }, 2600);
+    gain.gain.setTargetAtTime(0.35, t, 0.6);
+  } catch (e) { AMB = null; }
+}
 function sfx(n) { try { SFX[n] && SFX[n](); } catch (e) {} if (n === 'bad' || n === 'hit') buzz(30); if (n === 'heart' || n === 'badge') buzz([20, 40, 20]); }
 // Instanced meshes get their own material (never the shared cache) and a pre-filled colour per
 // instance: r128 binds instanceColor per program, so mixing coloured and uncoloured instanced

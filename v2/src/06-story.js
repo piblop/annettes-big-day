@@ -118,6 +118,8 @@ function loadMap(id) {
   buildMap(id);
   showHUD(true); setChapter(def.title); chapterCard(def.title); G.clock = SCENE_TIME[id] || G.clock;
   saveCheckpoint(id);
+  if (def.intro && !SET.calm) { cam.target.set(def.intro.x, 0.5, def.intro.z); cam.goal.copy(cam.target); cam.zoom = cam.zoomGoal = def.intro.zoom; W.introUntil = G.t + 2.2; }
+  ambient(def.ambient || null);
   G.mode = 'map';
   setTimeout(() => { if (G.scene === 'map' && G.mapId === id && G.mode === 'map') def.onEnter && def.onEnter(); }, 900);
 }
@@ -177,7 +179,7 @@ function talkMum() {
   const menu = () => pickMenu('Mum', 'Anything before you head off?', [
     { n: 'Flat white by the window', d: 'A slow sip before the big day', k: 'coffee' },
     { n: 'Big birthday hug', d: 'The best kind', k: 'hug' },
-    { n: 'See you tonight', d: 'Off we go', k: 'bye' }
+    { n: 'See you tonight', d: 'Off we go', k: 'bye', quick: true }
   ], d => {
     if (d.k === 'coffee') { if (!F.coffee) { F.coffee = true; stat('energy', 15); } say(["The morning light pours in. Perfect flat white.", { n: CONFIG.name, t: "Okay. Now I'm ready." }], refreshHints); }
     else if (d.k === 'hug') { stat('happy', 5); const m = W.npcs.find(n => n.ch === 'M'); if (m) FX.emit(m.x, 1.2, m.z, '#ff7aa8', 12, 1.2, { g: -1, life: 1.2 }); say({ n: 'Mum', t: "Happy birthday, darling. Go shine." }, refreshHints); }
@@ -209,7 +211,7 @@ function lunchScene() {
   cam.goal.set(3, 0.5, 2); cam.target.copy(cam.goal); cam.zoomGoal = 1.5; cam.pitch = 0.96; cam.orbit = 0; cam.base = 11; cam.yawGoal = Math.round(cam.yawGoal / (Math.PI / 2)) * (Math.PI / 2);
   setTimeout(() => {
     pickMenu('Lunch break', 'Midday hunger hits. What are we grabbing?', CONFIG.lunches, d => {
-      G.mode = 'busy'; stat('energy', 20, true); stat('happy', 8, true); confetti(3, 1.2, 2, 30); sfx('good');
+      G.mode = 'busy'; G.lunch = d.n; stat('energy', 20, true); stat('happy', 8, true); confetti(3, 1.2, 2, 30); sfx('good');
       say([{ n: CONFIG.name, t: "Lunch sorted: " + d.n + "." }, "Refuelled and ready. Golden hour at the beach next.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => startDrive('coast', 'beach', 'the beach'));
     }, false);
   }, 1200);
@@ -225,7 +227,7 @@ function drinkMenu() {
 }
 function dinnerMenu() {
   pickMenu('Dinner with ' + CONFIG.boyfriend, 'Order anything. It is your night.', CONFIG.dishes, d => {
-    F.dinner = true; stat('energy', 30); refreshHints();
+    F.dinner = true; G.dish = d.n; stat('energy', 30); refreshHints();
     say([{ n: CONFIG.boyfriend, t: "Good choice. The " + d.n.toLowerCase() + " here is unreal." }, d.n + ". Absolutely delicious. Five stars.", { n: CONFIG.boyfriend, t: "Okay. One more thing." }, "The staff bring out a birthday cake, candles lit.", "The whole bar starts singing."], cakeTime);
   });
 }
@@ -299,7 +301,11 @@ function credits() {
   ui.append(c);
   const bw = el('div', 'cbtns');
   const b = makeBtn('Play again', () => fade(titleScreen), 'big');
-  const btns = [b];
+  const btns = [b, makeBtn('Save photo', savePhoto, 'big sky')];
+  saveAlbumPage('day', { title: CONFIG.name + "'s Big Day", sub: 'The birthday', head: 'Birthday memories', rows: [
+    ['Outfit', (OUTFITS[G.outfit] || OUTFITS.office).name], ['Lunch', G.lunch || 'Something delicious'], ['Cocktail', G.drink || 'A little something'],
+    ['Dinner', G.dish || 'With ' + CONFIG.boyfriend], ['Collection', heartsFound() + ' of ' + HEARTS_TOTAL + ' hearts, ' + Object.keys(G.secrets).length + ' secrets'],
+    ['Badges', Object.keys(BADGES).filter(k => G.badges[k] && !BADGES[k].pack).length + ' earned'] ] });
   if (typeof startWeekend === 'function') btns.push(makeBtn('Play the weekend', () => fade(startWeekend), 'big alt'));
   if (typeof startHoliday === 'function') btns.push(makeBtn('Go on holiday', () => fade(startHoliday), 'big sky'));
   bw.append(...btns); c.append(bw); setMenu(btns, { cols: btns.length, keepMode: true });

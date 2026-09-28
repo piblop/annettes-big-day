@@ -18,7 +18,7 @@ function stat(k, d, quiet) {
   G.stats[k] = clamp(G.stats[k] + d, 0, 100); updateHUD();
   if (!quiet && d > 0 && W && W.player) FX.emit(W.player.g.position.x, 1.3, W.player.g.position.z, STAT_INFO[k][1], 8, 1.4, { g: -1, life: 0.9 });
 }
-function earn(id) { if (G.badges[id]) return; G.badges[id] = true; sfx('badge'); toast(BADGES[id].n + ' earned!', true); }
+function earn(id) { if (G.badges[id]) return; G.badges[id] = true; if (BADGES[id].pack) savePackBadge(id); sfx('badge'); toast(BADGES[id].n + ' earned!', true); }
 function secret(id) {
   const first = !G.secrets[id]; G.secrets[id] = true;
   say(CONFIG.secrets[id].slice(), () => { if (first) { sfx('secret'); toast('Secret found: ' + SECRET_NAMES[id] + ' (' + Object.keys(G.secrets).length + ' of 4)', true); if (W && W.player) confetti(W.player.g.position.x, 1.2, W.player.g.position.z, 30); } });
@@ -93,10 +93,54 @@ function menuBack() { if (MENU && MENU.onBack) { const f = MENU.onBack; MENU = n
 function panel(title, sub, gridCls) { clearUI(); const p = el('div', 'panel', `<h2>${title}</h2>${sub ? `<p class="sub">${sub}</p>` : ''}${gridCls ? `<div class="${gridCls}"></div>` : ''}`); ui.append(p); return p; }
 function pickMenu(title, sub, items, onPick, back) {
   const p = panel(esc(title), esc(sub), 'grid2');
-  const btns = items.map(d => makeBtn(`<span>${esc(d.n)}</span>${d.d ? `<small>${esc(d.d)}</small>` : ''}`, () => { clearUI(); G.mode = 'busy'; moment(d.n, null, () => { G.mode = 'map'; onPick(d); }); }));
+  const btns = items.map(d => makeBtn(`<span>${esc(d.n)}</span>${d.d ? `<small>${esc(d.d)}</small>` : ''}`, () => { clearUI(); if (d.quick) { G.mode = 'map'; onPick(d); return; } G.mode = 'busy'; moment(d.n, null, () => { G.mode = 'map'; onPick(d); }); }));
   p.querySelector('.grid2').append(...btns);
   setMenu(btns, { cols: innerWidth > 460 ? 2 : 1, onBack: back === false ? null : () => { clearUI(); G.mode = 'map'; } });
 }
+
+/* ---------------- the memories album: every ending saves a page, the title can flip through them ---------------- */
+const ALBUM_KEY = 'abd2-album-v1';
+function loadAlbum() { try { return JSON.parse(localStorage.getItem(ALBUM_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function saveAlbumPage(key, page) { const a = loadAlbum(); a[key] = Object.assign({ at: Date.now() }, page); try { localStorage.setItem(ALBUM_KEY, JSON.stringify(a)); } catch (e) {} }
+function pageHTML(p) { return `<h2>${esc(p.head || 'Memories')}</h2><div class="logs">` + p.rows.map(([k, v]) => `<div class="got"><b>${esc(k)}</b>${esc(v)}</div>`).join('') + '</div>'; }
+// the shared ending: a big title, one album page and buttons (plus Save photo)
+function memoriesCard(key, page, buttons) {
+  saveAlbumPage(key, page);
+  const t = el('div', 'title', `<div class="logo"><h1>${esc(page.title)}</h1><span class="v2">${esc(page.sub || '')}</span></div>`);
+  const card = el('div', 'panel album', pageHTML(page)); card.style.animationDelay = '.4s'; card.style.maxHeight = '46vh';
+  const w = el('div', 'tbtns'), all = buttons.concat(makeBtn('Save photo', savePhoto, 'big sky'));
+  w.append(...all); t.append(card, w); ui.append(t);
+  setMenu(all, { cols: all.length, keepMode: true });
+}
+function openAlbum(back) {
+  const a = loadAlbum(), keys = ['day', 'weekend', 'holiday-qt', 'holiday-hv'].filter(k => a[k]);
+  if (!keys.length) return;
+  let i = 0;
+  const show = () => {
+    const p = a[keys[i]], pn = panel('Our album', `Page ${i + 1} of ${keys.length} · ${esc(p.title)}`);
+    const body = el('div', 'album', pageHTML(p)); pn.append(body);
+    const row = el('div', 'tbtns'); row.style.marginTop = '14px';
+    const bs = [];
+    if (keys.length > 1) bs.push(makeBtn('Next page', () => { i = (i + 1) % keys.length; sfx('whoosh'); show(); }, 'big alt'));
+    bs.push(makeBtn('Close', () => { clearUI(); back(); }, 'big'));
+    row.append(...bs); pn.append(row); setMenu(bs, { cols: bs.length, keepMode: true, onBack: () => { clearUI(); back(); } });
+  };
+  show();
+}
+// snapshot the 3D scene as a keepsake photo (long-press to save on phones)
+function savePhoto() {
+  let url; try { renderer.render(scene, camera); url = renderer.domElement.toDataURL('image/png'); } catch (e) { toast('Could not take the photo.'); return; }
+  sfx('pop'); buzz(20);
+  const o = el('div', 'photo', `<div class="snap"><img alt="A memory" src="${url}"><p>Tap and hold to save on a phone</p></div>`);
+  const row = el('div', 'tbtns'), dl = el('a', 'big alt', 'Download'); dl.href = url; dl.download = 'annette-memory.png';
+  const close = makeBtn('Close', () => o.remove(), 'big'); row.append(dl, close); o.firstChild.append(row); document.body.append(o);
+  o.addEventListener('pointerdown', e => { if (e.target === o) o.remove(); });
+}
+
+/* ---------------- pack badges persist across playthroughs ---------------- */
+const PACK_BADGE_KEY = 'abd2-badges-v1';
+function restorePackBadges() { try { Object.assign(G.badges, JSON.parse(localStorage.getItem(PACK_BADGE_KEY) || '{}')); } catch (e) {} }
+function savePackBadge(id) { try { const b = JSON.parse(localStorage.getItem(PACK_BADGE_KEY) || '{}'); b[id] = true; localStorage.setItem(PACK_BADGE_KEY, JSON.stringify(b)); } catch (e) {} }
 
 /* ---------------- pictures for options + little animated moments when you pick ---------------- */
 // [pattern, emoji, kind]. First match wins, so specific names go before general ones.
@@ -110,7 +154,7 @@ const ICONS = [
   [/cleanser/i, '🧼', 'glow'], [/serum/i, '💧', 'glow'], [/moisturiser/i, '🧴', 'glow'], [/spf/i, '🌞', 'glow'],
   [/exec reports/i, '📊', 'plain'], [/project updates/i, '📋', 'plain'], [/snacks/i, '🍪', 'plain'],
   [/banana/i, '🍌', 'cart'], [/sourdough/i, '🍞', 'cart'], [/oat milk/i, '🥛', 'cart'], [/chocolate/i, '🍫', 'cart'], [/dishwasher/i, '🧽', 'cart'], [/sparkling/i, '💦', 'cart'], [/avocado/i, '🥑', 'cart'], [/party pies/i, '🥧', 'cart'], [/dog treats/i, '🦴', 'cart'], [/candle/i, '🕯️', 'cart'],
-  [/go-kart/i, '🏎️', 'special'], [/tv/i, '📺', 'special'], [/chainsaw/i, '🪚', 'special'], [/spa/i, '🛁', 'special'], [/ski/i, '⛷️', 'special'], [/welding/i, '🥽', 'special'], [/kayak/i, '🛶', 'special'], [/robot/i, '🤖', 'special'], [/snowboard/i, '🏂', 'special'], [/beekeeping/i, '🐝', 'special'], [/scooter/i, '🛴', 'special'],
+  [/go-kart/i, '🏎️', 'special'], [/tv/i, '📺', 'special'], [/chainsaw/i, '🪓', 'special'], [/spa/i, '🛁', 'special'], [/ski/i, '⛷️', 'special'], [/welding/i, '🥽', 'special'], [/kayak/i, '🛶', 'special'], [/robot/i, '🤖', 'special'], [/snowboard/i, '🏂', 'special'], [/beekeeping/i, '🐝', 'special'], [/scooter/i, '🛴', 'special'],
   [/scorsese/i, '🎬', 'movie'], [/nolan/i, '⏳', 'movie'], [/godfather/i, '🌹', 'movie'],
   [/knight/i, '♞', 'chess'], [/queen/i, '♛', 'chess'], [/castle/i, '🏰', 'chess'],
   [/cheese/i, '🧀', 'picnic'], [/strawberr/i, '🍓', 'picnic'],
@@ -120,7 +164,7 @@ const ICONS = [
 function iconFor(name) { const t = String(name).replace(/&amp;/g, '&'); const r = ICONS.find(([re]) => re.test(t)); return r ? { e: r[1], k: r[2] } : null; }
 const MOMENT_LINES = { dine: 'Dinner is served', drink: 'Cheers!', wine: 'Cheers to the weekend', food: 'Tuck in', read: 'Just one more chapter', hug: 'Right back at you', outfit: 'Looking good', music: 'Turn it up', glow: 'Glowing', movie: 'Lights down, film on', chess: 'Your move', picnic: 'Picnic time', cart: 'Into the trolley', special: 'Absolutely not on the list' };
 // props that join the main picture on the little stage, per kind
-const MOMENT_PROPS = { dine: ['🕯️', '🕯️'], wine: ['🧀', '🫒'], drink: [], food: [], movie: ['🍿'], music: ['🎵', '🎶', '🎵'], outfit: ['✨', '✨', '✨'], hug: ['💞', '💗', '💖'], glow: ['✨', '✨'], chess: ['👑'], picnic: ['🧺'], read: ['☕'], cart: ['🛒'], special: ['⭐'] };
+const MOMENT_PROPS = { dine: ['🕯️', '🕯️'], wine: ['🧀', '🍇'], drink: [], food: [], movie: ['🍿'], music: ['🎵', '🎶', '🎵'], outfit: ['✨', '✨', '✨'], hug: ['💞', '💗', '💖'], glow: ['✨', '✨'], chess: ['👑'], picnic: ['🧺'], read: ['☕'], cart: ['🛒'], special: ['⭐'] };
 let MOMENT = null;
 function moment(name, o, cb) {
   o = o || {};
@@ -159,7 +203,7 @@ function openSettings() {
   if (G.mode !== 'map' && G.mode !== 'title') return;
   const ret = G.mode, p = panel('Settings', 'Saved on this device.');
   const rows = [['sfx', 'Sound effects'], ['buzz', 'Vibration'], ['calm', 'Reduced motion']];
-  const btns = rows.map(([k, n]) => { const r = el('div', 'row', `<span>${n}</span>`); const t = makeBtn('', () => { SET[k] = !SET[k]; t.classList.toggle('on', SET[k]); saveSettings(); }, 'tog' + (SET[k] ? ' on' : '')); t.setAttribute('aria-label', n); r.append(t); p.append(r); return t; });
+  const btns = rows.map(([k, n]) => { const r = el('div', 'row', `<span>${n}</span>`); const t = makeBtn('', () => { SET[k] = !SET[k]; t.classList.toggle('on', SET[k]); saveSettings(); if (k === 'sfx' && !SET.sfx) stopAmbient(); }, 'tog' + (SET[k] ? ' on' : '')); t.setAttribute('aria-label', n); r.append(t); p.append(r); return t; });
   const done = makeBtn('Done', () => { clearUI(); G.mode = ret; }, 'big'); done.style.marginTop = '14px'; p.append(done);
   setMenu(btns.concat(done), { onBack: () => { clearUI(); G.mode = ret; }, keepMode: ret === 'title' });
   if (ret !== 'title') G.mode = 'menu';
@@ -181,8 +225,14 @@ $('#rotR').onclick = () => rotateView(-1);
 
 /* ---------------- save / checkpoint ---------------- */
 const SAVE_KEY = 'abd2-save-v1';
+// one save slot per campaign, so a weekend or holiday never overwrites the birthday day
+const CAMPAIGNS = { day: 'The birthday', weekend: 'The weekend', holiday: 'The holiday' };
+const slotKey = c => SAVE_KEY + (c && c !== 'day' ? '-' + c : '');
+const CAMPAIGN_STATE = {}; // campaign -> { save(): extra state, load(s) }
 function saveCheckpoint(mapId) {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 1, map: mapId, stats: G.stats, F: G.F, secrets: G.secrets, badges: G.badges, hearts: G.hearts, outfit: G.outfit, radio: G.radio, tidied: G.tidied, balloons: G.balloons, lucaPat: G.lucaPat })); } catch (e) {}
+  const c = G.campaign || 'day', extra = CAMPAIGN_STATE[c] ? CAMPAIGN_STATE[c].save() : {};
+  try { localStorage.setItem(slotKey(c), JSON.stringify({ v: 1, campaign: c, extra, map: mapId, stats: G.stats, F: G.F, secrets: G.secrets, badges: G.badges, hearts: G.hearts, outfit: G.outfit, radio: G.radio, tidied: G.tidied, balloons: G.balloons, lucaPat: G.lucaPat })); } catch (e) {}
 }
-function loadCheckpoint() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); return s && s.v === 1 && MAPS[s.map] ? s : null; } catch (e) { return null; } }
-function clearCheckpoint() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+function loadCheckpoint(c) { try { const s = JSON.parse(localStorage.getItem(slotKey(c)) || 'null'); return s && s.v === 1 && MAPS[s.map] ? Object.assign({ campaign: c || 'day' }, s) : null; } catch (e) { return null; } }
+function allCheckpoints() { return Object.keys(CAMPAIGNS).map(loadCheckpoint).filter(Boolean); }
+function clearCheckpoint(c) { try { localStorage.removeItem(slotKey(c || G.campaign || 'day')); } catch (e) {} }

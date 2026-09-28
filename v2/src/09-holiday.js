@@ -97,7 +97,14 @@ Object.assign(NPC_CHARS, { qtown: 'A', hunter: 'A' });
 OUTFITS.winter = { name: "Cosy knit", style: "pants", note: "Cream knit, jeans and a beanie", top: '#f3e2c7', bottom: '#3f6fb0', beanie: '#ff7aa8' };
 OUTFITS.snow = { name: "Snow gear", style: "pants", note: "Greentoad jacket, pants and a helmet", top: '#ff7aa8', bottom: '#3a3148', beanie: '#ffffff' };
 LOOK.pauloSnow = Object.assign({}, LOOK.paulo, { top: '#3f6fb0', bottom: '#2b2d42', beanie: '#ffd166' });
-const HOL_FLAGS = ['qtGear', 'qtSki', 'qtRest', 'hvTaste', 'hvCheese', 'hvMorning'];
+Object.assign(BADGES, {
+  powder: { n: 'Powder hound', how: 'Ride a green, blue, red and black run', pack: true },
+  black: { n: 'Black diamond', how: 'Make it down a black run', pack: true },
+  somm: { n: 'Sommelier', how: 'Guess all four wines at the cellar door', pack: true },
+  luge: { n: 'Luge legend', how: 'Beat Paulo down the Skyline luge', pack: true }
+});
+DRIVE_THEMES.hunter = { sky: 'golden', ground: '#b8d98a', side: 'gum', label: 'Up the M1 to the Hunter' };
+const HOL_FLAGS = ['qtGear', 'qtSki', 'qtRest', 'qtLuge', 'hvTaste', 'hvCheese', 'hvMorning'];
 
 // pictures and moments for the holiday choices (checked before the everyday ones)
 ICONS.unshift(
@@ -225,7 +232,8 @@ const npcPauloHol = c => c === 'A' ? (G.holiday === 'qt' ? LOOK.pauloSnow : LOOK
 MAPS.qtown = {
   theme: 'qtown', title: 'Holiday: Queenstown', outdoor: true, edge: '#eef4fa',
   get sky() { return F.qtSki ? 'evening' : 'day'; },
-  floor: ['#f4f8fc', '#e6eef6'], wet: '#d9dee6', wall: ['#fff', '#fff'],
+  floor: ['#f4f8fc', '#e6eef6'], wet: '#d9dee6', wall: ['#fff', '#fff'], water: ['#3f9fd0', '#4aa8d8'],
+  intro: { x: 7, z: -1.5, zoom: 0.62 }, ambient: 'water',
   rows: ["~~~~~~~~~~~~~~~", "~~~~~~~~~~~~~~~", "_______________", ".FF....p...GG..", "...............", "p......A.......", "............LLL", ".BB.........LLL", ".....n........p", "p.............."],
   start: { x: 5, z: 4, dir: 'up' },
   npcs: npcPauloHol,
@@ -248,6 +256,7 @@ MAPS.qtown = {
     if (F.qtSki) makeFairyLights(g, 0, 2.6, 14, 2.6, 1.8, 30);
   },
   onEnter() {
+    if (F.qtLuge) { say([HLOG.lugeWin ? "Luge legend! Paulo demands a rematch." : "Paulo won the luge and will not stop talking about it.", { n: CONFIG.boyfriend, t: "Right. Farewell dinner?" }]); return; }
     if (F.qtSki) { say(["Back in town, legs like jelly and cheeks glowing.", { n: CONFIG.boyfriend, t: "Come chat. We need a plan for tomorrow." }]); return; }
     say(["HOLIDAY PACK: Queenstown!", HOL.qt.flight + ". Landed in the snow.", "Checked in at " + HOL.qt.stay + ", a studio with a garden patio.", "Luca is having a sleepover at Mum's. He will be spoiled rotten.", { n: CONFIG.boyfriend, t: "First stop Greentoad for gear, then the ski bus." }]);
   },
@@ -260,11 +269,11 @@ MAPS.qtown = {
     '~': () => say("Lake Wakatipu, cold and impossibly blue. The TSS Earnslaw chugs past."),
     _: () => say("Lake Wakatipu, cold and impossibly blue. The TSS Earnslaw chugs past."),
     B: () => !F.qtGear ? say({ n: CONFIG.boyfriend, t: "Gear first! Greentoad is just over there." }) : F.qtSki ? say("The ski bus has finished for the day.") : fieldMenu(),
-    A: () => !F.qtGear ? say({ n: CONFIG.boyfriend, t: "Greentoad first, then the bus from The Station on Duke St." }) : !F.qtSki ? say({ n: CONFIG.boyfriend, t: "Bus stop's over there. Let's go shred." }) : qtEvening()
+    A: () => !F.qtGear ? say({ n: CONFIG.boyfriend, t: "Greentoad first, then the bus from The Station on Duke St." }) : !F.qtSki ? say({ n: CONFIG.boyfriend, t: "Bus stop's over there. Let's go shred." }) : F.qtRest ? qtDinner() : qtEvening()
   }
 };
 MAPS.hunter = {
-  theme: 'hunter', title: 'Holiday: Hunter Valley', sky: 'golden', outdoor: true, edge: '#b8d98a',
+  theme: 'hunter', title: 'Holiday: Hunter Valley', sky: 'golden', outdoor: true, edge: '#b8d98a', intro: { x: 7, z: 2, zoom: 0.68 }, ambient: 'cicada',
   floor: ['#c5e39a', '#b8d98a'], wall: ['#fff', '#fff'],
   rows: ["t.............t", ".vvvvvv..vvvvv.", "...............", ".vvvvvv..vvvvv.", "...............", ".CCC....A...cc.", ".CCC...........", "......bb.......", ".vvvvvv..vvvvv.", "..............."],
   start: { x: 7, z: 9, dir: 'up' },
@@ -301,8 +310,12 @@ function resetHoliday() {
   G.holiday = null; G.weekend = false; G.ride = 'board'; G.grade = 'blue'; cam.orbit = 0;
   HLOG = { trip: null, field: null, flakes: 0, snack: null, rest: null, dinner: null, score: 0, fav: null, cheese: null, morning: null };
 }
+CAMPAIGN_STATE.holiday = {
+  save: () => ({ holiday: G.holiday, log: HLOG, ride: G.ride, grade: G.grade, jacket: OUTFITS.snow.top }),
+  load: x => { resetHoliday(); G.holiday = x.holiday; Object.assign(HLOG, x.log || {}); G.ride = x.ride || 'board'; G.grade = x.grade || 'blue'; if (x.jacket) OUTFITS.snow.top = x.jacket; }
+};
 function startHoliday() {
-  resetHoliday(); clearWorld(); clearUI(); G.scene = 'hstart'; G.mode = 'busy'; showHUD(false); setChapter('Holiday Pack');
+  G.campaign = 'holiday'; resetHoliday(); clearWorld(); clearUI(); G.scene = 'hstart'; G.mode = 'busy'; showHUD(false); setChapter('Holiday Pack');
   W = { id: 'hstart', objs: [], npcs: [], hearts: [], markers: [], anim: [], dispose: [], walls: [], decor: [] };
   setSky('morning'); fitSun(0, 0, 8);
   makeIslandBase(world, 8, 6, GRASS, 0, 0); mk(G_BOX, GRASS, [8, 0.2, 6], [0, -0.1, 0], world);
@@ -319,7 +332,7 @@ function startHoliday() {
   const btns = trips.map(tr => makeBtn(`<span>${esc(tr.n)}</span><small>${esc(tr.d)}</small>`, () => {
     clearUI(); moment(tr.n, { line: tr.k === 'qt' ? 'SYD to ZQN, window seat' : 'Road trip up the M1', ms: 1900 }, () => {
       G.holiday = tr.k; HLOG.trip = tr.n; G.outfit = tr.k === 'qt' ? 'winter' : 'sunny';
-      say([{ n: 'Mum', t: "Go! Luca and I will be fine. Send photos." }, { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(() => loadMap(tr.k === 'qt' ? 'qtown' : 'hunter')));
+      say([{ n: 'Mum', t: "Go! Luca and I will be fine. Send photos." }, { n: CONFIG.name, t: CONFIG.catchphrase }], () => tr.k === 'qt' ? fade(flightScene) : startDrive('hunter', 'hunter', 'the Hunter Valley'));
     });
   }));
   pn.querySelector('.grid2').append(...btns);
@@ -356,51 +369,90 @@ function fieldMenu() {
 function qtEvening() {
   pickMenu('Rest day tomorrow', 'Legs need a break. What are we doing?', HOL.qt.rest, r => {
     HLOG.rest = r.n; F.qtRest = true; stat('happy', 8, true);
-    say([{ n: CONFIG.name, t: r.n + ". Done." }, { n: CONFIG.boyfriend, t: "And for the farewell dinner?" }], () => pickMenu('Farewell dinner', 'Last night in Queenstown.', HOL.qt.dinner, d => {
-      HLOG.dinner = d.n; stat('energy', 15, true);
-      say([{ n: CONFIG.boyfriend, t: d.n + ". Perfect way to finish." }, "Snow falling softly over the lake. What a trip.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(holidayEnd));
-    }, false));
+    if (/luge/i.test(r.n)) { say([{ n: CONFIG.boyfriend, t: "Gondola up Bob's Peak, then a luge race. Loser buys hot chocolate." }, "Steer around the cones. Grab the stars for a speed boost."], () => fade(() => buildSnowRun('luge'))); return; }
+    say([{ n: CONFIG.name, t: r.n + ". Done." }, { n: CONFIG.boyfriend, t: "And for the farewell dinner?" }], qtDinner);
   });
+}
+function qtDinner() {
+  pickMenu('Farewell dinner', 'Last night in Queenstown.', HOL.qt.dinner, d => {
+    HLOG.dinner = d.n; stat('energy', 15, true);
+    say([{ n: CONFIG.boyfriend, t: d.n + ". Perfect way to finish." }, "Snow falling softly over the lake. What a trip.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(holidayEnd));
+  }, false);
+}
+// tiny flight: SYD to ZQN over the clouds and the Southern Alps
+function flightScene() {
+  clearWorld(); clearUI(); G.scene = 'flight'; G.mode = 'busy'; showHUD(true); setChapter('Flying SYD to ZQN'); G.clock = 11 * 60;
+  W = { id: 'flight', objs: [], npcs: [], hearts: [], markers: [], anim: [], dispose: [], walls: [], decor: [] };
+  setSky('day'); fitSun(0, 0, 12);
+  const plane = grp(world, 0, 1.2, 0);
+  mk(G_CYL, '#fffaf0', [0.9, 3.6, 0.9], [0, 0, 0], plane).rotation.z = Math.PI / 2; mk(G_SPH, '#fffaf0', [0.9, 0.9, 0.9], [-1.8, 0, 0], plane);
+  mk(G_CONE, '#fffaf0', [0.9, 0.7, 0.9], [2.1, 0, 0], plane).rotation.z = -Math.PI / 2;
+  const tail = mk(G_BOX, '#e2554f', [0.7, 1.1, 0.08], [-1.7, 0.6, 0], plane); tail.rotation.z = 0.4;
+  mk(G_BOX, '#e2554f', [0.9, 0.06, 1.3], [-1.6, 0.1, 0], plane);
+  mk(G_BOX, '#e8ecf4', [1.2, 0.08, 4.2], [0.1, -0.12, 0], plane);
+  [-1, 1].forEach(s => mk(G_CYL, '#c7ccd6', [0.3, 0.6, 0.3], [0.3, -0.35, s * 1.1], plane).rotation.z = Math.PI / 2);
+  for (let i = 0; i < 7; i++) mk(G_SPH, '#9fd0ff', [0.18, 0.2, 0.05], [1.2 - i * 0.38, 0.12, 0.44], plane, { noShadow: true });
+  // two little faces at the windows
+  [[0.44, '#f9d1b0', '#f5d271'], [0.06, '#b57848', '#2a1d12']].forEach(([x, skin, hair]) => { mk(G_SPH, skin, [0.13, 0.13, 0.05], [x, 0.1, 0.46], plane, { noShadow: true }); mk(G_SPH, hair, [0.15, 0.08, 0.05], [x, 0.17, 0.455], plane, { noShadow: true }); });
+  const below = grp(world, 0, -3, 0), scroll = [];
+  for (let i = 0; i < 14; i++) scroll.push(makeMountain(below, -16 + i * 3.2, -4 + hsh(i, 2) * 3, 2.2, 2 + hsh(i, 3) * 2.5));
+  for (let i = 0; i < 14; i++) scroll.push(makeCloud(world, -18 + i * 3, -0.4 + hsh(i, 4) * 1.2, -2 + hsh(i, 5) * 5, 1 + hsh(i, 6)));
+  cam.base = 11; cam.pitch = 0.3; cam.zoomGoal = 1.25; cam.zoom = 1.25; cam.yawGoal = 0; cam.yaw = 0; cam.goal.set(0, 0.6, 0); cam.target.copy(cam.goal); cam.orbit = 0;
+  ambient('engine');
+  wkTicker((dt, t) => { plane.position.y = 1.2 + Math.sin(t * 1.4) * 0.12; plane.rotation.z = Math.sin(t * 0.9) * 0.04; scroll.forEach(o => { o.position.x -= dt * (o.parent === below ? 1.2 : 3); if (o.position.x < -20) o.position.x += 42; }); });
+  setTimeout(() => say([HOL.qt.flight + ".", "Window seat. The Southern Alps slide by below.", "Paulo is asleep before the drinks trolley.", { n: CONFIG.name, t: "Wake up, we're landing! Look at the snow!" }], () => fade(() => loadMap('qtown'))), 700);
 }
 
 /* ---------------- snowboard run: a floating slope, three lanes ---------------- */
 const SNOW_FIELDS = {
   cardrona: { sky: 'day', speed: 6, obst: 0.25, rock: false, label: 'Cardrona: wide and mellow', lights: false },
   remarks: { sky: 'day', speed: 7.4, obst: 0.4, rock: true, label: 'The Remarkables: sunny bowls, rocky lines', lights: false },
-  coronet: { sky: 'night', speed: 8.2, obst: 0.35, rock: false, label: 'Coronet Peak: night ski under lights', lights: true }
+  coronet: { sky: 'night', speed: 8.2, obst: 0.35, rock: false, label: 'Coronet Peak: night ski under lights', lights: true },
+  luge: { sky: 'day', speed: 7, obst: 0.3, rock: false, label: "Skyline luge: race Paulo down Bob's Peak", lights: false, luge: true }
 };
+const RUNS_KEY = 'abd2-runs-v1';
+function runRecords() { try { return JSON.parse(localStorage.getItem(RUNS_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function saveRunRecords(r) { try { localStorage.setItem(RUNS_KEY, JSON.stringify(r)); } catch (e) {} }
+const SPAWN_Z = -17;
 const SB_LANES = [-1.1, 0, 1.1], SB_LEN = 40;
 const GRADES = { green: { c: '#3fae7c', sp: 0.8, ob: 0.6 }, blue: { c: '#3f6fb0', sp: 1, ob: 1 }, red: { c: '#e2554f', sp: 1.15, ob: 1.3 }, black: { c: '#2b2d42', sp: 1.3, ob: 1.6 } };
 let SB = null;
 function buildSnowRun(k) {
   clearWorld(); clearUI(); G.scene = 'snow'; G.mode = 'drive'; showHUD(true);
-  const base = SNOW_FIELDS[k] || SNOW_FIELDS.cardrona, GR = GRADES[G.grade] || GRADES.blue;
-  const T = Object.assign({}, base, { speed: base.speed * GR.sp, obst: Math.min(0.7, base.obst * GR.ob), rock: base.rock || G.grade === 'black' }); setSky(T.sky); setChapter((HLOG.run ? HLOG.run + ', ' : '') + (HLOG.field || 'Ski day')); fitSun(0, -8, 16); G.clock = k === 'coronet' ? 19 * 60 : SCENE_TIME.snow;
+  const base = SNOW_FIELDS[k] || SNOW_FIELDS.cardrona, GR = k === 'luge' ? GRADES.blue : (GRADES[G.grade] || GRADES.blue);
+  const T = Object.assign({}, base, { speed: base.speed * GR.sp, obst: Math.min(0.7, base.obst * GR.ob), rock: base.rock || G.grade === 'black' }); setSky(T.sky); setChapter(base.luge ? 'Skyline luge' : (HLOG.run ? HLOG.run + ', ' : '') + (HLOG.field || 'Ski day')); fitSun(0, -8, 16); G.clock = k === 'coronet' ? 19 * 60 : SCENE_TIME.snow;
   W = { id: 'snow', objs: [], npcs: [], hearts: [], markers: [], anim: [], dispose: [], walls: [], decor: [] };
   const zc = -SB_LEN / 2 + 6;
   makeIslandBase(world, 11, SB_LEN + 8, '#dfe9f4', 0, zc); mk(G_BOX, '#dfe9f4', [11, 0.2, SB_LEN + 8], [0, -0.1, zc], world);
-  mk(G_BOX, '#f7fbff', [3.6, 0.03, SB_LEN + 8], [0, 0.01, zc], world, { noShadow: true });
+  mk(G_BOX, T.luge ? '#a9aebb' : '#f7fbff', [3.6, 0.03, SB_LEN + 8], [0, 0.01, zc], world, { noShadow: true });
+  if (T.luge) [-1.85, 1.85].forEach(x => mk(G_BOX, '#e2554f', [0.14, 0.2, SB_LEN + 8], [x, 0.1, zc], world));
   [-0.55, 0.55].forEach(x => mk(G_BOX, '#e8f0f8', [0.06, 0.035, SB_LEN + 8], [x, 0.012, zc], world, { noShadow: true }));
   const moving = [];
   for (let i = 0; i < 24; i++) moving.push(mk(G_BOX, '#cddbeb', [0.05, 0.02, 0.9 + hsh(i, 3)], [-1.6 + hsh(i, 1) * 3.2, 0.03, 6 - i * 1.7], world, { noShadow: true }));
   for (let i = 0; i < 16; i++) { const pole = grp(world, i % 2 ? 1.9 : -1.9, 0, 6 - i * 2.5); mk(G_CYL, GR.c, [0.06, 0.9, 0.06], [0, 0.45, 0], pole); mk(G_CYL, '#ffffff', [0.065, 0.1, 0.065], [0, 0.5, 0], pole, { noShadow: true }); mk(G_CYL, '#2b2d42', [0.065, 0.12, 0.065], [0, 0.7, 0], pole, { noShadow: true }); moving.push(pole); }
-  for (let i = 0; i < 18; i++) { const side = i % 2 ? 1 : -1, x = side * (2.4 + hsh(i, 1) * 1.6), z = 6 - i * 2.3; moving.push(T.rock && i % 3 === 0 ? makeMountain(world, x, z, 0.9, 0.8, '#9aa1b3') : makePine(world, x, z, 0.8 + hsh(i, 4) * 0.4, true)); }
+  for (let i = 0; i < 18; i++) { const side = i % 2 ? 1 : -1, x = side * (2.4 + hsh(i, 1) * 1.6), z = 6 - i * 2.3; moving.push(T.rock && i % 3 === 0 ? makeMountain(world, x, z, 0.9, 0.8, '#9aa1b3') : makePine(world, x, z, 0.8 + hsh(i, 4) * 0.4, !T.luge)); }
   // a chairlift running up beside the piste
   const chairs = [];
   for (let i = 0; i < 8; i++) { const tw = grp(world, 3.6, 0, 5 - i * 5); mk(G_CYL, '#8a8fa0', [0.12, 2.6, 0.12], [0, 1.3, 0], tw); mk(G_BOX, '#8a8fa0', [0.9, 0.08, 0.08], [0, 2.6, 0], tw); moving.push(tw); }
   [3.25, 3.95].forEach(x => mk(G_BOX, '#4a4658', [0.02, 0.02, SB_LEN + 8], [x, 2.58, zc], world, { noShadow: true }));
   for (let i = 0; i < 12; i++) {
     const up = i % 2 === 0, c = grp(world, up ? 3.25 : 3.95, 2.1, 6 - i * 3.4);
-    mk(G_CYL, '#4a4658', [0.02, 0.5, 0.02], [0, 0.25, 0], c, { noShadow: true }); mk(G_BOX, ['#3f6fb0', '#e2554f', '#ffd166'][i % 3], [0.5, 0.08, 0.3], [0, 0, 0], c); mk(G_BOX, '#3a3148', [0.5, 0.3, 0.05], [0, 0.15, -0.14], c);
-    if (i % 3 === 0) { const r = makePerson({ top: CONFETTI[i % 5], bottom: '#3a3148', hair: '#6b4a32', beanie: CONFETTI[(i + 2) % 5] }); r.scale.setScalar(0.55); r.position.set(0, -0.05, 0); c.add(r); }
+    mk(G_CYL, '#4a4658', [0.02, 0.5, 0.02], [0, 0.25, 0], c, { noShadow: true });
+    if (T.luge) { mk(G_BOX, '#e2554f', [0.5, 0.45, 0.5], [0, -0.05, 0], c); mk(G_BOX, '#bfe6ff', [0.51, 0.18, 0.4], [0, 0.02, 0], c, { noShadow: true }); }
+    else { mk(G_BOX, ['#3f6fb0', '#e2554f', '#ffd166'][i % 3], [0.5, 0.08, 0.3], [0, 0, 0], c); mk(G_BOX, '#3a3148', [0.5, 0.3, 0.05], [0, 0.15, -0.14], c); }
+    if (i % 3 === 0 && !T.luge) { const r = makePerson({ top: CONFETTI[i % 5], bottom: '#3a3148', hair: '#6b4a32', beanie: CONFETTI[(i + 2) % 5] }); r.scale.setScalar(0.55); r.position.set(0, -0.05, 0); c.add(r); }
     c.userData.up = up; chairs.push(c);
   }
   if (T.lights) for (let i = 0; i < 8; i++) moving.push(makeStreetLamp(world, i % 2 ? 2.1 : -2.3, 5 - i * 5));
   const far = grp(world, 0, -0.3, -SB_LEN - 4); for (let i = 0; i < 7; i++) makeMountain(far, -18 + i * 6, 0, 5, 6 + hsh(i, 2) * 5, T.sky === 'night' ? '#6a6f8c' : '#8e95a8');
   const rider = grp(world, SB_LANES[1], 0, 3);
-  const ski = G.ride === 'ski', a = makeAnnette('snow'); a.position.y = 0.07; rider.add(a);
-  let board;
-  if (ski) {
+  const ski = G.ride === 'ski' && !T.luge, a = makeAnnette(T.luge ? 'winter' : 'snow'); a.position.y = 0.07; rider.add(a);
+  let board, rival = null;
+  const lugeCart = (parent, col) => { const c = grp(parent); mk(G_BOX, col, [0.55, 0.14, 0.9], [0, 0.12, 0], c); mk(G_BOX, '#3a3148', [0.5, 0.25, 0.08], [0, 0.28, -0.4], c); [[-0.28, 0.3], [0.28, 0.3], [-0.28, -0.3], [0.28, -0.3]].forEach(([x, z]) => { const w = mk(G_CYL, '#2b2d42', [0.16, 0.08, 0.16], [x, 0.08, z], c); w.rotation.z = Math.PI / 2; }); return c; };
+  if (T.luge) {
+    board = lugeCart(rider, '#ffd166'); a.position.set(0, 0.12, -0.05); a.rotation.y = Math.PI; a.userData.legL.rotation.x = -1.4; a.userData.legR.rotation.x = -1.4; a.userData.armL.rotation.x = -0.9; a.userData.armR.rotation.x = -0.9;
+    rival = grp(world, SB_LANES[2], 0, 3.2); lugeCart(rival, '#7fc8f8'); const p = makePerson(LOOK.pauloSnow); p.position.set(0, 0.12, -0.05); p.rotation.y = Math.PI; p.userData.legL.rotation.x = -1.4; p.userData.legR.rotation.x = -1.4; rival.add(p); rival.userData.lane = 2;
+  } else if (ski) {
     board = grp(rider); [-0.1, 0.1].forEach(x => { mk(G_BOX, OUTFITS.snow.top, [0.09, 0.04, 1.05], [x, 0.03, -0.05], board); mk(G_BOX, OUTFITS.snow.top, [0.09, 0.04, 0.12], [x, 0.06, -0.58], board).rotation.x = 0.5; });
     a.rotation.y = Math.PI * 0.82; a.userData.armL.rotation.x = -0.6; a.userData.armR.rotation.x = -0.6;
     [-1, 1].forEach(s => { const p = mk(G_CYL, '#c7ccd6', [0.02, 0.7, 0.02], [s * 0.26, 0.3, 0.05], rider, { noShadow: true }); p.rotation.x = -0.5; p.rotation.z = s * -0.15; });
@@ -409,12 +461,25 @@ function buildSnowRun(k) {
     a.rotation.y = Math.PI * 0.3; a.userData.armL.rotation.z = 1.0; a.userData.armR.rotation.z = -1.0; a.userData.legL.rotation.z = 0.2; a.userData.legR.rotation.z = -0.2;
   }
   for (let i = 0; i < 8; i++) makeCloud(world, -20 + i * 6, 4 + hsh(i, 1) * 3, -34 + hsh(i, 2) * 30, 1.3);
-  SB = { chairs, k, T, t: 0, dur: 18, lane: 1, x: SB_LANES[1], rider, a, board, moving, items: [], spawn: 0.8, flakes: 0, bumps: 0, done: false, kiwi: null };
+  SB = { chairs, rival, k, T, t: 0, dur: T.luge ? 16 : 18, lane: 1, x: SB_LANES[1], rider, a, board, moving, items: [], spawn: 0.3, flakes: 0, bumps: 0, done: false, kiwi: null, key: (HLOG.run || 'run') + ' @ ' + (HLOG.field || k) };
+  if (T.luge) SB.key = 'Skyline luge';
+  for (let i = 0; i < 4; i++) sbSpawn(-3 - i * 3.5, false);
+  ambient(k === 'luge' ? 'wind' : 'lift');
   cam.goal.set(0, 0.3, -0.6); cam.target.copy(cam.goal); cam.zoomGoal = 1.45; cam.zoom = 1.45; cam.yawGoal = 0; cam.yaw = 0; cam.pitch = 0.36; cam.base = 11; cam.orbit = 0;
-  const dock = el('div', 'dock drv', `<h3 style="margin:0">${esc(HLOG.field || 'Ski day')}</h3><p class="sub" style="margin:2px 0 6px;font-size:14px">${esc(HLOG.run ? HLOG.run + ' · ' : '')}${esc(T.label)}</p><div class="meter"><b id="sbBar"></b></div><p class="sub" style="margin:6px 0 0;font-size:13px"><span id="sbCnt">Snowflakes: 0</span> &middot; Left and right to carve. Grab the snowflakes!</p>`);
+  const dock = el('div', 'dock drv', `<h3 style="margin:0">${esc(T.luge ? 'Skyline luge' : HLOG.field || 'Ski day')}</h3><p class="sub" style="margin:2px 0 6px;font-size:14px">${esc(!T.luge && HLOG.run ? HLOG.run + ' · ' : '')}${esc(T.label)}</p><div class="meter"><b id="sbBar"></b></div><p class="sub" style="margin:6px 0 0;font-size:13px"><span id="sbCnt">${T.luge ? 'Stars' : 'Snowflakes'}: 0</span> &middot; ${(b => b ? 'Best: ' + b + ' &middot; ' : '')(runRecords()[SB.key])}${T.luge ? 'Steer around the cones!' : 'Left and right to carve.'}</p>`);
   ui.append(dock); toast(T.label); sfx('whoosh');
 }
 function sbLane(d) { if (!SB || SB.done) return; const l = clamp(SB.lane + d, 0, 2); if (l !== SB.lane) { SB.lane = l; sfx('whoosh'); } }
+function sbSpawn(z, allowBump) {
+  const S = SB, lane = Math.floor(Math.random() * 3), obst = allowBump !== false && Math.random() < S.T.obst;
+  let g;
+  if (!obst) g = S.T.luge ? (() => { const s = grp(world, SB_LANES[lane], 0.5, z); mk(G_STAR, '#ffd166', [0.4, 0.4, 0.4], [0, 0, 0], s, { glow: true }); return s; })() : makeFlake(world, SB_LANES[lane], z);
+  else if (S.T.luge) { g = grp(world, SB_LANES[lane], 0, z); mk(G_CONE, '#ffa94d', [0.35, 0.5, 0.35], [0, 0.25, 0], g); mk(G_CYL, '#ffffff', [0.26, 0.07, 0.26], [0, 0.25, 0], g); }
+  else if (S.T.rock && Math.random() < 0.6) { g = grp(world, SB_LANES[lane], 0, z); mk(G_SPH, '#8e95a8', [0.7, 0.45, 0.6], [0, 0.18, 0], g); mk(G_SPH, '#ffffff', [0.5, 0.15, 0.45], [0, 0.36, 0], g, { noShadow: true }); }
+  else if (Math.random() < 0.5) g = makeSnowman(world, SB_LANES[lane], z);
+  else g = makePine(world, SB_LANES[lane], z, 0.6, true);
+  S.items.push({ g, lane, kind: obst ? 'bump' : 'flake', ph: Math.random() * TAU });
+}
 function makeFlake(parent, x, z) {
   const g = grp(parent, x, 0.5, z);
   for (let i = 0; i < 3; i++) { const b = mk(G_BOX, '#dff4ff', [0.5, 0.07, 0.07], [0, 0, 0], g, { glow: true, noShadow: true }); b.rotation.z = i * Math.PI / 3; }
@@ -432,16 +497,8 @@ function updateSnow(dt) {
   S.chairs.forEach(c => { c.position.z += mv + (c.userData.up ? -2.2 : 2.2) * dt; if (c.position.z > 8) c.position.z -= SB_LEN; if (c.position.z < 8 - SB_LEN) c.position.z += SB_LEN; c.rotation.z = Math.sin(S.t * 2 + c.position.z) * 0.05; });
   if (!SET.calm && Math.random() < dt * 30) FX.emit(S.x + (Math.random() - 0.5) * 0.6, 0.1, 3.4, ['#ffffff', '#eaf6ff'], 1, 1.2, { g: 2, life: 0.5 });
   S.spawn -= dt;
-  if (S.spawn <= 0 && S.t < S.dur - 2) {
-    S.spawn = 0.55 + Math.random() * 0.5;
-    const lane = Math.floor(Math.random() * 3), obst = Math.random() < S.T.obst;
-    let g;
-    if (!obst) g = makeFlake(world, SB_LANES[lane], -28);
-    else if (S.T.rock && Math.random() < 0.6) { g = grp(world, SB_LANES[lane], 0, -28); mk(G_SPH, '#8e95a8', [0.7, 0.45, 0.6], [0, 0.18, 0], g); mk(G_SPH, '#ffffff', [0.5, 0.15, 0.45], [0, 0.36, 0], g, { noShadow: true }); }
-    else if (Math.random() < 0.5) g = makeSnowman(world, SB_LANES[lane], -28);
-    else g = makePine(world, SB_LANES[lane], -28, 0.6, true);
-    S.items.push({ g, lane, kind: obst ? 'bump' : 'flake', ph: Math.random() * TAU });
-  }
+  if (S.spawn <= 0 && S.t < S.dur - 1.5) { S.spawn = 0.5 + Math.random() * 0.45; sbSpawn(SPAWN_Z); }
+  if (S.rival) { const r = S.rival; if (Math.random() < dt * 0.6) r.userData.lane = S.lane === 2 ? Math.floor(Math.random() * 2) : 2; r.position.x = lerp(r.position.x, SB_LANES[r.userData.lane], dt * 2.5); r.position.z = 3.2 + Math.sin(S.t * 0.7) * 0.8; r.position.y = Math.abs(Math.sin(S.t * 6)) * 0.02; }
   S.items = S.items.filter(it => {
     it.g.position.z += mv;
     if (it.kind === 'flake') { it.g.rotation.y += dt * 3; it.g.position.y = 0.5 + Math.sin(S.t * 4 + it.ph) * 0.1; }
@@ -449,20 +506,34 @@ function updateSnow(dt) {
       world.remove(it.g);
       if (it.kind === 'flake') { S.flakes++; sfx('pop'); sparkle(S.x, 0.9, 3, 12); }
       else { S.bumps++; sfx('bad'); cam.shake = SET.calm ? 0 : 0.2; FX.emit(S.x, 0.4, 2.6, ['#ffffff'], 16, 2.5, { g: 3, life: 0.8 }); toast(['Wipeout! Straight back up.', 'Face full of powder.', 'Butt pad: worth it.'][S.bumps % 3]); }
-      const c = $('#sbCnt'); if (c) c.textContent = 'Snowflakes: ' + S.flakes;
+      const c = $('#sbCnt'); if (c) c.textContent = (S.T.luge ? 'Stars: ' : 'Snowflakes: ') + S.flakes;
       return false;
     }
     if (it.g.position.z > 8) { world.remove(it.g); return false; }
     return true;
   });
   // the cheeky kiwi who chases you down the maunga for the last stretch
-  if (S.t > S.dur * 0.6 && !S.kiwi) { S.kiwi = makeKiwiBird(world); S.kiwi.position.set(SB_LANES[S.lane === 0 ? 1 : S.lane - 1], 0, 6); toast('Awww churrr bro!', true); sfx('honk'); }
+  if (S.t > S.dur * 0.6 && !S.kiwi && !S.T.luge) { S.kiwi = makeKiwiBird(world); S.kiwi.position.set(SB_LANES[S.lane === 0 ? 1 : S.lane - 1], 0, 6); toast('Awww churrr bro!', true); sfx('honk'); }
   if (S.kiwi) { const kl = SB_LANES[S.lane === 0 ? 1 : S.lane - 1]; S.kiwi.position.x = lerp(S.kiwi.position.x, kl, dt * 3); S.kiwi.position.z = lerp(S.kiwi.position.z, 3.6, dt * 1.5); S.kiwi.position.y = Math.abs(Math.sin(S.t * 12)) * 0.15; }
   const bar = $('#sbBar'); if (bar) bar.style.width = Math.min(100, S.t / S.dur * 100) + '%';
   if (S.t >= S.dur && !S.done) {
-    S.done = true; G.mode = 'busy'; F.qtSki = true; HLOG.flakes = S.flakes; stat('gains', 10, true); stat('happy', Math.min(12, 4 + S.flakes), true);
+    S.done = true; G.mode = 'busy'; stat('happy', Math.min(12, 4 + S.flakes), true);
     sfx('badge'); confetti(S.x, 1.2, 3, 50);
-    const lines = [S.bumps === 0 ? "Top to bottom, not a single fall. Who even are you?!" : "Made it down. Only " + S.bumps + " tumble" + (S.bumps > 1 ? "s" : "") + ", all very stylish.", S.flakes + " snowflake" + (S.flakes === 1 ? "" : "s") + " caught on the way down.", { n: CONFIG.boyfriend, t: "That kiwi chased you the whole last run." }];
+    const rec = runRecords(), bests = rec.bests || (rec.bests = {}), prev = bests[S.key] || 0, best = S.flakes > prev;
+    if (best) bests[S.key] = S.flakes;
+    let lines;
+    if (S.T.luge) {
+      const win = S.flakes - S.bumps * 2 >= 3; HLOG.lugeWin = win; F.qtLuge = true; if (win) earn('luge');
+      lines = [win ? "Across the line first! Paulo is stunned." : "Paulo pips you at the line by a whisker.", S.flakes + " star" + (S.flakes === 1 ? "" : "s") + " grabbed, " + S.bumps + " cone" + (S.bumps === 1 ? "" : "s") + " clipped.", win ? { n: CONFIG.boyfriend, t: "Rematch. Tomorrow. I'm serious." } : { n: CONFIG.boyfriend, t: "Hot chocolate's on you!" }];
+    } else {
+      F.qtSki = true; HLOG.flakes = S.flakes; stat('gains', 10, true);
+      const g = rec.grades || (rec.grades = {}); g[G.grade] = true;
+      if (G.grade === 'black') earn('black');
+      if (['green', 'blue', 'red', 'black'].every(k => g[k])) earn('powder');
+      lines = [S.bumps === 0 ? "Top to bottom, not a single fall. Who even are you?!" : "Made it down. Only " + S.bumps + " tumble" + (S.bumps > 1 ? "s" : "") + ", all very stylish.", S.flakes + " snowflake" + (S.flakes === 1 ? "" : "s") + " caught on the way down.", { n: CONFIG.boyfriend, t: "That kiwi chased you the whole last run." }];
+    }
+    if (best && prev) lines.splice(1, 0, "New best on " + S.key + "! (was " + prev + ")");
+    saveRunRecords(rec);
     say(lines, () => fade(() => { SB = null; loadMap('qtown'); }));
   }
 }
@@ -484,11 +555,12 @@ function tastingGame() {
     setMenu(btns, { cols: innerWidth > 460 ? 2 : 1, onBack: null });
   };
   const finish = () => {
-    clearUI(); G.mode = 'busy'; F.hvTaste = true; HLOG.score = score; stat('happy', 6 + score * 2, true);
+    clearUI(); G.mode = 'busy'; F.hvTaste = true; HLOG.score = score; stat('happy', 6 + score * 2, true); if (score === glasses.length) earn('somm');
     moment('Tasting done', { e: '🍇', k: 'wine', title: score + ' of ' + glasses.length + ' guessed', line: score >= 3 ? 'Paulo buys lunch!' : 'Paulo is insufferable about it', ms: 1900 }, () => {
       G.mode = 'map';
-      const fav = HOL.hv.wines[Math.floor(Math.random() * HOL.hv.wines.length)].n; HLOG.fav = fav;
-      say([score >= 3 ? { n: CONFIG.boyfriend, t: "How?! Fine. Lunch is on me." } : { n: CONFIG.boyfriend, t: "Ha! Lunch is on you." }, "Two bottles of " + fav + " go in the boot. Maybe three.", { n: CONFIG.name, t: CONFIG.catchphrase }], refreshHints);
+      say(score >= 3 ? { n: CONFIG.boyfriend, t: "How?! Fine. Lunch is on me." } : { n: CONFIG.boyfriend, t: "Ha! Lunch is on you." }, () => pickMenu('Favourite glass', 'Which one is coming home with us?', HOL.hv.wines.map(w => ({ n: w.n, d: w.note.split('.')[0] })), f => {
+        HLOG.fav = f.n; say(["Two bottles of " + f.n + " go in the boot. Maybe three.", { n: CONFIG.name, t: CONFIG.catchphrase }], refreshHints);
+      }, false));
     });
   };
   round();
@@ -538,18 +610,12 @@ function holidayEnd() {
     ['Morning', HLOG.morning || 'A lazy one'],
     ['Dinner', HLOG.dinner || 'Something delicious']
   ];
-  const tt = el('div', 'title', `<div class="logo"><h1>What a trip, ${esc(CONFIG.name)}!</h1><span class="v2">${qt ? 'Snow, lakes and one cheeky kiwi' : 'Vines, wine and golden hour'}</span></div>`);
-  const card = el('div', 'panel', '<h2>Holiday memories</h2><div class="logs">' + rows.map(([k, v]) => `<div class="got"><b>${esc(k)}</b>${esc(v)}</div>`).join('') + '</div>');
-  card.style.animationDelay = '.4s'; card.style.maxHeight = '46vh';
-  const w = el('div', 'tbtns');
-  const b1 = makeBtn('Another holiday', () => fade(startHoliday), 'big alt');
-  const b2 = makeBtn('Back to title', () => fade(titleScreen), 'big');
-  w.append(b1, b2); tt.append(card, w); ui.append(tt);
-  setMenu([b1, b2], { cols: 2, keepMode: true });
+  if (qt && HLOG.lugeWin != null) rows.splice(5, 0, ['Skyline luge', HLOG.lugeWin ? 'Beat Paulo to the bottom' : 'Paulo won. Rematch pending']);
+  memoriesCard(qt ? 'holiday-qt' : 'holiday-hv', { title: 'What a trip, ' + CONFIG.name + '!', sub: qt ? 'Snow, lakes and one cheeky kiwi' : 'Vines, wine and golden hour', head: qt ? 'Queenstown memories' : 'Hunter Valley memories', rows }, [makeBtn('Another holiday', () => fade(startHoliday), 'big alt'), makeBtn('Back to title', () => fade(titleScreen), 'big')]);
 }
 
 /* ---------------- QA jumps ---------------- */
-function holQA(kind, map, fn) { resetHoliday(); G.holiday = kind; G.outfit = kind === 'qt' ? 'winter' : 'sunny'; loadMap(map); if (fn) setTimeout(() => { if (DLG) { DLG.q = []; nextLine(); } fn(); }, 950); }
+function holQA(kind, map, fn) { G.campaign = 'holiday'; resetHoliday(); G.holiday = kind; G.outfit = kind === 'qt' ? 'winter' : 'sunny'; loadMap(map); if (fn) setTimeout(() => { if (DLG) { DLG.q = []; nextLine(); } fn(); }, 950); }
 Object.assign(QA_EXTRA, {
   holiday: () => startHoliday(),
   qtown: () => holQA('qt', 'qtown'),
@@ -559,6 +625,8 @@ Object.assign(QA_EXTRA, {
   nightrun: () => { resetHoliday(); G.holiday = 'qt'; G.ride = 'board'; G.grade = 'blue'; Object.assign(HLOG, { field: 'Coronet Peak night ski', run: 'Blue run' }); buildSnowRun('coronet'); },
   qtfield: () => holQA('qt', 'qtown', () => { F.qtGear = true; fieldMenu(); setTimeout(() => MENU && MENU.b[1].click(), 300); }),
   qtjacket: () => holQA('qt', 'qtown', gearMenu),
+  luge: () => { G.campaign = 'holiday'; resetHoliday(); G.holiday = 'qt'; buildSnowRun('luge'); },
+  flight: () => { G.campaign = 'holiday'; resetHoliday(); G.holiday = 'qt'; flightScene(); },
   qtnight: () => { resetHoliday(); G.holiday = 'qt'; F.qtGear = true; F.qtSki = true; G.outfit = 'snow'; loadMap('qtown'); },
   hunter: () => holQA('hv', 'hunter'),
   tasting: () => holQA('hv', 'hunter', tastingGame),

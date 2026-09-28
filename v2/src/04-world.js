@@ -10,6 +10,7 @@ let W = null; // the live map
 function clearWorld() {
   while (world.children.length) world.remove(world.children[0]);
   (W && W.dispose || []).forEach(o => o.dispose());
+  MERGED.forEach(g => g.dispose()); MERGED = []; stopAmbient();
   clouds.length = 0; FX.clear();
   W = null;
 }
@@ -92,7 +93,7 @@ function buildMap(id) {
   for (let z = 0; z < H; z++) for (let x = 0; x < Wd; x++) {
     const ch = grid[z][x];
     const isWall = !W.outdoor && (z === 0 || x === 0 || x === Wd - 1 || z === H - 1) && ch !== 'D';
-    if (ch === '~') { dm.position.set(x, -0.12, z); dm.scale.set(1, 1, 1); dm.updateMatrix(); water.setMatrixAt(nw, dm.matrix); water.setColorAt(nw++, col.set((x + z) % 2 ? '#8fd3f0' : '#9fdcf5')); continue; }
+    if (ch === '~') { dm.position.set(x, -0.12, z); dm.scale.set(1, 1, 1); dm.updateMatrix(); water.setMatrixAt(nw, dm.matrix); water.setColorAt(nw++, col.set(def.water ? def.water[(x + z) % 2] : (x + z) % 2 ? '#8fd3f0' : '#9fdcf5')); continue; }
     dm.position.set(x, 0, z); dm.scale.set(1, 1, 1); dm.updateMatrix(); floor.setMatrixAt(nf, dm.matrix);
     const c = ch === '_' ? def.wet : (isWall ? def.floor[1] : def.floor[(x + z) % 2]);
     floor.setColorAt(nf++, col.set(c));
@@ -123,7 +124,7 @@ function buildMap(id) {
     const onWall = !W.outdoor && z === 0;
     const o = { ch, x, z, w, h, onWall };
     if (onWall) { o.g = wallDecor(def.theme, ch, w); o.g.position.set(x + (w - 1) / 2, 0, z + 0.5); world.add(o.g); W.decor.push(o); }
-    else { o.g = buildObj(def.theme, ch, w, h); o.g.position.set(x + (w - 1) / 2, 0, z + (h - 1) / 2); world.add(o.g); popIn(o.g, 0.02 * (x + z)); }
+    else { o.g = buildObj(def.theme, ch, w, h); if (!Object.keys(o.g.userData).some(k => k !== 'sway')) mergeStatic(o.g); o.g.position.set(x + (w - 1) / 2, 0, z + (h - 1) / 2); world.add(o.g); popIn(o.g, 0.02 * (x + z)); }
     W.objs.push(o);
   }
   if (def.decorate) def.decorate(world);
@@ -131,6 +132,7 @@ function buildMap(id) {
   for (let i = 0; i < 26; i++) { const t = hsh(i, 9) * (2 * (Wd + H)); let x, z; if (t < Wd) { x = t - 0.5; z = H - 0.45; } else if (t < Wd + H) { x = Wd - 0.45; z = t - Wd - 0.5; } else if (t < 2 * Wd + H) { x = t - Wd - H - 0.5; z = -0.55; } else { x = -0.55; z = t - 2 * Wd - H - 0.5; } if (W.outdoor || hsh(i, 3) < 0.4) makeFlower(world, x, z, CONFETTI[i % 5]).position.y = W.outdoor ? 0 : -0.02; }
   [[-1.4, -0.8], [Wd + 0.4, -0.8], [-1.4, H + 0.2], [Wd + 0.4, H + 0.2]].forEach(([x, z], i) => { const b = makeBalloon(world, x, -0.3, z, CONFETTI[i], 2.2 + i * 0.3); b.userData.bob = true; W.anim.push(b); });
   for (let i = 0; i < 7; i++) makeCloud(world, -20 + i * 7, -5.5 + hsh(i, 1) * 1.5, -8 + hsh(i, 2) * 22, 1.2 + hsh(i, 3) * 1.4);
+  mergeStatic(world, new Set(W.hearts.map(h => h.m)), true, true); // static scenery meshes on the root, per material
   layoutWalls();
 
   // Annette + Luca

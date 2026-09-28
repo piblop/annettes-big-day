@@ -39,6 +39,13 @@ button { font-family:'Fredoka', system-ui, sans-serif; }
 #hudBtns { margin-left:auto; display:flex; gap:6px; }
 .ib { border:2px solid var(--tan); background:var(--paper); color:var(--ink); border-radius:999px; box-shadow:var(--shadow); padding:6px 12px; font:600 14px 'Fredoka', sans-serif; cursor:pointer; }
 .ib:active { transform:scale(.94); }
+@media (max-width:520px) { #chapter { position:absolute; left:12px; top:calc(54px + env(safe-area-inset-top,0px)); max-width:calc(100vw - 24px); } }
+.photo { position:fixed; inset:0; z-index:70; display:grid; place-items:center; background:rgba(58,40,30,.45); animation:fadeIn .2s; padding:16px; }
+.photo .snap { background:#fffdf8; padding:12px 12px 16px; border-radius:18px; box-shadow:var(--shadow); max-width:min(560px, 100%); transform:rotate(-1.5deg); animation:popIn .35s cubic-bezier(.3,1.6,.5,1); text-align:center; }
+.photo img { width:100%; border-radius:10px; display:block; }
+.photo p { font:500 13px 'Figtree', sans-serif; color:var(--ink2); margin:8px 0 10px; }
+.photo a.big { text-decoration:none; display:inline-block; }
+.album .logs .got { animation:optIn .4s backwards; }
 @media (max-width:700px) { #needs { display:none; } #chapter { max-width:40vw; } .pill, .ib { font-size:13px; padding:5px 10px; } }
 
 /* ---------- overlays ---------- */

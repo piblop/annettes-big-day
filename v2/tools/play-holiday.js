@@ -23,13 +23,13 @@ const SCRIPT = `(async () => {
   await sleep(1500); sbLane(-1); await sleep(400); sbLane(1); SB.t = SB.dur; await sleep(500); await flush(12);
   await waitFor(() => G.mapId === 'qtown' && G.scene === 'map'); await sleep(1000); await flush(12);
   step('qt-evening'); if (!F.qtSki) throw new Error('ski not done');
-  W.def.act.A(); await sleep(200); await pick(/Onsen/); await sleep(200); await flush(); await pick(/Botswana/); await sleep(200); await flush(12);
+  W.def.act.A(); await sleep(200); await pick(/luge/i); await sleep(200); await flush(12); await waitFor(() => G.scene === 'snow'); step('luge'); await sleep(1200); SB.t = SB.dur; await sleep(500); await flush(12); await waitFor(() => G.mapId === 'qtown' && G.scene === 'map'); await sleep(1000); await flush(12); if (!F.qtLuge) throw new Error('luge not done'); W.def.act.A(); await sleep(200); await pick(/Botswana/); await sleep(200); await flush(12);
   await waitFor(() => G.scene === 'hend'); step('qt-end'); if (G.scene !== 'hend') throw new Error('no qt end, at ' + G.scene);
   window.__qt = JSON.stringify(HLOG);
-  step('hv-start'); await sleep(800); await pick(/Another holiday/); await sleep(1500); await pick(/Hunter Valley/); await sleep(300); await flush(12); await waitFor(() => G.mapId === 'hunter'); await sleep(1000); await flush(12);
+  step('hv-start'); await sleep(800); await pick(/Another holiday/); await sleep(1500); await pick(/Hunter Valley/); await sleep(300); await flush(12); await waitFor(() => G.scene === 'drive'); step('hv-drive'); await sleep(800); if (D) { D.paused = false; D.t = D.dur; } await sleep(600); await flush(12); await waitFor(() => G.mapId === 'hunter' && G.scene === 'map'); await sleep(1000); await flush(12);
   step('hunter'); if (G.mapId !== 'hunter') throw new Error('no hunter, at ' + G.scene);
   W.def.act.C(); for (let r = 0; r < 4; r++) { await sleep(150); const b = [...document.querySelectorAll('#ui button')][r % 4]; b.click(); await sleep(900); }
-  await flush(12); if (!F.hvTaste) throw new Error('tasting not done');
+  await flush(12); await pick(/Shiraz/); await sleep(200); await flush(); if (!F.hvTaste || HLOG.fav !== 'Shiraz') throw new Error('tasting not done');
   W.def.act.c(); await sleep(200); await pick(/brie/i); await sleep(200); await flush();
   W.def.act.A(); await sleep(200); await pick(/balloon/i); await sleep(200); await flush(); await pick(/Degustation/); await sleep(200); await flush(12);
   await waitFor(() => G.scene === 'hend'); step('hv-end'); if (G.scene !== 'hend') throw new Error('no hv end, at ' + G.scene);

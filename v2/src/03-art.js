@@ -49,7 +49,7 @@ function makePerson(o) {
   if (o.beanie) { mk(G_SPH, o.beanie, [0.57, 0.36, 0.57], [0, 0.21, -0.04], head); mk(G_CYL, '#ffffff', [0.57, 0.08, 0.57], [0, 0.13, -0.03], head, { noShadow: true }); mk(G_SPH, '#ffffff', [0.15, 0.15, 0.15], [0, 0.4, -0.05], head); }
   if (o.apron) mk(G_BOX, o.apron, [0.24, 0.26, 0.02], [0, 0.34, 0.16], body);
   g.userData = { kind: 'person', body, head, legL, legR, armL, armR, walk: 0, bounce: 0 };
-  return g;
+  return mergeStatic(g);
 }
 const LOOK = {
   annette: o => ({ skin: '#f9d1b0', hair: '#f5d271', brow: '#d9a94a', lashes: true, hairStyle: 'long', eye: '#3d7be0', bow: '#ff7aa8', top: o.top, bottom: o.bottom, style: o.style, shoe: '#ffffff', beanie: o.beanie }),
@@ -69,7 +69,7 @@ function wisps(parent, c, r, n, cols, size, droop, skip, seed) {
     if (skip && skip(p)) return;
     const h = hsh(i, n, seed || 5), s = size * (0.8 + h * 0.45), col = cols[Math.floor(hsh(i, n, 3) * cols.length)];
     WISP_D.set(p[0] + (hsh(i, n, 9) - 0.5) * 0.5, p[1] - droop, p[2] + (hsh(i, n, 11) - 0.5) * 0.5).normalize();
-    const t = mk(G_CURL, col, [s * 0.78, s * 1.25, s * 0.8], [c[0] + p[0] * r[0] + WISP_D.x * s * 0.35, c[1] + p[1] * r[1] + WISP_D.y * s * 0.35, c[2] + p[2] * r[2] + WISP_D.z * s * 0.35], parent, { noShadow: true });
+    const t = mk(G_CURL, col, [s * 0.78, s * 1.25, s * 0.8], [c[0] + p[0] * r[0] + WISP_D.x * s * 0.12, c[1] + p[1] * r[1] + WISP_D.y * s * 0.12, c[2] + p[2] * r[2] + WISP_D.z * s * 0.12], parent, { noShadow: true });
     t.quaternion.setFromUnitVectors(UP, WISP_D);
   });
 }
@@ -78,12 +78,12 @@ function strand(parent, col, pos, dir, len, w) {
   const t = mk(G_CURL, col, [Math.max(w, len * 0.55), len, Math.max(w, len * 0.55) * 1.1], [pos[0] + WISP_D.x * len * 0.4, pos[1] + WISP_D.y * len * 0.4, pos[2] + WISP_D.z * len * 0.4], parent, { noShadow: true });
   t.quaternion.setFromUnitVectors(UP, WISP_D); return t;
 }
-function makeLuca() {
-  const g = new THREE.Group(), body = grp(g);
-  const A = '#d9a066', a = '#e8bb84', b = '#f7ecdc', d = '#cc9156', r = '#bd7f45', C = [A, A, a, '#cf955a'];
+function buildLuca() {
+  const g = new THREE.Group(), body = grp(g); body.name = 'body';
+  const A = '#e6bd88', a = '#f1d2a4', b = '#fbf3e6', d = '#dcaa74', r = '#cd9a64', C = [A, A, a, '#e0b27c'];
   // compact torso under a shaggy coat, with a cream bib down the chest
-  mk(G_SPH, A, [0.42, 0.36, 0.52], [0, 0.32, -0.02], body);
-  wisps(body, [0, 0.34, -0.02], [0.19, 0.16, 0.24], 52, C, 0.13, 0.7);
+  mk(G_SPH, A, [0.46, 0.4, 0.56], [0, 0.32, -0.02], body);
+  wisps(body, [0, 0.34, -0.02], [0.19, 0.16, 0.24], 34, C, 0.15, 0.7);
   wisps(body, [0, 0.3, 0.2], [0.11, 0.13, 0.06], 18, [b, b, '#efdcc2'], 0.12, 1.3, p => p[2] < -0.3, 6);
   const legs = [];
   [[-0.12, 0.15], [0.12, 0.15], [-0.12, -0.17], [0.12, -0.17]].forEach(([x, z], k) => {
@@ -95,9 +95,9 @@ function makeLuca() {
   });
   // head: a round dome under a mop of shaggy hair
   const head = grp(body, 0, 0.64, 0.28);
-  mk(G_SPH, A, [0.44, 0.4, 0.4], [0, 0, 0], head);
-  wisps(head, [0, 0.02, -0.02], [0.2, 0.18, 0.17], 40, C, 0.12, 0.3, p => p[2] > 0.3 && p[1] < 0.55);
-  wisps(head, [0, 0.19, 0.03], [0.1, 0.04, 0.08], 12, [a, A, '#f0cf9f'], 0.1, -0.9, null, 7);
+  mk(G_SPH, A, [0.47, 0.43, 0.43], [0, 0, 0], head);
+  wisps(head, [0, 0.02, -0.02], [0.2, 0.18, 0.17], 28, C, 0.13, 0.3, p => p[2] > 0.3 && p[1] < 0.55);
+  wisps(head, [0, 0.17, 0.03], [0.1, 0.04, 0.08], 8, [a, A, '#f0cf9f'], 0.08, -0.4, null, 7);
   // short cream muzzle with a long scruffy beard
   mk(G_SPH, b, [0.25, 0.16, 0.17], [0, -0.08, 0.16], head);
   mk(G_SPH, b, [0.16, 0.1, 0.1], [0, 0.0, 0.18], head);
@@ -134,7 +134,21 @@ function makeLuca() {
     mk(G_CURL, i % 2 ? a : A, [0.1, 0.1, 0.1], p, tail, { noShadow: true });
     [-1, 1].forEach(s => strand(tail, i > 3 ? b : i % 2 ? A : a, p, [s * 0.9, -0.3, 0.2], 0.12 + i * 0.015, 0.05));
   });
-  g.userData = { kind: 'dog', body, head, ears, tail, legs, tongue, walk: 0 };
+  head.name = 'head'; ears[0].name = 'earL'; ears[1].name = 'earR'; tail.name = 'tail'; legs.forEach((l, i) => l.name = 'leg' + i); tongue.name = 'tongue';
+  return g;
+}
+// Luca is built once, merged down to a handful of draw calls, then cloned (clones share geometry)
+let LUCA_T = null;
+const FUR_RAMP = (() => { const d = new Uint8Array([178, 204, 226, 242, 255]); const t = new THREE.DataTexture(d, 5, 1, THREE.LuminanceFormat); t.minFilter = t.magFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();
+function makeLuca() {
+  if (!LUCA_T) {
+    LUCA_T = buildLuca(); mergeStatic(LUCA_T, new Set([LUCA_T.getObjectByName('tongue')]), false);
+    // fur gets a soft, bright light ramp: shadows stay light and blend, so the tufts read as one fluffy coat instead of bubbles
+    const soft = {};
+    LUCA_T.traverse(o => { if (o.isMesh) o.receiveShadow = false; if (o.isMesh && o.material.isMeshToonMaterial) { const m = o.material, k = (m.vertexColors ? 'vc' : m.color.getHexString()) + m.opacity; o.material = soft[k] || (soft[k] = new THREE.MeshToonMaterial({ color: m.vertexColors ? '#ffffff' : m.color, vertexColors: m.vertexColors, gradientMap: FUR_RAMP, transparent: m.transparent, opacity: m.opacity })); } });
+  }
+  const g = LUCA_T.clone(), f = n => g.getObjectByName(n);
+  g.userData = { kind: 'dog', body: f('body'), head: f('head'), ears: [f('earL'), f('earR')], tail: f('tail'), legs: [0, 1, 2, 3].map(i => f('leg' + i)), tongue: f('tongue'), walk: 0 };
   return g;
 }
 
