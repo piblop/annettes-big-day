@@ -252,10 +252,16 @@ MAPS.baths = {
     mk(G_BOX, '#2e7d4f', [1.2, 0.3, 0.8], [0, 1.2, 0], ferry); mk(G_CYL, '#ffe27a', [0.18, 0.4, 0.18], [0.4, 1.5, 0], ferry);
     const boat = grp(g, 16, -0.12, -10); mk(G_BOX, '#ffffff', [1.1, 0.25, 0.4], [0, 0.12, 0], boat); mk(G_CYL, '#c7ccd6', [0.03, 1.5, 0.03], [0, 0.95, 0], boat); const sail = mk(G_CONE, '#ffffff', [0.6, 1.3, 0.05], [0.2, 0.95, 0], boat); sail.rotation.z = -0.05;
     const far = grp(g, 7, -0.3, -14.5); for (let i = 0; i < 14; i++) { const x = -18 + i * 2.8 + hsh(i, 5); mk(G_SPH, ['#8fc86f', '#7fb862', '#9fd07e'][i % 3], [3.4, 1.6 + hsh(i, 6) * 1.4, 2.2], [x, 0.3, 0], far, { noShadow: true }); mk(G_BOX, ['#fff4e8', '#ffd1e1', '#e8f4ff', '#fff0c2'][i % 4], [0.7, 0.5, 0.5], [x + 0.4, 0.9 + hsh(i, 6) * 0.6, 0.7], far, { noShadow: true }); mk(G_CONE, '#e2554f', [0.8, 0.35, 0.6], [x + 0.4, 1.33 + hsh(i, 6) * 0.6, 0.7], far, { noShadow: true }).rotation.y = Math.PI / 4; }
+    // lap-lane ropes, sun loungers, a lifeguard chair, Cockatoo Island and the city skyline beyond
+    for (let x = 0; x < 15; x += 0.35) mk(G_SPH, Math.round(x / 0.35) % 2 ? '#ffffff' : '#e2554f', [0.12, 0.08, 0.12], [x, -0.02, 0.5], g, { noShadow: true });
+    [[0.2, 6.2], [0.2, 7.3], [14.8, 6.2], [14.8, 7.3]].forEach(([x, z], i) => { const l = grp(g, x, 0, z); mk(G_BOX, '#fffaf0', [0.5, 0.08, 0.95], [0, 0.22, 0], l); mk(G_BOX, i % 2 ? '#7fc8f8' : '#ff9fb8', [0.46, 0.05, 0.9], [0, 0.28, 0], l, { noShadow: true }); const bk = mk(G_BOX, '#fffaf0', [0.5, 0.06, 0.4], [0, 0.4, -0.4], l); bk.rotation.x = -0.9; });
+    const lg = grp(g, 13.4, 0, 2.4); [-0.2, 0.2].forEach(x => mk(G_CYL, '#fffaf0', [0.05, 1.2, 0.05], [x, 0.6, 0], lg)); mk(G_BOX, '#ffd166', [0.55, 0.06, 0.45], [0, 1.2, 0], lg); mk(G_BOX, '#e2554f', [0.55, 0.3, 0.05], [0, 1.4, -0.2], lg);
+    const ci = grp(g, 1, -0.3, -11); mk(G_SPH, '#b89a72', [6, 1.2, 2.6], [0, 0, 0], ci, { noShadow: true }); mk(G_SPH, '#8fb07a', [4, 1.3, 2], [0.5, 0.3, 0], ci, { noShadow: true }); [-1.5, 1.2].forEach(x => { mk(G_BOX, '#c9a36a', [0.12, 1.8, 0.12], [x, 1.2, 0.3], ci); const jib = mk(G_BOX, '#c9a36a', [1.4, 0.1, 0.1], [x + 0.5, 2.1, 0.3], ci); jib.rotation.z = 0.2; });
+    const city = grp(g, 17, -0.3, -15); for (let i = 0; i < 9; i++) { const h = 1.5 + hsh(i, 7) * 3.5; mk(G_BOX, ['#b9c7ff', '#d8e2ff', '#c7f0e0', '#e2d8ff'][i % 4], [0.9, h, 0.9], [i * 1.05, h / 2, hsh(i, 8)], city, { noShadow: true }); }
     W.wk = { ferry, boat };
     wkTicker(updateBaths);
   },
-  onEnter() { G.wearing = 'sunny'; say(["EXPANSION PACK: a weekend with Paulo.", "No alarms, no meetings. Just a slow Saturday.", WK.baths + ", all to yourselves.", "Luca sniffs every blade of grass on the lawn.", "Face the water and press A for a morning dip."]); },
+  onEnter() { G.wearing = 'sunny'; say(["EXPANSION PACK: a weekend with Paulo.", "No alarms, no meetings. Just a slow Saturday.", WK.baths + ": a netted harbour pool on Greenwich Point.", "Across the water: Cockatoo Island and the city skyline.", "Luca sniffs every blade of grass on the lawn.", "Face the water and press A for a morning dip."]); },
   doorOpen: () => false,
   doorLocked: () => "The car's parked over on the sand.",
   act: {
@@ -265,7 +271,7 @@ MAPS.baths = {
     u: () => say("A stripy umbrella planted in the lawn."),
     p: () => say("A gum tree leaning over the baths."),
     s: () => say("A little shell. Luca sniffs it suspiciously."),
-    K: () => say("The kiosk. Hot chips and a lemonade for later."),
+    K: () => say(["The kiosk: espresso, gelato and hot chips.", "Coffee on a sun lounger by the water, obviously."]),
     A: () => say(F.wkBaths ? { n: CONFIG.boyfriend, t: "Best swim of the year. Ready when you are." } : { n: CONFIG.boyfriend, t: "Greenwich Baths, all to ourselves. Race you in?" })
   }
 };
@@ -286,7 +292,7 @@ MAPS.aldi = {
     W.wk = { trolley: tr, bag: 0 };
     wkTicker(updateAldi);
   },
-  onEnter() { G.wearing = 'sunny'; say([WK.shops + " on a Saturday. " + WK.grocer + " first.", "Luca's snoozing in the car with the window cracked.", { n: CONFIG.boyfriend, t: "Here's the list. Divide and conquer?" }]); },
+  onEnter() { G.wearing = 'sunny'; say([WK.shops + " City on a Saturday. Down the escalators to LG2, right by Kmart.", WK.grocer + " first.", "Luca's snoozing in the car with the window cracked.", { n: CONFIG.boyfriend, t: "Here's the list. Divide and conquer?" }]); },
   doorOpen: () => F.wkGroceries,
   doorLocked: () => ({ n: CONFIG.boyfriend, t: "Not without the groceries! Grab the list off me." }),
   onDoor() { G.mode = 'busy'; say(["Bags loaded. Luca approves of the dog treats.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => startDrive('suburb', 'park', 'the dog park')); },
@@ -300,7 +306,7 @@ MAPS.aldi = {
   }
 };
 MAPS.park = {
-  theme: 'park', title: 'Weekend Pack: the dog park', sky: 'day', outdoor: true, edge: '#a6dc8f', ambient: 'cicada',
+  theme: 'park', title: 'Weekend Pack: Ryde Park', sky: 'day', outdoor: true, edge: '#a6dc8f', ambient: 'cicada',
   floor: ['#a6dc8f', '#9bd483'], wall: ['#fff', '#fff'],
   rows: ["###############", "#T....T.....T.#", "#..........y..#", "#....g....k...#", "#.......A.....#", "#..o.......y..#", "#..b.......b..#", "#....k........#", "#.............#", "######D########"],
   start: { x: 7, z: 8, dir: 'up' }, luca: { x: 9, z: 8 },
@@ -313,20 +319,22 @@ MAPS.park = {
       mk(G_BOX, '#fffaf0', [0.14, 0.7, 0.08], [x, 0.35, z], g); mk(G_CONE, '#fffaf0', [0.14, 0.14, 0.08], [x, 0.77, z], g, { noShadow: true });
       const horiz = z === 0 || z === 9; mk(G_BOX, '#f1e4d2', horiz ? [1, 0.06, 0.05] : [0.05, 0.06, 1], [x, 0.5, z], g, { noShadow: true }); mk(G_BOX, '#f1e4d2', horiz ? [1, 0.06, 0.05] : [0.05, 0.06, 1], [x, 0.25, z], g, { noShadow: true });
     }
+    // a little coffee cart for the park cafe
+    const cart = grp(g, 12.6, 0, 8.4); mk(G_BOX, '#2f5d4a', [0.9, 0.7, 0.5], [0, 0.45, 0], cart); mk(G_BOX, '#fffaf0', [1.0, 0.06, 0.6], [0, 0.82, 0], cart); [-0.3, 0.3].forEach(x => { const wh = mk(G_CYL, '#3a3148', [0.22, 0.06, 0.22], [x, 0.11, 0.26], cart); wh.rotation.x = Math.PI / 2; }); for (let i = 0; i < 4; i++) mk(G_BOX, i % 2 ? '#fffaf0' : '#e2554f', [0.26, 0.04, 0.4], [-0.39 + i * 0.26, 1.25, 0.1], cart).rotation.x = 0.3; [-0.4, 0.4].forEach(x => mk(G_CYL, '#c7ccd6', [0.03, 0.45, 0.03], [x, 1.05, -0.1], cart, { noShadow: true })); mk(G_CYL, '#fffaf0', [0.1, 0.12, 0.1], [0.2, 0.92, 0.05], cart);
     const sign = grp(g, 4.3, 0, 8.8); mk(G_CYL, '#8a6a55', [0.06, 0.9, 0.06], [0, 0.45, 0], sign); mk(G_BOX, '#3fae7c', [0.9, 0.4, 0.05], [0, 0.95, 0], sign); mk(G_BOX, '#fffaf0', [0.7, 0.05, 0.02], [0, 1.0, 0.03], sign, { noShadow: true }); mk(G_BOX, '#fffaf0', [0.5, 0.05, 0.02], [0, 0.9, 0.03], sign, { noShadow: true });
     for (let i = 0; i < 18; i++) makeFlower(g, 1 + hsh(i, 41) * 12.5, 1 + hsh(i, 42) * 7.5, CONFETTI[i % 5]).scale.setScalar(0.8);
     W.npcs.forEach(n => { if ('yko'.includes(n.ch)) { recolorDog(n.g, n.ch); n.g.scale.setScalar(n.ch === 'o' ? 0.8 : 1.12); n.phase = Math.random() * TAU; } });
     W.wk = {};
     wkTicker(updatePark);
   },
-  onEnter() { G.wearing = 'sunny'; if (!G.lucaPat.park) { G.lucaPat.park = true; stat('happy', 5); } say(["Off-leash heaven. The park is full of happy dogs today.", "Luca does a lap of zoomies to say hello to everyone.", { n: CONFIG.boyfriend, t: "Grab the ball. He's already staring at it." }]); },
+  onEnter() { G.wearing = 'sunny'; if (!G.lucaPat.park) { G.lucaPat.park = true; stat('happy', 5); } say(["Ryde Park's fenced dog park. Off-leash heaven, and it's full of happy dogs today.", "Luca does a lap of zoomies to say hello to everyone.", { n: CONFIG.boyfriend, t: "Grab the ball. He's already staring at it." }]); },
   doorOpen: () => F.wkFetch,
   doorLocked: () => "One round of fetch first, Luca's begging.",
   onDoor() { G.mode = 'busy'; say(["Luca trots home happy and worn out.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(() => loadMap('home'))); },
   act: {
     g: () => F.wkFetch ? say("The ball's thoroughly slobbered. Luca is content.") : fetchGame(),
     T: () => say("A big shady gum. Cicadas going nuts."),
-    b: () => say("A park bench. Prime dog-watching seat."),
+    b: () => say(["A park bench. Prime dog-watching seat.", "Coffees from the Grounds Keeper Cafe, right here in the park."]),
     y: () => say("A golden retriever, utterly ball-obsessed."),
     k: () => say("A sleek black lab nailing every recall."),
     o: () => say("A fluffy grey pup, all bounce and zero chill."),

@@ -1031,6 +1031,7 @@ function buildObj(theme, ch, w, h) {
     case 'bedroom:S': B('#8a6a55', [0.5, 0.7, 0.42], [0, 0.35, -0.05]); C('#4a3b52', [0.28, 0.04, 0.28], [0, 0.48, 0.17]).rotation.x = Math.PI / 2; C('#4a3b52', [0.16, 0.04, 0.16], [0, 0.2, 0.17]).rotation.x = Math.PI / 2; S('#ff7aa8', [0.06, 0.06, 0.06], [0.16, 0.64, 0.17], { glow: true }); break;
     case 'gym:r': [-w / 2 + 0.2, w / 2 - 0.2].forEach(x => C('#5a5470', [0.1, 1.5, 0.1], [x, 0.75, -0.1])); { const b = C('#c7ccd6', [0.06, w - 0.1, 0.06], [0, 1.15, 0]); b.rotation.z = Math.PI / 2; [-1, 1].forEach(s => { C('#b9a3ff', [0.55, 0.1, 0.55], [s * (w / 2 - 0.35), 1.15, 0]).rotation.z = Math.PI / 2; C('#ff7aa8', [0.42, 0.08, 0.42], [s * (w / 2 - 0.25), 1.15, 0]).rotation.z = Math.PI / 2; }); } B('#d8f0e4', [w - 0.1, 0.04, 0.9], [0, 0.02, 0.1]); break;
     case 'gym:L': for (let i = 0; i < w * 2; i++) { B(i % 2 ? '#9fe0c9' : '#b5ead7', [0.46, 1.4, 0.5], [-w / 2 + 0.26 + i * 0.49, 0.7, -0.15]); for (let v = 0; v < 3; v++) B('#6fbf9f', [0.24, 0.03, 0.02], [-w / 2 + 0.26 + i * 0.49, 1.15 - v * 0.06, 0.11], { noShadow: true }); } break;
+    case 'gym:S': B('#c89f7a', [w - 0.1, 1.5, 0.8], [0, 0.75, -0.05]); for (let i = 0; i < 6; i++) B('#b07a4a', [w - 0.12, 0.03, 0.02], [0, 0.2 + i * 0.22, 0.36], { noShadow: true }); B('#8a5a3b', [0.5, 1.05, 0.04], [0, 0.55, 0.37]); B('#ffd7a0', [0.26, 0.2, 0.02], [0, 0.85, 0.4], { glow: true }); C('#c7ccd6', [0.05, 0.05, 0.05], [0.18, 0.55, 0.4]); break;
     case 'gym:b': B('#ff9fc3', [w - 0.3, 0.14, 0.42], [0, 0.42, 0]); [-0.6, 0.6].forEach(x => B('#5a5470', [0.08, 0.35, 0.3], [x, 0.18, 0])); break;
     case 'office:p': case 'beach:p0': case 'shop:p': return makePlant(null, 0, 0, true);
     case 'office:d': B('#f3ead8', [w - 0.15, 0.07, 0.8], [0, 0.6, 0]); [-1, 1].forEach(s => B('#c9b49a', [0.07, 0.6, 0.7], [s * (w / 2 - 0.15), 0.3, 0])); B('#3a3148', [0.55, 0.36, 0.05], [0.25, 0.86, -0.2]); B('#9fd0ff', [0.48, 0.28, 0.02], [0.25, 0.86, -0.17], { glow: true }); C('#ffffff', [0.12, 0.14, 0.12], [-0.4, 0.71, 0.1]); break;
@@ -1621,11 +1622,11 @@ const MAPS = {
   gym: {
     theme: 'gym', title: 'Chapter 2: Gym', sky: 'morning', edge: GRASS,
     floor: ['#d8f5ea', '#cdeee1'], wall: ['#e2d8ff', '#d8ccff'],
-    rows: ["#########mm####", "#rr..rr..LL...#", "#.....h.......#", "#.g.......g...#", "#.............#", "#..bb....bb...#", "#.............#", "#.....n.......#", "#.............#", "######D########"],
+    rows: ["#########mm####", "#rr..rr..LL.SS#", "#.....h.......#", "#.g.......g...#", "#.............#", "#..bb....bb...#", "#.............#", "#.....n.......#", "#.............#", "######D########"],
     start: { x: 6, z: 8, dir: 'up' },
     npcs: (c, x) => c === 'g' ? (x < 6 ? { skin: '#f0c39a', hair: '#e07b39', hairStyle: 'bun', top: '#3fae7c', bottom: '#2b2d42' } : { skin: '#8a5a36', hair: '#2a1d12', hairStyle: 'fluffy', top: '#7f93b3', bottom: '#2b2d42' }) : c === 'n' ? { skin: '#e6b58f', hair: '#3a2f2a', top: '#ffa94d', bottom: '#4a4658' } : null,
     hints: () => [!F.lifted && 'r', F.lifted && !F.gymBattle && 'r', F.gymBattle && 'D'],
-    onEnter() { G.wearing = 'gym'; say(["One Playground. " + CONFIG.name + " changes into her Lululemon set.", "Time to lift!"]); },
+    onEnter() { G.wearing = 'gym'; say(["One Playground. " + CONFIG.name + " changes into her Lululemon set.", "Squat racks, a sauna for later and a Reformer Pilates class booming next door.", "Time to lift!"]); },
     doorOpen: () => F.gymBattle,
     doorLocked: () => "You just got here! Hit the squat rack first.",
     onDoor() { G.wearing = G.outfit; startDrive('city', 'office', CONFIG.company); },
@@ -1633,9 +1634,10 @@ const MAPS = {
       r: () => F.gymBattle ? say("The rack is free, but those legs are cooked.") : F.lifted ? startBattle('lastset') : liftGame(),
       L: () => G.secrets.card ? say("Locker's empty now.") : secret('card'),
       m: () => say("Mirror check. Form looks strong, hair looks stronger."),
+      S: () => say(F.gymBattle ? ["The sauna. Ten minutes of recovery after that PR.", "Coach's orders."] : "The sauna. Recovery comes after the PR."),
       b: () => say("A bench. For between sets, or for sitting on your phone."),
       g: (x) => say(x < 6 ? { n: 'Gym-goer', t: "Happy birthday! Want a spot on your next set?" } : { n: 'Gym-goer', t: CONFIG.insideJokes[0] }),
-      n: () => say([{ n: 'Coach', t: "Breathe, brace, lift. And it's your birthday, so PR today." }, { n: CONFIG.name, t: CONFIG.catchphrase }])
+      n: () => say([{ n: 'Coach', t: "Breathe, brace, lift. And it's your birthday, so PR today." }, { n: 'Coach', t: "Then sauna and a stretch in the recovery zone." }, { n: CONFIG.name, t: CONFIG.catchphrase }])
     }
   },
   office: {
@@ -1645,7 +1647,7 @@ const MAPS = {
     start: { x: 6, z: 8, dir: 'up' },
     npcs: (c, x, z) => c === 'c' ? ((x + z) % 2 ? { skin: '#cf9b6f', hair: '#6b4a32', top: '#7f93b3', bottom: '#4a4658', glasses: true } : { skin: '#f0c39a', hair: '#3a2f2a', hairStyle: 'bun', top: '#c55a6c', bottom: '#3a3d5c' }) : null,
     hints: () => [!F.sorted && 'Y', !F.officeBattle && 'Z', F.sorted && F.officeBattle && 'D'],
-    onEnter() { G.wearing = G.outfit; say([CONFIG.company + ", Sydney CBD. Birthday balloons on the project coordinator's desk.", "File the reports at your desk, then battle that inbox on the computer."]); },
+    onEnter() { G.wearing = G.outfit; say([CONFIG.company + ", Sydney CBD. Birthday balloons on the project coordinator's desk.", "Out at Moorebank, trains are swapping containers for the Port Botany run.", "File the reports at your desk, then battle that inbox on the computer."]); },
     doorOpen: () => F.sorted && F.officeBattle,
     doorLocked: () => "Not yet. File the reports and beat the inbox first.",
     onDoor() { G.mode = 'busy'; say(["Project updates sent. Exec reports signed off.", "Clock off for lunch! Everyone's starving."], () => fade(lunchScene)); },
@@ -1654,8 +1656,8 @@ const MAPS = {
       Z: () => F.officeBattle ? say("Inbox zero. Beautiful.") : startBattle('inbox'),
       w: () => say("The harbour sparkles between the towers."),
       p: () => say("A desk plant, alive thanks to " + CONFIG.name + "'s watering reminders."),
-      d: () => say("A coworker's desk. Messier than " + CONFIG.name + " would ever allow."),
-      c: (x, z) => say({ n: 'Coworker', t: ({ '3,4': "Happy birthday! There's cake in the kitchen at three.", '7,4': CONFIG.insideJokes[1], '3,7': "Your project updates are the only ones the execs actually read." })[x + ',' + z] || "Happy birthday! Lunch is on us next week." })
+      d: () => say(["A coworker's desk. Messier than " + CONFIG.name + " would ever allow.", "A tiny model freight train sits next to the keyboard."]),
+      c: (x, z) => say({ n: 'Coworker', t: ({ '3,4': "Happy birthday! There's cake in the kitchen at three.", '7,4': CONFIG.insideJokes[1], '3,7': "Your project updates are the only ones the execs actually read.", '10,7': "Fun fact: Moorebank is the biggest intermodal precinct in Australia. 243 hectares!" })[x + ',' + z] || "Happy birthday! Lunch is on us next week." })
     }
   },
   beach: {
@@ -1680,18 +1682,23 @@ const MAPS = {
     rows: ["######F########", "#f...n.....f.f#", "#..rrrrrr.....#", "#.............#", "#....f...f...h#", "#.............#", "#......At.....#", "#.............#", "#f...........f#", "######D########"],
     start: { x: 6, z: 8, dir: 'up' },
     npcs: c => c === 'n' ? { skin: '#8a5a36', hair: '#6b4a32', top: '#2f5d4a', bottom: INK, apron: '#fff4e8' } : c === 'A' ? LOOK.paulo : null,
-    decorate(g) { for (let i = 0; i < 4; i++) makeFairyLights(g, 1, 1.5 + i * 2, 13, 1 + i * 2, 1.9, 22); },
+    decorate(g) {
+      for (let i = 0; i < 4; i++) makeFairyLights(g, 1, 1.5 + i * 2, 13, 1 + i * 2, 1.9, 22);
+      // hanging plants and apothecary bottles
+      for (let i = 0; i < 7; i++) { const x = 1.5 + i * 1.9, z = 3 + (i % 2) * 2.5; mk(G_CYL, '#c7ccd6', [0.01, 0.5, 0.01], [x, 2.05, z], g, { noShadow: true }); mk(G_CYL, '#e8916b', [0.22, 0.16, 0.22], [x, 1.75, z], g); for (let k = 0; k < 5; k++) mk(G_SPH, ['#5f9f4f', '#7fbf66'][k % 2], [0.12, 0.26, 0.12], [x + Math.cos(k * 1.3) * 0.12, 1.58 - (k % 3) * 0.06, z + Math.sin(k * 1.3) * 0.12], g, { noShadow: true }); }
+      for (let i = 0; i < 4; i++) { const bt = grp(g, 3.3 + i * 0.35, 0.93, 2.2); mk(G_CYL, '#dff2ff', [0.1, 0.18, 0.1], [0, 0.09, 0], bt, { alpha: 0.7 }); mk(G_CYL, '#dff2ff', [0.04, 0.08, 0.04], [0, 0.22, 0], bt, { alpha: 0.7 }); }
+    },
     hints: () => [!F.drink && 'n', F.drink && !F.dinner && 'A'],
-    onEnter() { G.wearing = 'dress'; say([CONFIG.dinnerSpot + ". Fairy lights, plants everywhere, harbour breeze.", CONFIG.name + "'s in her blue dress.", { n: CONFIG.boyfriend, t: "Wow! Look how beautiful your outfit is." }, "Grab a drink at the bar, then join " + CONFIG.boyfriend + " at the table."]); },
+    onEnter() { G.wearing = 'dress'; say([CONFIG.dinnerSpot + ". Named after a botanist who once ran a bookshop on this very spot.", "Victorian apothecary vibes: botanical prints, hanging plants, water in little lab bottles.", CONFIG.name + "'s in her blue dress.", { n: CONFIG.boyfriend, t: "Wow! Look how beautiful your outfit is." }, "Grab a drink at the bar, then join " + CONFIG.boyfriend + " at the table."]); },
     doorOpen: () => false,
     doorLocked: () => "Leaving? The night's just getting started.",
     act: {
-      n: () => F.drink ? say({ n: 'Bartender', t: "Another round? Just say the word." }) : drinkMenu(),
+      n: () => F.drink ? say({ n: 'Bartender', t: "Another round? The Negroni Sbagliato uses rosemary-infused Campari." }) : drinkMenu(),
       r: () => F.drink ? say({ n: 'Bartender', t: "Another round? Just say the word." }) : drinkMenu(),
       A: () => F.dinner ? say({ n: CONFIG.boyfriend, t: "Best night ever." }) : F.drink ? dinnerMenu() : say({ n: CONFIG.boyfriend, t: "Let's get a drink first. We can get whateeeeeeeever you want! :D" }),
       F: () => secret('poster'),
-      t: () => say("Candlelit tables. Very date night."),
-      f: () => say("A giant fern. The Botanist takes the name seriously.")
+      t: () => say("Candlelit tables, and water served in a little science-lab bottle. Very date night."),
+      f: () => say("A giant fern. There are plants hanging from the ceiling too. The Botanist takes the name seriously.")
     }
   }
 };
@@ -1853,7 +1860,13 @@ function buildHarbour() {
   const pt = grp(world, 6.5, 0, 2.5);
   mk(G_BOX, '#e8d8c0', [4, 0.4, 2.6], [0, 0.1, 0], pt);
   [[-1.2, 1.3], [-0.2, 1.7], [0.8, 1.4], [1.6, 1.0]].forEach(([x, s], i) => { const c = mk(geo('sail', () => new THREE.SphereGeometry(0.5, 16, 10, 0, Math.PI, 0, Math.PI / 2)), '#fffaf2', [1.2 * s, 1.8 * s, 1.2 * s], [x, 0.3, 0], pt); c.rotation.y = -Math.PI / 2 + i * 0.1; c.rotation.z = -0.35; });
-  // the pier with our stars
+  // Luna Park's side of the bridge: a glowing ferris wheel (simple shapes, not a model of anything)
+  const wheel = grp(world, -9.2, 2.3, -2.6), rim = grp(wheel);
+  mk(geo('wheelrim', () => new THREE.TorusGeometry(1.8, 0.07, 6, 36)), '#c9b6f2', [1, 1, 1], [0, 0, 0], rim);
+  for (let i = 0; i < 12; i++) { const a = i / 12 * TAU, s = mk(G_BOX, '#b9a3ff', [0.04, 1.8, 0.04], [Math.cos(a) * 0.9, Math.sin(a) * 0.9, 0], rim, { noShadow: true }); s.rotation.z = a - Math.PI / 2; mk(G_SPH, CONFETTI[i % 5], [0.16, 0.16, 0.16], [Math.cos(a) * 1.8, Math.sin(a) * 1.8, 0.05], rim, { glow: true }); }
+  [-1, 1].forEach(sd => { const l = mk(G_BOX, '#8a93b8', [0.1, 2.6, 0.1], [sd * 0.7, -1.1, 0.25], wheel); l.rotation.z = sd * 0.3; });
+  W.wheel = rim;
+  // Jeffrey Street Wharf, Kirribilli, with our stars
   mk(G_BOX, '#c89f7a', [3.4, 0.2, 1.8], [-2, 0.05, 3.5], world);
   for (let i = 0; i < 4; i++) mk(G_CYL, '#a8744f', [0.18, 0.7, 0.18], [-3.5 + i, -0.2, 4.3], world);
   const a = makeAnnette('dress'); a.position.set(-2.4, 0.15, 3.4); a.rotation.y = Math.PI; world.add(a);
@@ -1868,7 +1881,7 @@ function finale() {
   clearUI(); G.scene = 'finale'; G.mode = 'busy'; showHUD(false);
   buildHarbour(); G.clock = SCENE_TIME.finale; G.stats.happy = 100; updateHUD(); clearCheckpoint();
   setTimeout(() => earn('birthday'), 3200);
-  const t = el('div', 'title', `<div class="logo"><h1>Happy birthday, ${esc(CONFIG.name)}!</h1></div>`);
+  const t = el('div', 'title', `<div class="logo"><h1>Happy birthday, ${esc(CONFIG.name)}!</h1><span class="v2">Jeffrey Street Wharf, Kirribilli</span></div>`);
   const b = makeBtn('Roll credits', credits, 'big'); const w = el('div', 'tbtns'); w.append(b); t.append(w);
   ui.append(t); setMenu([b], { keepMode: true });
 }
@@ -1879,6 +1892,7 @@ function updateFireworks(dt) {
     const x = (Math.random() - 0.5) * 16, y = 5 + Math.random() * 4, z = -6 + Math.random() * 5, c = CONFETTI[Math.floor(Math.random() * 5)];
     FX.emit(x, y, z, [c, '#ffffff', c], SET.calm ? 26 : 60, 5, { g: 2.5, life: 1.6 }); sfx('boom');
   }
+  if (W && W.wheel) W.wheel.rotation.z += dt * (SET.calm ? 0.05 : 0.18);
   if (W && W.cast) W.cast.forEach((g, i) => { animatePerson(g, false, dt, G.t + i); g.position.y = 0.15 + (SET.calm ? 0 : Math.max(0, Math.sin(G.t * 3 + i * 1.5)) * 0.12); });
 }
 function credits() {
@@ -2512,10 +2526,16 @@ MAPS.baths = {
     mk(G_BOX, '#2e7d4f', [1.2, 0.3, 0.8], [0, 1.2, 0], ferry); mk(G_CYL, '#ffe27a', [0.18, 0.4, 0.18], [0.4, 1.5, 0], ferry);
     const boat = grp(g, 16, -0.12, -10); mk(G_BOX, '#ffffff', [1.1, 0.25, 0.4], [0, 0.12, 0], boat); mk(G_CYL, '#c7ccd6', [0.03, 1.5, 0.03], [0, 0.95, 0], boat); const sail = mk(G_CONE, '#ffffff', [0.6, 1.3, 0.05], [0.2, 0.95, 0], boat); sail.rotation.z = -0.05;
     const far = grp(g, 7, -0.3, -14.5); for (let i = 0; i < 14; i++) { const x = -18 + i * 2.8 + hsh(i, 5); mk(G_SPH, ['#8fc86f', '#7fb862', '#9fd07e'][i % 3], [3.4, 1.6 + hsh(i, 6) * 1.4, 2.2], [x, 0.3, 0], far, { noShadow: true }); mk(G_BOX, ['#fff4e8', '#ffd1e1', '#e8f4ff', '#fff0c2'][i % 4], [0.7, 0.5, 0.5], [x + 0.4, 0.9 + hsh(i, 6) * 0.6, 0.7], far, { noShadow: true }); mk(G_CONE, '#e2554f', [0.8, 0.35, 0.6], [x + 0.4, 1.33 + hsh(i, 6) * 0.6, 0.7], far, { noShadow: true }).rotation.y = Math.PI / 4; }
+    // lap-lane ropes, sun loungers, a lifeguard chair, Cockatoo Island and the city skyline beyond
+    for (let x = 0; x < 15; x += 0.35) mk(G_SPH, Math.round(x / 0.35) % 2 ? '#ffffff' : '#e2554f', [0.12, 0.08, 0.12], [x, -0.02, 0.5], g, { noShadow: true });
+    [[0.2, 6.2], [0.2, 7.3], [14.8, 6.2], [14.8, 7.3]].forEach(([x, z], i) => { const l = grp(g, x, 0, z); mk(G_BOX, '#fffaf0', [0.5, 0.08, 0.95], [0, 0.22, 0], l); mk(G_BOX, i % 2 ? '#7fc8f8' : '#ff9fb8', [0.46, 0.05, 0.9], [0, 0.28, 0], l, { noShadow: true }); const bk = mk(G_BOX, '#fffaf0', [0.5, 0.06, 0.4], [0, 0.4, -0.4], l); bk.rotation.x = -0.9; });
+    const lg = grp(g, 13.4, 0, 2.4); [-0.2, 0.2].forEach(x => mk(G_CYL, '#fffaf0', [0.05, 1.2, 0.05], [x, 0.6, 0], lg)); mk(G_BOX, '#ffd166', [0.55, 0.06, 0.45], [0, 1.2, 0], lg); mk(G_BOX, '#e2554f', [0.55, 0.3, 0.05], [0, 1.4, -0.2], lg);
+    const ci = grp(g, 1, -0.3, -11); mk(G_SPH, '#b89a72', [6, 1.2, 2.6], [0, 0, 0], ci, { noShadow: true }); mk(G_SPH, '#8fb07a', [4, 1.3, 2], [0.5, 0.3, 0], ci, { noShadow: true }); [-1.5, 1.2].forEach(x => { mk(G_BOX, '#c9a36a', [0.12, 1.8, 0.12], [x, 1.2, 0.3], ci); const jib = mk(G_BOX, '#c9a36a', [1.4, 0.1, 0.1], [x + 0.5, 2.1, 0.3], ci); jib.rotation.z = 0.2; });
+    const city = grp(g, 17, -0.3, -15); for (let i = 0; i < 9; i++) { const h = 1.5 + hsh(i, 7) * 3.5; mk(G_BOX, ['#b9c7ff', '#d8e2ff', '#c7f0e0', '#e2d8ff'][i % 4], [0.9, h, 0.9], [i * 1.05, h / 2, hsh(i, 8)], city, { noShadow: true }); }
     W.wk = { ferry, boat };
     wkTicker(updateBaths);
   },
-  onEnter() { G.wearing = 'sunny'; say(["EXPANSION PACK: a weekend with Paulo.", "No alarms, no meetings. Just a slow Saturday.", WK.baths + ", all to yourselves.", "Luca sniffs every blade of grass on the lawn.", "Face the water and press A for a morning dip."]); },
+  onEnter() { G.wearing = 'sunny'; say(["EXPANSION PACK: a weekend with Paulo.", "No alarms, no meetings. Just a slow Saturday.", WK.baths + ": a netted harbour pool on Greenwich Point.", "Across the water: Cockatoo Island and the city skyline.", "Luca sniffs every blade of grass on the lawn.", "Face the water and press A for a morning dip."]); },
   doorOpen: () => false,
   doorLocked: () => "The car's parked over on the sand.",
   act: {
@@ -2525,7 +2545,7 @@ MAPS.baths = {
     u: () => say("A stripy umbrella planted in the lawn."),
     p: () => say("A gum tree leaning over the baths."),
     s: () => say("A little shell. Luca sniffs it suspiciously."),
-    K: () => say("The kiosk. Hot chips and a lemonade for later."),
+    K: () => say(["The kiosk: espresso, gelato and hot chips.", "Coffee on a sun lounger by the water, obviously."]),
     A: () => say(F.wkBaths ? { n: CONFIG.boyfriend, t: "Best swim of the year. Ready when you are." } : { n: CONFIG.boyfriend, t: "Greenwich Baths, all to ourselves. Race you in?" })
   }
 };
@@ -2546,7 +2566,7 @@ MAPS.aldi = {
     W.wk = { trolley: tr, bag: 0 };
     wkTicker(updateAldi);
   },
-  onEnter() { G.wearing = 'sunny'; say([WK.shops + " on a Saturday. " + WK.grocer + " first.", "Luca's snoozing in the car with the window cracked.", { n: CONFIG.boyfriend, t: "Here's the list. Divide and conquer?" }]); },
+  onEnter() { G.wearing = 'sunny'; say([WK.shops + " City on a Saturday. Down the escalators to LG2, right by Kmart.", WK.grocer + " first.", "Luca's snoozing in the car with the window cracked.", { n: CONFIG.boyfriend, t: "Here's the list. Divide and conquer?" }]); },
   doorOpen: () => F.wkGroceries,
   doorLocked: () => ({ n: CONFIG.boyfriend, t: "Not without the groceries! Grab the list off me." }),
   onDoor() { G.mode = 'busy'; say(["Bags loaded. Luca approves of the dog treats.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => startDrive('suburb', 'park', 'the dog park')); },
@@ -2560,7 +2580,7 @@ MAPS.aldi = {
   }
 };
 MAPS.park = {
-  theme: 'park', title: 'Weekend Pack: the dog park', sky: 'day', outdoor: true, edge: '#a6dc8f', ambient: 'cicada',
+  theme: 'park', title: 'Weekend Pack: Ryde Park', sky: 'day', outdoor: true, edge: '#a6dc8f', ambient: 'cicada',
   floor: ['#a6dc8f', '#9bd483'], wall: ['#fff', '#fff'],
   rows: ["###############", "#T....T.....T.#", "#..........y..#", "#....g....k...#", "#.......A.....#", "#..o.......y..#", "#..b.......b..#", "#....k........#", "#.............#", "######D########"],
   start: { x: 7, z: 8, dir: 'up' }, luca: { x: 9, z: 8 },
@@ -2573,20 +2593,22 @@ MAPS.park = {
       mk(G_BOX, '#fffaf0', [0.14, 0.7, 0.08], [x, 0.35, z], g); mk(G_CONE, '#fffaf0', [0.14, 0.14, 0.08], [x, 0.77, z], g, { noShadow: true });
       const horiz = z === 0 || z === 9; mk(G_BOX, '#f1e4d2', horiz ? [1, 0.06, 0.05] : [0.05, 0.06, 1], [x, 0.5, z], g, { noShadow: true }); mk(G_BOX, '#f1e4d2', horiz ? [1, 0.06, 0.05] : [0.05, 0.06, 1], [x, 0.25, z], g, { noShadow: true });
     }
+    // a little coffee cart for the park cafe
+    const cart = grp(g, 12.6, 0, 8.4); mk(G_BOX, '#2f5d4a', [0.9, 0.7, 0.5], [0, 0.45, 0], cart); mk(G_BOX, '#fffaf0', [1.0, 0.06, 0.6], [0, 0.82, 0], cart); [-0.3, 0.3].forEach(x => { const wh = mk(G_CYL, '#3a3148', [0.22, 0.06, 0.22], [x, 0.11, 0.26], cart); wh.rotation.x = Math.PI / 2; }); for (let i = 0; i < 4; i++) mk(G_BOX, i % 2 ? '#fffaf0' : '#e2554f', [0.26, 0.04, 0.4], [-0.39 + i * 0.26, 1.25, 0.1], cart).rotation.x = 0.3; [-0.4, 0.4].forEach(x => mk(G_CYL, '#c7ccd6', [0.03, 0.45, 0.03], [x, 1.05, -0.1], cart, { noShadow: true })); mk(G_CYL, '#fffaf0', [0.1, 0.12, 0.1], [0.2, 0.92, 0.05], cart);
     const sign = grp(g, 4.3, 0, 8.8); mk(G_CYL, '#8a6a55', [0.06, 0.9, 0.06], [0, 0.45, 0], sign); mk(G_BOX, '#3fae7c', [0.9, 0.4, 0.05], [0, 0.95, 0], sign); mk(G_BOX, '#fffaf0', [0.7, 0.05, 0.02], [0, 1.0, 0.03], sign, { noShadow: true }); mk(G_BOX, '#fffaf0', [0.5, 0.05, 0.02], [0, 0.9, 0.03], sign, { noShadow: true });
     for (let i = 0; i < 18; i++) makeFlower(g, 1 + hsh(i, 41) * 12.5, 1 + hsh(i, 42) * 7.5, CONFETTI[i % 5]).scale.setScalar(0.8);
     W.npcs.forEach(n => { if ('yko'.includes(n.ch)) { recolorDog(n.g, n.ch); n.g.scale.setScalar(n.ch === 'o' ? 0.8 : 1.12); n.phase = Math.random() * TAU; } });
     W.wk = {};
     wkTicker(updatePark);
   },
-  onEnter() { G.wearing = 'sunny'; if (!G.lucaPat.park) { G.lucaPat.park = true; stat('happy', 5); } say(["Off-leash heaven. The park is full of happy dogs today.", "Luca does a lap of zoomies to say hello to everyone.", { n: CONFIG.boyfriend, t: "Grab the ball. He's already staring at it." }]); },
+  onEnter() { G.wearing = 'sunny'; if (!G.lucaPat.park) { G.lucaPat.park = true; stat('happy', 5); } say(["Ryde Park's fenced dog park. Off-leash heaven, and it's full of happy dogs today.", "Luca does a lap of zoomies to say hello to everyone.", { n: CONFIG.boyfriend, t: "Grab the ball. He's already staring at it." }]); },
   doorOpen: () => F.wkFetch,
   doorLocked: () => "One round of fetch first, Luca's begging.",
   onDoor() { G.mode = 'busy'; say(["Luca trots home happy and worn out.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(() => loadMap('home'))); },
   act: {
     g: () => F.wkFetch ? say("The ball's thoroughly slobbered. Luca is content.") : fetchGame(),
     T: () => say("A big shady gum. Cicadas going nuts."),
-    b: () => say("A park bench. Prime dog-watching seat."),
+    b: () => say(["A park bench. Prime dog-watching seat.", "Coffees from the Grounds Keeper Cafe, right here in the park."]),
     y: () => say("A golden retriever, utterly ball-obsessed."),
     k: () => say("A sleek black lab nailing every recall."),
     o: () => say("A fluffy grey pup, all bounce and zero chill."),
@@ -3035,11 +3057,19 @@ CONFIG.holiday = {
         { n: "Shadow Basin", d: "Red. Steeper, off the big chair", g: 'red', lift: "the Shadow Basin Chair" },
         { n: "Alta Chutes", d: "Black. The famous chutes. Deep breath.", g: 'black', lift: "the Alta Chair and a little hike" }
       ],
-      other: [
-        { n: "Green run", d: "Wide and gentle", g: 'green', lift: "the beginner chair" },
-        { n: "Blue run", d: "Cruisy groomers", g: 'blue', lift: "the main chair" },
-        { n: "Red run", d: "Getting spicy", g: 'red', lift: "the express chair" },
-        { n: "Black run", d: "Steep and bumpy", g: 'black', lift: "the top chair" }
+      // Cardrona: five basins (NZ maps have no reds, so Valley View Basin plays the red)
+      cardrona: [
+        { n: "Footrot Flats", d: "Green. Beside the terrain park, back to base", g: 'green', lift: "McDougall's Chondola" },
+        { n: "Captain's Basin", d: "Blue. Wide and rolling", g: 'blue', lift: "the Captain's Express" },
+        { n: "Valley View Basin", d: "Red. The locals' favourite", g: 'red', lift: "the chair to Valley View" },
+        { n: "Arcadia Chutes", d: "Black. Steep and thrilling", g: 'black', lift: "the chairs up to Arcadia" }
+      ],
+      // Coronet Peak (Greengates is a blue on the real map; it plays the red here)
+      coronet: [
+        { n: "Big Easy", d: "Green. Gentle, by the Meadows Express", g: 'green', lift: "the Meadows Express" },
+        { n: "M1", d: "Blue. The classic cruiser", g: 'blue', lift: "the Coronet Express" },
+        { n: "Greengates", d: "Red. A little spicier", g: 'red', lift: "the Greengates Express" },
+        { n: "Shirt Front", d: "Black. Steep pitches under the lights", g: 'black', lift: "the Coronet Express" }
       ]
     },
     ferg: [
@@ -3077,8 +3107,8 @@ CONFIG.holiday = {
       { n: "Chocolate fudge", d: "Next door. It counts." }
     ],
     morning: [
-      { n: "Hot air balloon at sunrise", d: "Mist over the vines" },
-      { n: "Hunter Valley Gardens", d: "A slow wander, coffee in hand" },
+      { n: "Hot air balloon at sunrise", d: "Lift off at dawn over Pokolbin" },
+      { n: "Hunter Valley Gardens", d: "14 hectares, 10 themed gardens" },
       { n: "Spa morning", d: "Robes on, phones off" }
     ],
     dinner: [
@@ -3108,7 +3138,7 @@ const HOL_FLAGS = ['qtGear', 'qtSki', 'qtRest', 'qtLuge', 'hvTaste', 'hvCheese',
 ICONS.unshift(
   [/queenstown/i, '🏂', 'trip'], [/hunter valley gardens/i, '🌷', 'adventure'], [/hunter valley/i, '🍇', 'trip'],
   [/^snowboard$/i, '🏂', 'snow'], [/^skis$/i, '⛷️', 'snow'], [/shell|puffer|parka|snow jacket|macpac/i, '🧥', 'outfit'],
-  [/homeward|green run/i, '🟢', 'snow'], [/alta blue|blue run/i, '🔵', 'snow'], [/shadow basin|red run/i, '🔴', 'snow'], [/alta chutes|black run/i, '⚫', 'snow'],
+  [/homeward|footrot|big easy/i, '🟢', 'snow'], [/alta blue|captain's basin|^m1$/i, '🔵', 'snow'], [/shadow basin|valley view|greengates/i, '🔴', 'snow'], [/alta chutes|arcadia chutes|shirt front/i, '⚫', 'snow'],
   [/cardrona/i, '☀️', 'snow'], [/remarkables/i, '🏔️', 'snow'], [/coronet/i, '🌙', 'snow'], [/jacket/i, '🧥', 'outfit'],
   [/big al|little lamby|fergburger/i, '🍔', 'dine'], [/venison pie/i, '🥧', 'dine'], [/gelato/i, '🍨', 'dine'],
   [/onsen/i, '♨️', 'adventure'], [/skyline|gondola/i, '🚡', 'adventure'], [/shotover/i, '🚤', 'adventure'], [/arrowtown/i, '🍂', 'adventure'], [/glenorchy/i, '🏞️', 'adventure'],
@@ -3261,7 +3291,7 @@ MAPS.qtown = {
   act: {
     G: () => F.qtGear ? say("Greentoad: board, boots, jacket, pants and helmet. $244 each for four days.") : gearMenu(),
     F: () => pickMenu('Fergburger', 'The queue is part of the experience.', HOL.qt.ferg, d => { stat('energy', 10, true); HLOG.snack = d.n; say([{ n: CONFIG.name, t: d.n + ", please!" }, "Worth every minute of the queue."], refreshHints); }),
-    L: () => say("Lomond Lodge. Our little studio, two minutes from the gondola."),
+    L: () => say("Lomond Lodge on Man Street. Our little studio, two minutes from the Skyline gondola up Bob's Peak."),
     n: () => say("A snowman wearing a pink beanie. Paulo swears it wasn't him."),
     p: () => say("A snowy pine. Very Christmas card."),
     '~': () => say("Lake Wakatipu, cold and impossibly blue. The TSS Earnslaw chugs past."),
@@ -3271,7 +3301,7 @@ MAPS.qtown = {
   }
 };
 MAPS.hunter = {
-  theme: 'hunter', title: 'Holiday: Hunter Valley', sky: 'golden', outdoor: true, edge: '#b8d98a', intro: { x: 7, z: 2, zoom: 0.68 }, ambient: 'cicada',
+  theme: 'hunter', title: 'Holiday: Pokolbin, Hunter Valley', sky: 'golden', outdoor: true, edge: '#b8d98a', intro: { x: 7, z: 2, zoom: 0.68 }, ambient: 'cicada',
   floor: ['#c5e39a', '#b8d98a'], wall: ['#fff', '#fff'],
   rows: ["t.............t", ".vvvvvv..vvvvv.", "...............", ".vvvvvv..vvvvv.", "...............", ".CCC....A...cc.", ".CCC...........", "......bb.......", ".vvvvvv..vvvvv.", "..............."],
   start: { x: 7, z: 9, dir: 'up' },
@@ -3290,10 +3320,10 @@ MAPS.hunter = {
     wkTicker(updateHunter);
   },
   onEnter() {
-    say(["HOLIDAY PACK: the Hunter Valley!", "Two hours up the M1 and the vines go on forever.", "Luca is having a sleepover at Mum's. He will be spoiled rotten.", { n: CONFIG.boyfriend, t: "Cellar door first. Blind tasting, loser buys lunch." }]);
+    say(["HOLIDAY PACK: the Hunter Valley!", "Pokolbin, the wine capital of the Hunter. Over 150 cellar doors to choose from.", "Luca is having a sleepover at Mum's. He will be spoiled rotten.", { n: CONFIG.boyfriend, t: "Cellar door first. Blind tasting, loser buys lunch." }]);
   },
   act: {
-    C: () => F.hvTaste ? say("The cellar door. We may have joined the wine club.") : tastingGame(),
+    C: () => F.hvTaste ? say(["The cellar door. Semillon is the Hunter's famous drop.", "We may have joined the wine club."]) : tastingGame(),
     c: () => pickMenu('Cheese shop', 'A little something for the car ride.', HOL.hv.cheese, d => { F.hvCheese = true; HLOG.cheese = d.n; stat('happy', 5, true); say([{ n: CONFIG.name, t: d.n + ". Obviously." }, "Wrapped up and tucked in the esky."], refreshHints); }),
     v: () => say("Rows of vines, heavy with grapes."),
     b: () => say("Oak barrels. It smells like a very good idea."),
@@ -3358,8 +3388,8 @@ function gearMenu() {
 function fieldMenu() {
   pickMenu('Ski day', 'Which mountain are we riding?', HOL.qt.fields, d => {
     HLOG.field = d.n;
-    const runs = HOL.qt.runs[d.k === 'remarks' ? 'remarks' : 'other'];
-    pickMenu(d.n, d.k === 'remarks' ? 'Trail map out. Three sunny bowls to pick from.' : 'Which run are we dropping into?', runs, r => { HLOG.run = r.n; G.grade = r.g;
+    const runs = HOL.qt.runs[d.k];
+    pickMenu(d.n, d.k === 'remarks' ? 'Trail map out. Three sunny bowls to pick from.' : d.k === 'cardrona' ? 'Trail map out. Five basins to pick from.' : 'Night skiing runs 4pm to 9pm. Pick a run under the lights.', runs, r => { HLOG.run = r.n; G.grade = r.g;
     say([d.k === 'coronet' ? "The night bus leaves The Station on the hour." : d.k === 'cardrona' ? "The shuttle climbs the Crown Range. About an hour to the top." : "Ski bus from The Station, about 40 minutes up.", "Up " + r.lift + " to the top of " + r.n + ".", { n: CONFIG.boyfriend, t: "Steer left and right. Grab the snowflakes, dodge everything else." }], () => fade(() => buildSnowRun(d.k)));
     }, false);
   });
@@ -3528,7 +3558,9 @@ function updateSnow(dt) {
       const g = rec.grades || (rec.grades = {}); g[G.grade] = true;
       if (G.grade === 'black') earn('black');
       if (['green', 'blue', 'red', 'black'].every(k => g[k])) earn('powder');
+      const flavour = { cardrona: "Refuel with a slice at Captain's Pizzeria.", remarks: "Sun on the north-facing bowls all day long.", coronet: "Skiing under the lights, Queenstown twinkling below." }[S.k];
       lines = [S.bumps === 0 ? "Top to bottom, not a single fall. Who even are you?!" : "Made it down. Only " + S.bumps + " tumble" + (S.bumps > 1 ? "s" : "") + ", all very stylish.", S.flakes + " snowflake" + (S.flakes === 1 ? "" : "s") + " caught on the way down.", { n: CONFIG.boyfriend, t: "That kiwi chased you the whole last run." }];
+      if (flavour) lines.splice(2, 0, flavour);
     }
     if (best && prev) lines.splice(1, 0, "New best on " + S.key + "! (was " + prev + ")");
     saveRunRecords(rec);
@@ -3566,7 +3598,8 @@ function tastingGame() {
 function hvEvening() {
   pickMenu('Tomorrow morning', 'Early start or a lazy one?', HOL.hv.morning, m => {
     HLOG.morning = m.n; F.hvMorning = true; stat('happy', 8, true);
-    say([{ n: CONFIG.name, t: m.n + "." }, { n: CONFIG.boyfriend, t: "Now, dinner tonight?" }], () => pickMenu('Dinner in the vines', 'The sun is going down over the vines.', HOL.hv.dinner, d => {
+    const after = /balloon/i.test(m.n) ? "Up before dawn. The mist lifts and the vines glow gold beneath the basket." : /gardens/i.test(m.n) ? "Eight kilometres of garden paths, waterfalls and ponds. Coffee in hand." : "Robes on, phones off. Bliss.";
+    say([{ n: CONFIG.name, t: m.n + "." }, after, { n: CONFIG.boyfriend, t: "Now, dinner tonight?" }], () => pickMenu('Dinner in the vines', 'The sun is going down over the vines.', HOL.hv.dinner, d => {
       HLOG.dinner = d.n; stat('energy', 15, true);
       say([{ n: CONFIG.boyfriend, t: d.n + ". Good call." }, "Golden light, a full glass, nowhere to be.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(holidayEnd));
     }, false));

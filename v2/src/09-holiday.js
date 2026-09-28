@@ -37,11 +37,19 @@ CONFIG.holiday = {
         { n: "Shadow Basin", d: "Red. Steeper, off the big chair", g: 'red', lift: "the Shadow Basin Chair" },
         { n: "Alta Chutes", d: "Black. The famous chutes. Deep breath.", g: 'black', lift: "the Alta Chair and a little hike" }
       ],
-      other: [
-        { n: "Green run", d: "Wide and gentle", g: 'green', lift: "the beginner chair" },
-        { n: "Blue run", d: "Cruisy groomers", g: 'blue', lift: "the main chair" },
-        { n: "Red run", d: "Getting spicy", g: 'red', lift: "the express chair" },
-        { n: "Black run", d: "Steep and bumpy", g: 'black', lift: "the top chair" }
+      // Cardrona: five basins (NZ maps have no reds, so Valley View Basin plays the red)
+      cardrona: [
+        { n: "Footrot Flats", d: "Green. Beside the terrain park, back to base", g: 'green', lift: "McDougall's Chondola" },
+        { n: "Captain's Basin", d: "Blue. Wide and rolling", g: 'blue', lift: "the Captain's Express" },
+        { n: "Valley View Basin", d: "Red. The locals' favourite", g: 'red', lift: "the chair to Valley View" },
+        { n: "Arcadia Chutes", d: "Black. Steep and thrilling", g: 'black', lift: "the chairs up to Arcadia" }
+      ],
+      // Coronet Peak (Greengates is a blue on the real map; it plays the red here)
+      coronet: [
+        { n: "Big Easy", d: "Green. Gentle, by the Meadows Express", g: 'green', lift: "the Meadows Express" },
+        { n: "M1", d: "Blue. The classic cruiser", g: 'blue', lift: "the Coronet Express" },
+        { n: "Greengates", d: "Red. A little spicier", g: 'red', lift: "the Greengates Express" },
+        { n: "Shirt Front", d: "Black. Steep pitches under the lights", g: 'black', lift: "the Coronet Express" }
       ]
     },
     ferg: [
@@ -79,8 +87,8 @@ CONFIG.holiday = {
       { n: "Chocolate fudge", d: "Next door. It counts." }
     ],
     morning: [
-      { n: "Hot air balloon at sunrise", d: "Mist over the vines" },
-      { n: "Hunter Valley Gardens", d: "A slow wander, coffee in hand" },
+      { n: "Hot air balloon at sunrise", d: "Lift off at dawn over Pokolbin" },
+      { n: "Hunter Valley Gardens", d: "14 hectares, 10 themed gardens" },
       { n: "Spa morning", d: "Robes on, phones off" }
     ],
     dinner: [
@@ -110,7 +118,7 @@ const HOL_FLAGS = ['qtGear', 'qtSki', 'qtRest', 'qtLuge', 'hvTaste', 'hvCheese',
 ICONS.unshift(
   [/queenstown/i, '🏂', 'trip'], [/hunter valley gardens/i, '🌷', 'adventure'], [/hunter valley/i, '🍇', 'trip'],
   [/^snowboard$/i, '🏂', 'snow'], [/^skis$/i, '⛷️', 'snow'], [/shell|puffer|parka|snow jacket|macpac/i, '🧥', 'outfit'],
-  [/homeward|green run/i, '🟢', 'snow'], [/alta blue|blue run/i, '🔵', 'snow'], [/shadow basin|red run/i, '🔴', 'snow'], [/alta chutes|black run/i, '⚫', 'snow'],
+  [/homeward|footrot|big easy/i, '🟢', 'snow'], [/alta blue|captain's basin|^m1$/i, '🔵', 'snow'], [/shadow basin|valley view|greengates/i, '🔴', 'snow'], [/alta chutes|arcadia chutes|shirt front/i, '⚫', 'snow'],
   [/cardrona/i, '☀️', 'snow'], [/remarkables/i, '🏔️', 'snow'], [/coronet/i, '🌙', 'snow'], [/jacket/i, '🧥', 'outfit'],
   [/big al|little lamby|fergburger/i, '🍔', 'dine'], [/venison pie/i, '🥧', 'dine'], [/gelato/i, '🍨', 'dine'],
   [/onsen/i, '♨️', 'adventure'], [/skyline|gondola/i, '🚡', 'adventure'], [/shotover/i, '🚤', 'adventure'], [/arrowtown/i, '🍂', 'adventure'], [/glenorchy/i, '🏞️', 'adventure'],
@@ -263,7 +271,7 @@ MAPS.qtown = {
   act: {
     G: () => F.qtGear ? say("Greentoad: board, boots, jacket, pants and helmet. $244 each for four days.") : gearMenu(),
     F: () => pickMenu('Fergburger', 'The queue is part of the experience.', HOL.qt.ferg, d => { stat('energy', 10, true); HLOG.snack = d.n; say([{ n: CONFIG.name, t: d.n + ", please!" }, "Worth every minute of the queue."], refreshHints); }),
-    L: () => say("Lomond Lodge. Our little studio, two minutes from the gondola."),
+    L: () => say("Lomond Lodge on Man Street. Our little studio, two minutes from the Skyline gondola up Bob's Peak."),
     n: () => say("A snowman wearing a pink beanie. Paulo swears it wasn't him."),
     p: () => say("A snowy pine. Very Christmas card."),
     '~': () => say("Lake Wakatipu, cold and impossibly blue. The TSS Earnslaw chugs past."),
@@ -273,7 +281,7 @@ MAPS.qtown = {
   }
 };
 MAPS.hunter = {
-  theme: 'hunter', title: 'Holiday: Hunter Valley', sky: 'golden', outdoor: true, edge: '#b8d98a', intro: { x: 7, z: 2, zoom: 0.68 }, ambient: 'cicada',
+  theme: 'hunter', title: 'Holiday: Pokolbin, Hunter Valley', sky: 'golden', outdoor: true, edge: '#b8d98a', intro: { x: 7, z: 2, zoom: 0.68 }, ambient: 'cicada',
   floor: ['#c5e39a', '#b8d98a'], wall: ['#fff', '#fff'],
   rows: ["t.............t", ".vvvvvv..vvvvv.", "...............", ".vvvvvv..vvvvv.", "...............", ".CCC....A...cc.", ".CCC...........", "......bb.......", ".vvvvvv..vvvvv.", "..............."],
   start: { x: 7, z: 9, dir: 'up' },
@@ -292,10 +300,10 @@ MAPS.hunter = {
     wkTicker(updateHunter);
   },
   onEnter() {
-    say(["HOLIDAY PACK: the Hunter Valley!", "Two hours up the M1 and the vines go on forever.", "Luca is having a sleepover at Mum's. He will be spoiled rotten.", { n: CONFIG.boyfriend, t: "Cellar door first. Blind tasting, loser buys lunch." }]);
+    say(["HOLIDAY PACK: the Hunter Valley!", "Pokolbin, the wine capital of the Hunter. Over 150 cellar doors to choose from.", "Luca is having a sleepover at Mum's. He will be spoiled rotten.", { n: CONFIG.boyfriend, t: "Cellar door first. Blind tasting, loser buys lunch." }]);
   },
   act: {
-    C: () => F.hvTaste ? say("The cellar door. We may have joined the wine club.") : tastingGame(),
+    C: () => F.hvTaste ? say(["The cellar door. Semillon is the Hunter's famous drop.", "We may have joined the wine club."]) : tastingGame(),
     c: () => pickMenu('Cheese shop', 'A little something for the car ride.', HOL.hv.cheese, d => { F.hvCheese = true; HLOG.cheese = d.n; stat('happy', 5, true); say([{ n: CONFIG.name, t: d.n + ". Obviously." }, "Wrapped up and tucked in the esky."], refreshHints); }),
     v: () => say("Rows of vines, heavy with grapes."),
     b: () => say("Oak barrels. It smells like a very good idea."),
@@ -360,8 +368,8 @@ function gearMenu() {
 function fieldMenu() {
   pickMenu('Ski day', 'Which mountain are we riding?', HOL.qt.fields, d => {
     HLOG.field = d.n;
-    const runs = HOL.qt.runs[d.k === 'remarks' ? 'remarks' : 'other'];
-    pickMenu(d.n, d.k === 'remarks' ? 'Trail map out. Three sunny bowls to pick from.' : 'Which run are we dropping into?', runs, r => { HLOG.run = r.n; G.grade = r.g;
+    const runs = HOL.qt.runs[d.k];
+    pickMenu(d.n, d.k === 'remarks' ? 'Trail map out. Three sunny bowls to pick from.' : d.k === 'cardrona' ? 'Trail map out. Five basins to pick from.' : 'Night skiing runs 4pm to 9pm. Pick a run under the lights.', runs, r => { HLOG.run = r.n; G.grade = r.g;
     say([d.k === 'coronet' ? "The night bus leaves The Station on the hour." : d.k === 'cardrona' ? "The shuttle climbs the Crown Range. About an hour to the top." : "Ski bus from The Station, about 40 minutes up.", "Up " + r.lift + " to the top of " + r.n + ".", { n: CONFIG.boyfriend, t: "Steer left and right. Grab the snowflakes, dodge everything else." }], () => fade(() => buildSnowRun(d.k)));
     }, false);
   });
@@ -530,7 +538,9 @@ function updateSnow(dt) {
       const g = rec.grades || (rec.grades = {}); g[G.grade] = true;
       if (G.grade === 'black') earn('black');
       if (['green', 'blue', 'red', 'black'].every(k => g[k])) earn('powder');
+      const flavour = { cardrona: "Refuel with a slice at Captain's Pizzeria.", remarks: "Sun on the north-facing bowls all day long.", coronet: "Skiing under the lights, Queenstown twinkling below." }[S.k];
       lines = [S.bumps === 0 ? "Top to bottom, not a single fall. Who even are you?!" : "Made it down. Only " + S.bumps + " tumble" + (S.bumps > 1 ? "s" : "") + ", all very stylish.", S.flakes + " snowflake" + (S.flakes === 1 ? "" : "s") + " caught on the way down.", { n: CONFIG.boyfriend, t: "That kiwi chased you the whole last run." }];
+      if (flavour) lines.splice(2, 0, flavour);
     }
     if (best && prev) lines.splice(1, 0, "New best on " + S.key + "! (was " + prev + ")");
     saveRunRecords(rec);
@@ -568,7 +578,8 @@ function tastingGame() {
 function hvEvening() {
   pickMenu('Tomorrow morning', 'Early start or a lazy one?', HOL.hv.morning, m => {
     HLOG.morning = m.n; F.hvMorning = true; stat('happy', 8, true);
-    say([{ n: CONFIG.name, t: m.n + "." }, { n: CONFIG.boyfriend, t: "Now, dinner tonight?" }], () => pickMenu('Dinner in the vines', 'The sun is going down over the vines.', HOL.hv.dinner, d => {
+    const after = /balloon/i.test(m.n) ? "Up before dawn. The mist lifts and the vines glow gold beneath the basket." : /gardens/i.test(m.n) ? "Eight kilometres of garden paths, waterfalls and ponds. Coffee in hand." : "Robes on, phones off. Bliss.";
+    say([{ n: CONFIG.name, t: m.n + "." }, after, { n: CONFIG.boyfriend, t: "Now, dinner tonight?" }], () => pickMenu('Dinner in the vines', 'The sun is going down over the vines.', HOL.hv.dinner, d => {
       HLOG.dinner = d.n; stat('energy', 15, true);
       say([{ n: CONFIG.boyfriend, t: d.n + ". Good call." }, "Golden light, a full glass, nowhere to be.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(holidayEnd));
     }, false));

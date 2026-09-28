@@ -34,11 +34,11 @@ const MAPS = {
   gym: {
     theme: 'gym', title: 'Chapter 2: Gym', sky: 'morning', edge: GRASS,
     floor: ['#d8f5ea', '#cdeee1'], wall: ['#e2d8ff', '#d8ccff'],
-    rows: ["#########mm####", "#rr..rr..LL...#", "#.....h.......#", "#.g.......g...#", "#.............#", "#..bb....bb...#", "#.............#", "#.....n.......#", "#.............#", "######D########"],
+    rows: ["#########mm####", "#rr..rr..LL.SS#", "#.....h.......#", "#.g.......g...#", "#.............#", "#..bb....bb...#", "#.............#", "#.....n.......#", "#.............#", "######D########"],
     start: { x: 6, z: 8, dir: 'up' },
     npcs: (c, x) => c === 'g' ? (x < 6 ? { skin: '#f0c39a', hair: '#e07b39', hairStyle: 'bun', top: '#3fae7c', bottom: '#2b2d42' } : { skin: '#8a5a36', hair: '#2a1d12', hairStyle: 'fluffy', top: '#7f93b3', bottom: '#2b2d42' }) : c === 'n' ? { skin: '#e6b58f', hair: '#3a2f2a', top: '#ffa94d', bottom: '#4a4658' } : null,
     hints: () => [!F.lifted && 'r', F.lifted && !F.gymBattle && 'r', F.gymBattle && 'D'],
-    onEnter() { G.wearing = 'gym'; say(["One Playground. " + CONFIG.name + " changes into her Lululemon set.", "Time to lift!"]); },
+    onEnter() { G.wearing = 'gym'; say(["One Playground. " + CONFIG.name + " changes into her Lululemon set.", "Squat racks, a sauna for later and a Reformer Pilates class booming next door.", "Time to lift!"]); },
     doorOpen: () => F.gymBattle,
     doorLocked: () => "You just got here! Hit the squat rack first.",
     onDoor() { G.wearing = G.outfit; startDrive('city', 'office', CONFIG.company); },
@@ -46,9 +46,10 @@ const MAPS = {
       r: () => F.gymBattle ? say("The rack is free, but those legs are cooked.") : F.lifted ? startBattle('lastset') : liftGame(),
       L: () => G.secrets.card ? say("Locker's empty now.") : secret('card'),
       m: () => say("Mirror check. Form looks strong, hair looks stronger."),
+      S: () => say(F.gymBattle ? ["The sauna. Ten minutes of recovery after that PR.", "Coach's orders."] : "The sauna. Recovery comes after the PR."),
       b: () => say("A bench. For between sets, or for sitting on your phone."),
       g: (x) => say(x < 6 ? { n: 'Gym-goer', t: "Happy birthday! Want a spot on your next set?" } : { n: 'Gym-goer', t: CONFIG.insideJokes[0] }),
-      n: () => say([{ n: 'Coach', t: "Breathe, brace, lift. And it's your birthday, so PR today." }, { n: CONFIG.name, t: CONFIG.catchphrase }])
+      n: () => say([{ n: 'Coach', t: "Breathe, brace, lift. And it's your birthday, so PR today." }, { n: 'Coach', t: "Then sauna and a stretch in the recovery zone." }, { n: CONFIG.name, t: CONFIG.catchphrase }])
     }
   },
   office: {
@@ -58,7 +59,7 @@ const MAPS = {
     start: { x: 6, z: 8, dir: 'up' },
     npcs: (c, x, z) => c === 'c' ? ((x + z) % 2 ? { skin: '#cf9b6f', hair: '#6b4a32', top: '#7f93b3', bottom: '#4a4658', glasses: true } : { skin: '#f0c39a', hair: '#3a2f2a', hairStyle: 'bun', top: '#c55a6c', bottom: '#3a3d5c' }) : null,
     hints: () => [!F.sorted && 'Y', !F.officeBattle && 'Z', F.sorted && F.officeBattle && 'D'],
-    onEnter() { G.wearing = G.outfit; say([CONFIG.company + ", Sydney CBD. Birthday balloons on the project coordinator's desk.", "File the reports at your desk, then battle that inbox on the computer."]); },
+    onEnter() { G.wearing = G.outfit; say([CONFIG.company + ", Sydney CBD. Birthday balloons on the project coordinator's desk.", "Out at Moorebank, trains are swapping containers for the Port Botany run.", "File the reports at your desk, then battle that inbox on the computer."]); },
     doorOpen: () => F.sorted && F.officeBattle,
     doorLocked: () => "Not yet. File the reports and beat the inbox first.",
     onDoor() { G.mode = 'busy'; say(["Project updates sent. Exec reports signed off.", "Clock off for lunch! Everyone's starving."], () => fade(lunchScene)); },
@@ -67,8 +68,8 @@ const MAPS = {
       Z: () => F.officeBattle ? say("Inbox zero. Beautiful.") : startBattle('inbox'),
       w: () => say("The harbour sparkles between the towers."),
       p: () => say("A desk plant, alive thanks to " + CONFIG.name + "'s watering reminders."),
-      d: () => say("A coworker's desk. Messier than " + CONFIG.name + " would ever allow."),
-      c: (x, z) => say({ n: 'Coworker', t: ({ '3,4': "Happy birthday! There's cake in the kitchen at three.", '7,4': CONFIG.insideJokes[1], '3,7': "Your project updates are the only ones the execs actually read." })[x + ',' + z] || "Happy birthday! Lunch is on us next week." })
+      d: () => say(["A coworker's desk. Messier than " + CONFIG.name + " would ever allow.", "A tiny model freight train sits next to the keyboard."]),
+      c: (x, z) => say({ n: 'Coworker', t: ({ '3,4': "Happy birthday! There's cake in the kitchen at three.", '7,4': CONFIG.insideJokes[1], '3,7': "Your project updates are the only ones the execs actually read.", '10,7': "Fun fact: Moorebank is the biggest intermodal precinct in Australia. 243 hectares!" })[x + ',' + z] || "Happy birthday! Lunch is on us next week." })
     }
   },
   beach: {
@@ -93,18 +94,23 @@ const MAPS = {
     rows: ["######F########", "#f...n.....f.f#", "#..rrrrrr.....#", "#.............#", "#....f...f...h#", "#.............#", "#......At.....#", "#.............#", "#f...........f#", "######D########"],
     start: { x: 6, z: 8, dir: 'up' },
     npcs: c => c === 'n' ? { skin: '#8a5a36', hair: '#6b4a32', top: '#2f5d4a', bottom: INK, apron: '#fff4e8' } : c === 'A' ? LOOK.paulo : null,
-    decorate(g) { for (let i = 0; i < 4; i++) makeFairyLights(g, 1, 1.5 + i * 2, 13, 1 + i * 2, 1.9, 22); },
+    decorate(g) {
+      for (let i = 0; i < 4; i++) makeFairyLights(g, 1, 1.5 + i * 2, 13, 1 + i * 2, 1.9, 22);
+      // hanging plants and apothecary bottles
+      for (let i = 0; i < 7; i++) { const x = 1.5 + i * 1.9, z = 3 + (i % 2) * 2.5; mk(G_CYL, '#c7ccd6', [0.01, 0.5, 0.01], [x, 2.05, z], g, { noShadow: true }); mk(G_CYL, '#e8916b', [0.22, 0.16, 0.22], [x, 1.75, z], g); for (let k = 0; k < 5; k++) mk(G_SPH, ['#5f9f4f', '#7fbf66'][k % 2], [0.12, 0.26, 0.12], [x + Math.cos(k * 1.3) * 0.12, 1.58 - (k % 3) * 0.06, z + Math.sin(k * 1.3) * 0.12], g, { noShadow: true }); }
+      for (let i = 0; i < 4; i++) { const bt = grp(g, 3.3 + i * 0.35, 0.93, 2.2); mk(G_CYL, '#dff2ff', [0.1, 0.18, 0.1], [0, 0.09, 0], bt, { alpha: 0.7 }); mk(G_CYL, '#dff2ff', [0.04, 0.08, 0.04], [0, 0.22, 0], bt, { alpha: 0.7 }); }
+    },
     hints: () => [!F.drink && 'n', F.drink && !F.dinner && 'A'],
-    onEnter() { G.wearing = 'dress'; say([CONFIG.dinnerSpot + ". Fairy lights, plants everywhere, harbour breeze.", CONFIG.name + "'s in her blue dress.", { n: CONFIG.boyfriend, t: "Wow! Look how beautiful your outfit is." }, "Grab a drink at the bar, then join " + CONFIG.boyfriend + " at the table."]); },
+    onEnter() { G.wearing = 'dress'; say([CONFIG.dinnerSpot + ". Named after a botanist who once ran a bookshop on this very spot.", "Victorian apothecary vibes: botanical prints, hanging plants, water in little lab bottles.", CONFIG.name + "'s in her blue dress.", { n: CONFIG.boyfriend, t: "Wow! Look how beautiful your outfit is." }, "Grab a drink at the bar, then join " + CONFIG.boyfriend + " at the table."]); },
     doorOpen: () => false,
     doorLocked: () => "Leaving? The night's just getting started.",
     act: {
-      n: () => F.drink ? say({ n: 'Bartender', t: "Another round? Just say the word." }) : drinkMenu(),
+      n: () => F.drink ? say({ n: 'Bartender', t: "Another round? The Negroni Sbagliato uses rosemary-infused Campari." }) : drinkMenu(),
       r: () => F.drink ? say({ n: 'Bartender', t: "Another round? Just say the word." }) : drinkMenu(),
       A: () => F.dinner ? say({ n: CONFIG.boyfriend, t: "Best night ever." }) : F.drink ? dinnerMenu() : say({ n: CONFIG.boyfriend, t: "Let's get a drink first. We can get whateeeeeeeever you want! :D" }),
       F: () => secret('poster'),
-      t: () => say("Candlelit tables. Very date night."),
-      f: () => say("A giant fern. The Botanist takes the name seriously.")
+      t: () => say("Candlelit tables, and water served in a little science-lab bottle. Very date night."),
+      f: () => say("A giant fern. There are plants hanging from the ceiling too. The Botanist takes the name seriously.")
     }
   }
 };
@@ -266,7 +272,13 @@ function buildHarbour() {
   const pt = grp(world, 6.5, 0, 2.5);
   mk(G_BOX, '#e8d8c0', [4, 0.4, 2.6], [0, 0.1, 0], pt);
   [[-1.2, 1.3], [-0.2, 1.7], [0.8, 1.4], [1.6, 1.0]].forEach(([x, s], i) => { const c = mk(geo('sail', () => new THREE.SphereGeometry(0.5, 16, 10, 0, Math.PI, 0, Math.PI / 2)), '#fffaf2', [1.2 * s, 1.8 * s, 1.2 * s], [x, 0.3, 0], pt); c.rotation.y = -Math.PI / 2 + i * 0.1; c.rotation.z = -0.35; });
-  // the pier with our stars
+  // Luna Park's side of the bridge: a glowing ferris wheel (simple shapes, not a model of anything)
+  const wheel = grp(world, -9.2, 2.3, -2.6), rim = grp(wheel);
+  mk(geo('wheelrim', () => new THREE.TorusGeometry(1.8, 0.07, 6, 36)), '#c9b6f2', [1, 1, 1], [0, 0, 0], rim);
+  for (let i = 0; i < 12; i++) { const a = i / 12 * TAU, s = mk(G_BOX, '#b9a3ff', [0.04, 1.8, 0.04], [Math.cos(a) * 0.9, Math.sin(a) * 0.9, 0], rim, { noShadow: true }); s.rotation.z = a - Math.PI / 2; mk(G_SPH, CONFETTI[i % 5], [0.16, 0.16, 0.16], [Math.cos(a) * 1.8, Math.sin(a) * 1.8, 0.05], rim, { glow: true }); }
+  [-1, 1].forEach(sd => { const l = mk(G_BOX, '#8a93b8', [0.1, 2.6, 0.1], [sd * 0.7, -1.1, 0.25], wheel); l.rotation.z = sd * 0.3; });
+  W.wheel = rim;
+  // Jeffrey Street Wharf, Kirribilli, with our stars
   mk(G_BOX, '#c89f7a', [3.4, 0.2, 1.8], [-2, 0.05, 3.5], world);
   for (let i = 0; i < 4; i++) mk(G_CYL, '#a8744f', [0.18, 0.7, 0.18], [-3.5 + i, -0.2, 4.3], world);
   const a = makeAnnette('dress'); a.position.set(-2.4, 0.15, 3.4); a.rotation.y = Math.PI; world.add(a);
@@ -281,7 +293,7 @@ function finale() {
   clearUI(); G.scene = 'finale'; G.mode = 'busy'; showHUD(false);
   buildHarbour(); G.clock = SCENE_TIME.finale; G.stats.happy = 100; updateHUD(); clearCheckpoint();
   setTimeout(() => earn('birthday'), 3200);
-  const t = el('div', 'title', `<div class="logo"><h1>Happy birthday, ${esc(CONFIG.name)}!</h1></div>`);
+  const t = el('div', 'title', `<div class="logo"><h1>Happy birthday, ${esc(CONFIG.name)}!</h1><span class="v2">Jeffrey Street Wharf, Kirribilli</span></div>`);
   const b = makeBtn('Roll credits', credits, 'big'); const w = el('div', 'tbtns'); w.append(b); t.append(w);
   ui.append(t); setMenu([b], { keepMode: true });
 }
@@ -292,6 +304,7 @@ function updateFireworks(dt) {
     const x = (Math.random() - 0.5) * 16, y = 5 + Math.random() * 4, z = -6 + Math.random() * 5, c = CONFETTI[Math.floor(Math.random() * 5)];
     FX.emit(x, y, z, [c, '#ffffff', c], SET.calm ? 26 : 60, 5, { g: 2.5, life: 1.6 }); sfx('boom');
   }
+  if (W && W.wheel) W.wheel.rotation.z += dt * (SET.calm ? 0.05 : 0.18);
   if (W && W.cast) W.cast.forEach((g, i) => { animatePerson(g, false, dt, G.t + i); g.position.y = 0.15 + (SET.calm ? 0 : Math.max(0, Math.sin(G.t * 3 + i * 1.5)) * 0.12); });
 }
 function credits() {
