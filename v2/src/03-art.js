@@ -46,12 +46,13 @@ function makePerson(o) {
   if (o.hairStyle === 'fluffy') [[-0.1, 0.25, 0.02], [0.08, 0.27, -0.04], [0.16, 0.2, 0.06], [-0.18, 0.18, -0.02]].forEach(p => mk(G_SPH, hair, [0.16, 0.14, 0.16], p, head));
   if (o.bow) { const b = grp(head, 0.17, 0.22, 0.02); b.rotation.z = -0.4; [-1, 1].forEach(s => { const c = mk(G_CONE, o.bow, [0.09, 0.12, 0.06], [s * 0.06, 0, 0], b); c.rotation.z = s * Math.PI / 2; }); mk(G_SPH, o.bow, [0.05, 0.05, 0.05], [0, 0, 0], b); }
   if (o.glasses) [-1, 1].forEach(s => { const r = mk(geo('ring', () => new THREE.TorusGeometry(0.5, 0.12, 6, 16)), INK, [0.09, 0.09, 0.09], [s * 0.085, 0, 0.235], head, { noShadow: true }); });
+  if (o.beanie) { mk(G_SPH, o.beanie, [0.57, 0.36, 0.57], [0, 0.21, -0.04], head); mk(G_CYL, '#ffffff', [0.57, 0.08, 0.57], [0, 0.13, -0.03], head, { noShadow: true }); mk(G_SPH, '#ffffff', [0.15, 0.15, 0.15], [0, 0.4, -0.05], head); }
   if (o.apron) mk(G_BOX, o.apron, [0.24, 0.26, 0.02], [0, 0.34, 0.16], body);
   g.userData = { kind: 'person', body, head, legL, legR, armL, armR, walk: 0, bounce: 0 };
   return g;
 }
 const LOOK = {
-  annette: o => ({ skin: '#f9d1b0', hair: '#f5d271', brow: '#d9a94a', lashes: true, hairStyle: 'long', eye: '#3d7be0', bow: '#ff7aa8', top: o.top, bottom: o.bottom, style: o.style, shoe: '#ffffff' }),
+  annette: o => ({ skin: '#f9d1b0', hair: '#f5d271', brow: '#d9a94a', lashes: true, hairStyle: 'long', eye: '#3d7be0', bow: '#ff7aa8', top: o.top, bottom: o.bottom, style: o.style, shoe: '#ffffff', beanie: o.beanie }),
   paulo: { skin: '#b57848', hair: '#2a1d12', hairStyle: 'fluffy', eye: '#3a2414', top: '#1f1a24', bottom: '#3f6fb0', shoe: '#f4f6fb' },
   mum: { skin: '#f5cfae', hair: '#4a3226', hairStyle: 'bob', eye: '#6b4a32', top: '#7fa383', bottom: '#5b5566' }
 };

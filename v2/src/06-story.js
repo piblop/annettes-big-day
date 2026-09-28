@@ -301,5 +301,6 @@ function credits() {
   const b = makeBtn('Play again', () => fade(titleScreen), 'big');
   const btns = [b];
   if (typeof startWeekend === 'function') btns.push(makeBtn('Play the weekend', () => fade(startWeekend), 'big alt'));
+  if (typeof startHoliday === 'function') btns.push(makeBtn('Go on holiday', () => fade(startHoliday), 'big sky'));
   bw.append(...btns); c.append(bw); setMenu(btns, { cols: btns.length, keepMode: true });
 }

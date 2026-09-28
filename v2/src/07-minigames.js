@@ -78,7 +78,7 @@ function buildDrive(theme, next, dest) {
   toast(T.label);
 }
 function drvRadio() { const r = $('#drvRadio'); if (!r || !D) return; const a = CONFIG.radio[D.st], bars = CONFIG.radioBars[a] || []; r.textContent = 'Now playing: ' + a + (bars.length ? ', ' + bars[Math.floor(D.song) % bars.length] : ''); }
-function driveLane(d) { if (!D || D.done || D.paused) return; const l = clamp(D.lane + d, 0, 1); if (l !== D.lane) { D.lane = l; sfx('whoosh'); } }
+function driveLane(d) { if (typeof SB !== 'undefined' && SB) { sbLane(d); return; } if (!D || D.done || D.paused) return; const l = clamp(D.lane + d, 0, 1); if (l !== D.lane) { D.lane = l; sfx('whoosh'); } }
 function makeSlowCar(lane) {
   const c = makeCar(['#ffffff', '#c9b6f2', '#ffd166', '#9fe0c9'][Math.floor(Math.random() * 4)]); c.userData.flower.visible = false;
   c.position.set(LANE_X[lane], 0, -26); c.rotation.y = Math.PI; world.add(c); return c;

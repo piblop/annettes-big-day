@@ -28,6 +28,7 @@ function titleScreen() {
   if (save) btns.push(makeBtn('Continue', () => { audioInit(); fade(() => resumeGame(save)); }, 'big'));
   btns.push(makeBtn(save ? 'New day' : 'Start the day', () => { audioInit(); fade(startGame); }, save ? 'big sky' : 'big'));
   if (typeof startWeekend === 'function') btns.push(makeBtn('Weekend Adventure', () => { audioInit(); fade(startWeekend); }, 'big alt'));
+  if (typeof startHoliday === 'function') btns.push(makeBtn('Go on holiday', () => { audioInit(); fade(startHoliday); }, 'big sky'));
   btns.push(makeBtn('Settings', () => { audioInit(); openSettings(); }, 'big sky'));
   w.append(...btns); t.append(w); ui.append(t);
   setMenu(btns, { cols: btns.length });
@@ -137,6 +138,7 @@ function frame(now) {
     if (G.scene === 'map') { updatePlayer(dt); updateWorld(dt, t); updateLift(dt); updateBattle(dt, t); updatePet(dt, t); if (W && W.player && !PET) { const p = W.player.g.position; if (!G.b && !G.lift) cam.goal.set(p.x, 0.5, p.z - 0.3); } updateBuddy(dt, t); }
     else if (G.scene === 'lunch') { updateWorld(dt, t); if (W && W.steam && Math.random() < dt * 8) FX.emit(3 + (Math.random() - 0.5) * 0.3, 1, 2, ['#ffffff', '#f5eef8'], 1, 0.4, { g: -0.8, life: 1.4 }); }
     else if (G.scene === 'drive') updateDrive(dt);
+    else if (G.scene === 'snow') updateSnow(dt);
     else if (G.scene === 'finale' || G.scene === 'credits') { updateFireworks(dt); updateWorld(dt, t); }
     else if (G.scene === 'title') { updateWorld(dt, t); if (W && W.cast) W.cast.forEach((g, i) => { animatePerson(g, false, dt, t + i); g.position.y = 0.1 + (SET.calm ? 0 : Math.max(0, Math.sin(t * 2.4 + i * 1.3)) * 0.1); g.rotation.y = Math.sin(t * 0.7 + i) * 0.35; }); if (W && W.cake) W.cake.userData.flames.forEach((f, i) => f.scale.y = 0.1 * (0.85 + Math.sin(t * 14 + i) * 0.15)); }
     updateDlg(dt); FX.update(dt); updateCamera(dt);
