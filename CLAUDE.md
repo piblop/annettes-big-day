@@ -13,7 +13,7 @@ A birthday gift game for Annette, built by Paulo. A top-down, handheld-style pix
 - `assets/sprites-8x/`: same sprites at 8x for previews and docs
 - `assets/sprites.json`: sprite source data (rows + palettes) and outfit colours
 - `assets/sprite-sheet.png`: all sprites on one sheet
-- `assets/screenshots/`: reference shots of each scene, `00-title.png` to `11-credits.png` (regenerate after visual changes)
+- `assets/screenshots/`: reference shots of each scene, `00-title.png` to `13-weekend-park.png` (regenerate after visual changes via the `?qa=` hook + headless Chrome, see README)
 - `Claude outputs/`: before/after comparison images from polish passes
 - `PROMPT.md`: the kickoff prompt for Claude Code
 
@@ -22,6 +22,9 @@ A birthday gift game for Annette, built by Paulo. A top-down, handheld-style pix
 - `sprites`: pixel sprites as string rows. Each char maps to a palette key, `.` is transparent. Annette is built from `HEAD_F`/`HEAD_B` plus a `LOWER` style (`pants`, `crop`, `dress`). Characters use villager proportions: a big round head (12 of 20 rows), tall 2x3 oval eyes with a `W` highlight in the top-right pixel, a tiny mouth, stubby arms and a short body. Lower-case keys are shades: when an override recolours `T`, `P`, `H`, `D` or `M`, the matching lower-case key is darkened automatically, so shading follows every outfit and NPC
 - Luca: `luca`, `luca_walk`, `luca_wag` (side view, faces right, flip to face left). Use `lucaSpr(moving)` to pick the frame
 - `state`, `HUD` (needs-style bars coloured by level via `needColour`, in-game clock via `SCENE_TIME` / `setClock`), `audio` (WebAudio SFX + tiny chiptune sequencer), `input` (keyboard + on-screen D-pad/A/B)
+- `settings`: persisted `SET` object (sfx, music opt-in [music was removed by request, the toggle re-enables it], haptics via `buzz()`, calm = reduced motion honouring `prefers-reduced-motion`). Panel opens from the HUD Settings button (map/title modes only). Guarded localStorage, key `abd-settings-v1`.
+- save: `saveCheckpoint()` runs at every `loadMap` (stats, F flags, badges, secrets, hearts + `G.gotHearts` positions, outfit, radio) under key `abd-save-v1`; title shows Continue via `loadCheckpoint()`/`resumeGame()`; `credits()` and `weekendEnd()` clear it. Collected hearts are stripped from tiles on load.
+- QA: `?qa=<map|drive|battle|wardrobe|lift|report|drinks|finale|credits|pet|fetch>` jumps straight to a scene (also pins #fade/.roll animations for headless capture)
 - `UI primitives`: `say()` dialogue with typewriter, `setMenu()` keyboard/touch menus, `fade()`
 - `maps`: `MAPS` object. Each map is 15x10 tiles of 16px on a 240x160 canvas
 - Chapter logic: bedroom, drive, gym + lift mini-game, battles, office report sprint, beach, The Botanist, finale, credits

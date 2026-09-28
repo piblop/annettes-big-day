@@ -3,6 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#8fd07a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="A cozy pixel birthday RPG: one big day in Annette's life, made with love.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%238fd07a'/%3E%3Cpath d='M8 13 3.6 8.6a2.8 2.8 0 1 1 4-4l.4.4.4-.4a2.8 2.8 0 1 1 4 4Z' fill='%23ff5c7a' stroke='%23fff' stroke-width='.8'/%3E%3C/svg%3E">
 <title>Annette's Big Day</title>
 <style>
 /* Pixelify Sans, Figtree and Fredoka (SIL OFL), embedded so the game looks right offline */
@@ -171,7 +176,7 @@ button:focus-visible{outline:3px solid #3d7be0;outline-offset:3px}
       <div id="chapterWrap"><div id="chapter">Annette's Big Day</div><div id="clock" aria-live="off">7:30 am</div></div>
       <div id="hudBtns">
         <button class="hbtn" id="bagBtn" type="button" aria-label="Collection"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span class="bl">Collection</span></button>
-        <button class="hbtn" id="muteBtn" type="button" aria-pressed="false" aria-label="Sound on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="w" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="x" d="M16 9l6 6M22 9l-6 6"/></svg><span class="bl">Sound on</span></button>
+        <button class="hbtn" id="muteBtn" type="button" aria-pressed="false" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="w" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="x" d="M16 9l6 6M22 9l-6 6"/></svg><span class="bl">Settings</span></button>
       </div>
       <div id="stats"></div>
     </header>
@@ -431,7 +436,7 @@ function drawLuca(x, y, opts) {
     dy = -Math.abs(Math.sin(t * 11)) * 2 * scale;                                    // trotting bob
   } else if (opts.dance !== false) {
     const c = t % 6;
-    if (c < 4.2) { const h = Math.abs(Math.sin(t * 3.6)); dy = -h * 3.5 * scale; sy = 1 + h * 0.08; sx = 1 - h * 0.06; }   // gentle continuous bounce
+    if (c < 4.2 || SET.calm) { const h = Math.abs(Math.sin(t * 3.6)); dy = -h * 3.5 * scale; sy = 1 + h * 0.08; sx = 1 - h * 0.06; }   // gentle continuous bounce (reduced motion keeps only this)
     else if (c < 5) { const h = Math.sin((c - 4.2) / 0.8 * Math.PI); dy = -h * 11 * scale; sy = 1 + h * 0.16; sx = 1 - h * 0.14; frameMoving = h > 0.3; }   // one big happy jump
     else { const p = (c - 5) / 1; rot = p * Math.PI * 2; dy = -Math.sin(p * Math.PI) * 5 * scale; }   // one quick spin
   } else {
@@ -453,7 +458,7 @@ function annetteSprite(back, outfit) { const o = OUTFITS[outfit || G.wearing]; r
 const G = {
   scene: 'title', mode: 'busy', t: 0, wearing: 'pj', outfit: 'office',
   stats: { energy: 60, glow: 20, gains: 20, tidy: 30, happy: 50 },
-  F: {}, badges: {}, secrets: {}, hearts: 0, heartsTotal: 0, tidied: 0, lucaPat: {},
+  F: {}, badges: {}, secrets: {}, hearts: 0, heartsTotal: 0, tidied: 0, lucaPat: {}, gotHearts: {},
   map: null, p: null, l: null, dlg: null, b: null, drive: null, lift: null, fx: []
 };
 const F = G.F;
@@ -521,11 +526,23 @@ function showItem(sprKey, lines) {
 }
 updateHUD();
 
+/* ---------------- settings (persisted, guarded) ---------------- */
+const SET_KEY = 'abd-settings-v1';
+const SET = {
+  sfx: true,
+  music: false, // background music is opt-in: it was removed by request, the toggle brings it back only if wanted
+  haptics: true,
+  calm: !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)
+};
+try { const d = JSON.parse(localStorage.getItem(SET_KEY)); if (d && d.v === 1) Object.assign(SET, d.s); } catch (e) { }
+function saveSettings() { try { localStorage.setItem(SET_KEY, JSON.stringify({ v: 1, s: SET })); } catch (e) { } }
+function buzz(p) { if (SET.haptics && navigator.vibrate) { try { navigator.vibrate(p); } catch (e) { } } }
+
 /* ---------------- audio ---------------- */
-let actx = null, master = null, muted = false;
+let actx = null, master = null;
 function ensureAudio() {
   if (actx) { if (actx.state === 'suspended') actx.resume(); return; }
-  try { actx = new (window.AudioContext || window.webkitAudioContext)(); master = actx.createGain(); master.gain.value = muted ? 0 : 0.9; master.connect(actx.destination); nextT = actx.currentTime + 0.05; } catch (e) { actx = null; }
+  try { actx = new (window.AudioContext || window.webkitAudioContext)(); master = actx.createGain(); master.gain.value = 0.9; master.connect(actx.destination); nextT = actx.currentTime + 0.05; } catch (e) { actx = null; }
 }
 function note(m, t, d, type, vol) {
   if (!actx || !m) return;
@@ -534,8 +551,10 @@ function note(m, t, d, type, vol) {
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
   o.connect(g); g.connect(master); o.start(t); o.stop(t + d + 0.02);
 }
+const HAPTIC = { blip: 6, select: 10, good: 15, bad: 30, pickup: 12, badge: [20, 40, 20], hit: 25, pr: [15, 30, 15, 30, 15], woof: 12, battle: 20, heal: 15 };
 function sfx(n) {
-  if (!actx || muted) return;
+  if (HAPTIC[n]) buzz(HAPTIC[n]);
+  if (!actx || !SET.sfx) return;
   const t = actx.currentTime;
   const seq = (ms, gap, d, type, v) => ms.forEach((m, i) => note(m, t + i * gap, d, type, v));
   const S = {
@@ -562,10 +581,10 @@ const SONGS = {
 };
 const SCENE_SONG = { title: 'calm', bedroom: 'calm', gym: 'upbeat', drive: 'upbeat', office: 'calm', beach: 'calm', botanist: 'calm', battle: 'battle', finale: 'finale', baths: 'calm', aldi: 'upbeat', park: 'upbeat', home: 'calm' };
 let song = null, step = 0, nextT = 0;
-// Background music removed by request. Sound effects (sfx) still play.
-function music(name) { song = null; step = 0; }
+// Background music is opt-in via Settings (it was removed by request; SET.music brings it back only if wanted).
+function music(name) { song = SONGS[SCENE_SONG[name]] || null; step = 0; }
 setInterval(() => {
-  if (!actx || !song || muted) return;
+  if (!actx || !song || !SET.music) return;
   if (nextT < actx.currentTime - 0.3) nextT = actx.currentTime + 0.05;
   while (nextT < actx.currentTime + 0.15) {
     note(song.lead[step % song.lead.length], nextT, song.tempo * 0.9, 'square', 0.022);
@@ -573,13 +592,37 @@ setInterval(() => {
     nextT += song.tempo; step++;
   }
 }, 30);
-$('#muteBtn').addEventListener('click', () => {
-  ensureAudio(); muted = !muted;
-  if (master) master.gain.value = muted ? 0 : 0.9;
-  $('#muteBtn .bl').textContent = muted ? 'Sound off' : 'Sound on';
-  $('#muteBtn').setAttribute('aria-label', muted ? 'Sound off' : 'Sound on');
-  $('#muteBtn').setAttribute('aria-pressed', String(muted));
-});
+function updateSoundBtn() {
+  const allOff = !SET.sfx && !SET.music;
+  $('#muteBtn').setAttribute('aria-pressed', String(allOff));
+}
+function openSettings() {
+  if (G.mode !== 'map' && G.scene !== 'title') return;
+  clearUI();
+  const p = el('div', 'panel');
+  p.innerHTML = '<h2>Settings</h2><p class="sub">Saved on this device.</p><div class="grid2"></div>';
+  const mk = (key, name, desc) => {
+    const b = makeBtn('', () => {
+      SET[key] = !SET[key]; saveSettings(); label(); updateSoundBtn();
+      if (key === 'music' && !SET.music) song = null;
+      if (key === 'music' && SET.music) { ensureAudio(); music(G.scene === 'map' ? G.mapId : G.scene); }
+    }, true);
+    const label = () => b.innerHTML = '<span>' + name + ': ' + (SET[key] ? 'On' : 'Off') + '</span><small>' + desc + '</small>';
+    label(); return b;
+  };
+  const btns = [
+    mk('sfx', 'Sound FX', 'Blips, woofs and jingles'),
+    mk('music', 'Music', 'Tiny chiptune tunes'),
+    mk('haptics', 'Vibration', 'Little buzzes on phones'),
+    mk('calm', 'Reduced motion', 'Fewer fireworks and big jumps')
+  ];
+  const close = makeBtn('Close', closeSettings); close.style.alignItems = 'center';
+  p.querySelector('.grid2').append(...btns); p.append(close); ui.append(p);
+  setMenu(btns.concat(close), { cols: 2, onBack: closeSettings });
+}
+function closeSettings() { clearUI(); if (G.scene === 'title') showTitle(); else G.mode = 'map'; }
+$('#muteBtn').addEventListener('click', () => { ensureAudio(); openSettings(); });
+updateSoundBtn();
 
 /* now-playing lyric ticker (original homage lines, see CONFIG.radioBars) */
 let npI = 0;
@@ -887,7 +930,34 @@ function loadMap(id) {
   G.p = { x: s.x, y: s.y, px: s.x * 16, py: s.y * 16, dir: s.dir || 'down', mv: null, bump: false };
   G.l = M.luca ? { x: M.luca.x, y: M.luca.y, px: M.luca.x * 16, py: M.luca.y * 16, mv: null, flip: M.luca.x > s.x } : null; // Luca only joins in the morning
   clearUI(); setChapter(M.title); chapterCard(M.title); setClock(id); G.scene = 'map'; G.mode = 'map'; music(id);
+  // strip hearts already collected on a previous visit (restored runs)
+  G.map.tiles.forEach((row, ty) => row.forEach((c, tx) => { if (c === 'h' && G.gotHearts[id + ':' + tx + ',' + ty]) row[tx] = '.'; }));
   if (M.onEnter) M.onEnter();
+  saveCheckpoint();
+}
+/* ---------------- save: checkpoint at every map (guarded, versioned) ---------------- */
+const SAVE_KEY = 'abd-save-v1';
+function saveCheckpoint() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      v: 1, mapId: G.mapId, stats: G.stats, F: F, badges: G.badges, secrets: G.secrets,
+      hearts: G.hearts, tidied: G.tidied, lucaPat: G.lucaPat, gotHearts: G.gotHearts,
+      wearing: G.wearing, outfit: G.outfit, radioPick: G.radioPick == null ? null : G.radioPick
+    }));
+  } catch (e) { }
+}
+function loadCheckpoint() {
+  try { const d = JSON.parse(localStorage.getItem(SAVE_KEY)); return d && d.v === 1 && MAPS[d.mapId] ? d : null; } catch (e) { return null; }
+}
+function clearCheckpoint() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { } }
+function resumeGame() {
+  const d = loadCheckpoint(); if (!d) return showTitle();
+  Object.assign(G.stats, d.stats); Object.assign(F, d.F);
+  G.badges = d.badges || {}; G.secrets = d.secrets || {}; G.hearts = d.hearts || 0; G.tidied = d.tidied || 0;
+  G.lucaPat = d.lucaPat || {}; G.gotHearts = d.gotHearts || {};
+  G.wearing = d.wearing || 'pj'; G.outfit = d.outfit || 'office';
+  G.radioPick = d.radioPick == null ? null : d.radioPick;
+  updateHUD(); fade(() => loadMap(d.mapId));
 }
 function interact() {
   const p = G.p; if (p.mv) return;
@@ -923,7 +993,7 @@ function updateMap(dt) {
 }
 function arrive() {
   const c = tileAt(G.p.x, G.p.y);
-  if (c === 'h') { G.map.tiles[G.p.y][G.p.x] = '.'; G.hearts++; sfx('pickup'); stat('happy', 3, false); toast('Heart found (' + G.hearts + '/' + G.heartsTotal + ')'); }
+  if (c === 'h') { G.map.tiles[G.p.y][G.p.x] = '.'; G.gotHearts[G.mapId + ':' + G.p.x + ',' + G.p.y] = 1; G.hearts++; sfx('pickup'); stat('happy', 3, false); toast('Heart found (' + G.hearts + '/' + G.heartsTotal + ')'); }
   else if (c === 'D' && G.map.def.onDoor) G.map.def.onDoor();
 }
 
@@ -1343,7 +1413,7 @@ function finale() {
   }));
 }
 function credits() {
-  clearUI(); G.scene = 'credits';
+  clearUI(); G.scene = 'credits'; clearCheckpoint(); // day complete: a fresh start next time
   const c = el('div', 'credits');
   const got = Object.keys(BADGES).filter(k => G.badges[k]).map(k => '<p>' + BADGES[k].n + '</p>').join('') || '<p>None yet. Play again!</p>';
   c.innerHTML = '<div class="roll"><h3>' + esc(CONFIG.name) + "'s Big Day</h3><h3>Starring</h3><p>" + esc(CONFIG.name) + ' as herself</p><p>Luca as the goodest boy</p><p>Mum as Mum</p><p>' + esc(CONFIG.boyfriend) + ' as the boyfriend</p><p>' + esc(CONFIG.car) + ' as the blue Corolla</p><h3>Filmed on location</h3><p>North Ryde, the Sydney CBD and Kirribilli</p><h3>Badges</h3>' + got + '<h3>Secrets found</h3><p>' + Object.keys(G.secrets).length + ' of 4</p><h3>Hearts collected</h3><p>' + G.hearts + ' of ' + G.heartsTotal + '</p><h3>Made with love by</h3><p>' + esc(CONFIG.boyfriend) + '</p><h3>Happy birthday</h3><p>Here\'s to the next level.</p></div>';
@@ -1355,9 +1425,10 @@ function credits() {
 function updateFinale(dt) {
   G.fxT -= dt;
   if (G.fxT <= 0) {
-    G.fxT = 0.5 + Math.random() * 0.4;
+    G.fxT = (SET.calm ? 1.1 : 0.5) + Math.random() * 0.4;
+    const n = SET.calm ? 12 : 26;
     const cx = 30 + Math.random() * 180, cy = 20 + Math.random() * 40, col = ['#ff6f91', '#ffd166', '#7fc8f8', '#ffffff', '#b9e1d6'][Math.floor(Math.random() * 5)];
-    for (let i = 0; i < 26; i++) { const a = Math.PI * 2 * i / 26, s = 30 + Math.random() * 30; G.fx.push({ x: cx, y: cy, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1.2 + Math.random() * 0.5, c: col }); }
+    for (let i = 0; i < n; i++) { const a = Math.PI * 2 * i / n, s = 30 + Math.random() * 30; G.fx.push({ x: cx, y: cy, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1.2 + Math.random() * 0.5, c: col }); }
   }
   G.fx.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 30 * dt; p.life -= dt; });
   G.fx = G.fx.filter(p => p.life > 0);
@@ -1708,7 +1779,7 @@ function weekendFinale() {
   say([{ n: CONFIG.boyfriend, t: "No big plans. Just you, me and Luca." }, { n: CONFIG.boyfriend, t: "My favourite kind of weekend." }, { n: CONFIG.name, t: "Say less." }], () => fade(() => weekendEnd()));
 }
 function weekendEnd() {
-  clearUI(); G.scene = 'wend'; G.mode = 'busy'; setChapter('The best kind of ordinary');
+  clearUI(); G.scene = 'wend'; G.mode = 'busy'; clearCheckpoint(); setChapter('The best kind of ordinary');
   ui.append(el('div', 'big', 'What a weekend, ' + esc(CONFIG.name) + '!'));
   const b1 = makeBtn('Play the weekend again', () => startWeekend());
   const b2 = makeBtn('Back to title', () => showTitle());
@@ -2070,12 +2141,39 @@ function loop(now) {
 function showTitle() {
   G.scene = 'title'; clearUI(); setChapter(CONFIG.name + "'s Big Day");
   ui.append(el('div', 'titlecard', '<h1>' + esc(CONFIG.name.toUpperCase()) + "'S<span>BIG DAY</span></h1><p class='keys'>Arrows to move · A to interact · B for your collection</p>"));
-  const b = makeBtn('Press start', () => fade(() => loadMap('bedroom'))); b.classList.add('start');
-  const w = makeBtn('Weekend Adventure', () => startWeekend()); w.classList.add('start');
-  w.style.bottom = '14cqw'; w.style.animation = 'none'; w.style.background = 'var(--leaf)'; w.style.borderColor = '#fff'; w.style.boxShadow = '0 .6cqw 0 #2f7d59'; w.style.fontSize = 'max(11px,3cqw)'; w.style.padding = '1cqw 4cqw';
-  ui.append(b, w); setMenu([b, w]); music('title');
+  const small = btn => { btn.classList.add('start'); btn.style.animation = 'none'; btn.style.borderColor = '#fff'; btn.style.fontSize = 'max(11px,3cqw)'; btn.style.padding = '1cqw 4cqw'; return btn; };
+  const saved = loadCheckpoint();
+  const btns = [];
+  if (saved) {
+    const c = makeBtn('Continue', () => resumeGame()); c.classList.add('start'); btns.push(c);
+    const b = small(makeBtn('Start a new day', () => { clearCheckpoint(); fade(() => loadMap('bedroom')); }));
+    b.style.bottom = '14cqw'; b.style.background = 'var(--orange)'; b.style.boxShadow = '0 .6cqw 0 #c97a35'; btns.push(b);
+  } else {
+    const b = makeBtn('Press start', () => fade(() => loadMap('bedroom'))); b.classList.add('start'); btns.push(b);
+  }
+  const w = small(makeBtn('Weekend Adventure', () => startWeekend()));
+  w.style.bottom = saved ? '22cqw' : '14cqw'; w.style.background = 'var(--leaf)'; w.style.boxShadow = '0 .6cqw 0 #2f7d59'; btns.push(w);
+  ui.append(...btns); setMenu(btns); music('title');
 }
 showTitle();
+/* QA hook: ?qa=<map id|drive|finale|credits|pet|fetch> jumps straight to a scene (screenshots + testing) */
+(() => {
+  const q = new URLSearchParams(location.search).get('qa'); if (!q) return;
+  // headless capture: CSS transitions/animations don't advance under virtual time, so pin them
+  document.head.appendChild(Object.assign(document.createElement('style'), { textContent: '#fade{transition:none!important}.roll{animation:none!important;top:4cqw!important}' }));
+  const noDlg = () => { if (G.dlg) { G.dlg = null; clearUI(); G.mode = 'map'; } };
+  if (MAPS[q]) { if (['baths', 'aldi', 'park', 'home'].includes(q)) { F.wkBaths = true; F.wkGroceries = true; } loadMap(q); noDlg(); }
+  else if (q === 'drive') startDrive('city', 'gym', 'One Playground');
+  else if (q === 'finale') { G.wearing = 'dress'; finale(); for (let i = 0; i < 30; i++) dialogAdvance(); }
+  else if (q === 'credits') credits();
+  else if (q === 'pet') { loadMap('bedroom'); noDlg(); petGame(); }
+  else if (q === 'fetch') { F.wkBaths = true; F.wkGroceries = true; loadMap('park'); noDlg(); fetchGame(); }
+  else if (q === 'wardrobe') { loadMap('bedroom'); noDlg(); outfitMenu(); }
+  else if (q === 'lift') { loadMap('gym'); noDlg(); liftGame(); }
+  else if (q === 'battle') { loadMap('gym'); noDlg(); startBattle('lastset'); }
+  else if (q === 'report') { loadMap('office'); noDlg(); sortGame(); }
+  else if (q === 'drinks') { G.wearing = 'dress'; loadMap('botanist'); noDlg(); drinkMenu(); }
+})();
 requestAnimationFrame(loop);
 </script>
 </body>
