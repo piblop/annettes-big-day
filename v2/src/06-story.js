@@ -7,10 +7,16 @@ const MAPS = {
   bedroom: {
     theme: 'bedroom', title: 'Chapter 1: Wake up', sky: 'morning', edge: GRASS,
     floor: ['#f6e3ff', '#efd8fb'], wall: ['#ffd1e1', '#ffc6da'],
-    rows: ["#o######GGGG###", "#..ww.kk.vv.bb#", "#.........x.bb#", "#........S....#", "#..x..........#", "#.............#", "#.......x.....#", "#.....h.......#", "#..M..........#", "######D########"],
+    rows: ["#o###R##GGGG###", "#..ww.kk.vvjbb#", "#.........x.bb#", "#........S....#", "#..x..........#", "#............C#", "#.......x.....#", "#.....h.......#", "#..M..........#", "######D########"],
     start: { x: 7, z: 5, dir: 'down' }, luca: { x: 8, z: 5 },
     npcs: c => c === 'M' ? LOOK.mum : null,
-    decorate(g) { mk(G_CYL, '#ffc2d6', [4.2, 0.03, 3], [6.5, 0.015, 5], g, { noShadow: true }); mk(G_CYL, '#fff0f6', [3.2, 0.035, 2.2], [6.5, 0.02, 5], g, { noShadow: true }); },
+    decorate(g) {
+      mk(G_CYL, '#ffc2d6', [4.2, 0.03, 3], [6.5, 0.015, 5], g, { noShadow: true }); mk(G_CYL, '#fff0f6', [3.2, 0.035, 2.2], [6.5, 0.02, 5], g, { noShadow: true });
+      // lollies and coffee cups everywhere: a well-loved room
+      [[5.2, 4.3], [5.6, 4.6], [7.9, 5.9], [8.3, 4.2], [4.6, 5.7], [11.4, 3.2], [11.8, 3.5], [2.2, 6.6], [12.6, 7.4]].forEach(([x, z], i) => (i % 3 === 2 ? makeSnake : makeLolly)(g, x, 0.03, z, LOLLY_COLS[i % 6], i * 0.9));
+      makeMug(g, 10.25, 0.5, 1.2, '#7fc8f8'); makeMug(g, 6.2, 1.32, 0.95, '#ffd1e1'); makeMug(g, 3.2, 0.02, 7.7, '#fffaf0');
+      for (let i = 0; i < 4; i++) makeLolly(g, 6.65 + i * 0.13, 1.33, 0.95, LOLLY_COLS[(i + 2) % 6], i);
+    },
     hints: () => [!F.outfit && 'w', !F.skincare && 'v', !F.music && 'S', !F.mum && 'M', F.outfit && F.skincare && F.music && 'D'],
     onEnter() {
       G.wearing = 'pj';
@@ -27,6 +33,9 @@ const MAPS = {
       k: () => say(["Sooo many books! Thank goodness I have a Kobo."], () => secret('book')),
       o: () => secret('owl'),
       G: () => say("Birthday bunting. Mum was up early."),
+      R: () => say(["A rap poster: gold mic, a crown and a lot of attitude.", "Tupac, J. Cole and Kendrick. The morning hype squad."]),
+      C: () => { const first = !F.bedCoffee; F.bedCoffee = true; if (first) stat('energy', 6, true); say(first ? ["The coffee station. Pods lined up like trophies.", "One quick coffee before the big day. Bzzzt."] : "The coffee station. Maybe just one more pod."); },
+      j: () => { const first = !F.bedLolly; F.bedLolly = true; if (first) stat('happy', 3, true); say(first ? ["The lolly jar: snakes, milk bottles and freckles.", "One for the road. Okay, three."] : "The lolly jar is looking suspiciously empty."); },
       b: () => say("Tempting to crawl back in. But it's your birthday!"),
       M: () => talkMum()
     }

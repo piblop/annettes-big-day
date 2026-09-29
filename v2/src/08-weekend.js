@@ -39,7 +39,7 @@ CONFIG.weekend = {
 };
 const WK = CONFIG.weekend;
 BADGES.aisle = { n: 'Centre aisle victim', how: 'Grab an ALDI special buy', pack: true };
-const WK_FLAGS = ['wkBaths', 'wkGroceries', 'wkFetch', 'wkMovie', 'wkActivity'];
+const WK_FLAGS = ['wkBaths', 'wkGroceries', 'wkFetch', 'wkMovie', 'wkActivity', 'wkCoffee', 'wkLolly'];
 Object.assign(SCENE_TIME, { baths: 9 * 60 + 10, aldi: 11 * 60 + 20, park: 14 * 60, home: 16 * 60 + 30, wnight: 19 * 60, wend: 22 * 60 + 30 });
 Object.assign(NPC_CHARS, { baths: 'A', shop: 'A', park: 'Ayko', home: 'A' });
 let WKLOG = {};
@@ -219,6 +219,23 @@ OB['home:k'] = (w, h) => {
   return g;
 };
 OB['home:p'] = () => makePlant(null, 0, 0, true);
+// the espresso machine: portafilter, steam wand, cups warming on top
+OB['home:e'] = () => {
+  const g = new THREE.Group();
+  mk(G_BOX, '#e7ebf1', [0.8, 0.6, 0.6], [0, 0.3, -0.05], g); mk(G_BOX, '#fffaf0', [0.84, 0.05, 0.64], [0, 0.62, -0.05], g);
+  mk(G_BOX, '#c7ccd6', [0.5, 0.42, 0.36], [0, 0.86, -0.1], g); mk(G_BOX, '#3a3148', [0.16, 0.05, 0.14], [0, 0.72, 0.1], g); mk(G_CYL, '#3a3148', [0.03, 0.14, 0.03], [0.08, 0.72, 0.22], g).rotation.x = Math.PI / 2;
+  mk(G_CYL, '#c7ccd6', [0.025, 0.2, 0.025], [0.2, 0.74, 0.08], g, { noShadow: true }); mk(G_SPH, '#ffd166', [0.05, 0.05, 0.05], [-0.15, 0.95, 0.09], g, { glow: true });
+  makeMug(g, 0, 0.645, 0.12, '#fffaf0', '#c8955e'); [-0.12, 0.12].forEach(x => makeMug(g, x, 1.07, -0.1, '#ffd1e1'));
+  return g;
+};
+// a side table with the lolly bowl
+OB['home:j'] = () => {
+  const g = new THREE.Group();
+  mk(G_CYL, '#c89f7a', [0.6, 0.04, 0.6], [0, 0.46, 0], g); mk(G_CYL, '#a8744f', [0.06, 0.46, 0.06], [0, 0.23, 0], g);
+  mk(G_SPH, '#fffaf0', [0.42, 0.18, 0.42], [0, 0.52, 0], g);
+  for (let i = 0; i < 9; i++) (i % 3 ? makeLolly : makeSnake)(g, Math.cos(i * 0.7) * 0.1 - 0.02, 0.56 + (i % 2) * 0.02, Math.sin(i * 0.7) * 0.1, LOLLY_COLS[i % 6], i);
+  return g;
+};
 WALL_BUILDERS['home:w'] = w => {
   const g = new THREE.Group();
   mk(G_BOX, '#ffffff', [w * 0.92, 0.95, 0.08], [0, 0.85, 0], g); mk(G_BOX, '#bfe6ff', [w * 0.84, 0.8, 0.05], [0, 0.85, 0.03], g, { noShadow: true });
@@ -344,12 +361,15 @@ MAPS.park = {
 MAPS.home = {
   theme: 'home', title: 'Weekend Pack: home', sky: 'golden', edge: '#a6dc8f',
   floor: ['#e9c9a0', '#e2bf94'], wall: ['#fff1e0', '#ffe9d2'], trim: '#ffffff',
-  rows: ["###wwww###wwww#", "#............p#", "#..VV........k#", "#..VV........k#", "#..ff....HH...#", "#..ff.........#", "#......A......#", "#.............#", "#.............#", "######D########"],
+  rows: ["###wwwwRR#wwww#", "#...........ep#", "#..VV........k#", "#..VV........k#", "#..ff....HH...#", "#..ffj........#", "#......A......#", "#.............#", "#.............#", "######D########"],
   start: { x: 9, z: 8, dir: 'up' }, luca: { x: 6, z: 8 },
   npcs: npcPaulo,
   hints: () => [!F.wkMovie && 'V', F.wkMovie && !F.wkActivity && 'H', F.wkMovie && F.wkActivity && 'D'],
   decorate(g) {
     makeRug(g, 9.5, 6.5, 3, 2, ['#c9e7d8', '#9fd6bc']);
+    // mugs and lollies wherever people sat down
+    makeMug(g, 9.3, 0.61, 4.25, '#b9a3ff'); makeMug(g, 13.2, 0.9, 2.2, '#fffaf0'); makeMug(g, 4.6, 0.02, 6.6, '#ffd1e1');
+    [[4.9, 4.2], [4.2, 6.3], [8.1, 7.2], [10.6, 6.2], [11.2, 7.3], [6.2, 3.1]].forEach(([x, z], i) => (i % 2 ? makeSnake : makeLolly)(g, x, 0.03, z, LOLLY_COLS[i % 6], i * 1.1));
     mk(G_CYL, '#fff4b0', [0.35, 0.05, 0.35], [7, 1.9, 4], g, { glow: true, noShadow: true }); mk(G_CYL, '#c7ccd6', [0.01, 0.5, 0.01], [7, 2.15, 4], g, { noShadow: true });
     const bed = grp(g, 12.4, 0, 7.6); mk(G_CYL, '#ff9fb8', [0.9, 0.16, 0.7], [0, 0.08, 0], bed); mk(G_CYL, '#fff0f6', [0.7, 0.12, 0.52], [0, 0.12, 0], bed, { noShadow: true });
     for (let i = 0; i < 3; i++) mk(G_BOX, ['#ffd1e1', '#c9e7d8', '#fff0c2'][i], [0.5, 0.35, 0.03], [3 + i * 0.7 + (i ? 4 : 0), 1.1, 0.53], g);
@@ -365,6 +385,9 @@ MAPS.home = {
     H: () => !F.wkMovie ? say({ n: CONFIG.boyfriend, t: "Movie first, then I'll lose at chess." }) : F.wkActivity ? say("Good game. Rematch after dinner.") : chessGame(),
     k: () => !F.wkMovie ? say("Snacks later, film's starting.") : F.wkActivity ? say("Picnic's already packed.") : picnicChoice(),
     f: () => say("The comfiest couch in Sydney. Luca's throne too."),
+    R: () => say(["A rap poster: gold mic, a crown and a lot of attitude.", "Tupac, J. Cole and Kendrick. The morning hype squad."]),
+    e: () => { const first = !F.wkCoffee; F.wkCoffee = true; if (first) stat('energy', 6, true); say(first ? [{ n: CONFIG.boyfriend, t: "Two flat whites, coming up." }, "The machine hisses. The whole house smells like a cafe."] : "The coffee machine. Paulo is on his third already."); },
+    j: () => { const first = !F.wkLolly; F.wkLolly = true; if (first) stat('happy', 3, true); say(first ? ["The lolly bowl.", { n: CONFIG.boyfriend, t: "I did NOT eat all the red snakes." }] : "Only the green snakes are left. Classic."); },
     w: () => say("Afternoon light pours in over the garden."),
     p: () => say("A happy little pot plant."),
     A: () => say(!F.wkMovie ? { n: CONFIG.boyfriend, t: "Home sweet home. Movie on the telly?" } : !F.wkActivity ? { n: CONFIG.boyfriend, t: "Chess board's out, or shall we pack a picnic?" } : { n: CONFIG.boyfriend, t: "What a day. Dinner out to finish it off?" })

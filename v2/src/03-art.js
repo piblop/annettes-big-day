@@ -311,6 +311,58 @@ function makeFairyLights(parent, x0, z0, x1, z1, y, n) {
   for (let i = 0; i <= n; i++) { const t = i / n; const sag = Math.sin(t * Math.PI) * 0.35; const b = mk(G_SPH, cols[i % 4], [0.09, 0.11, 0.09], [lerp(x0, x1, t), y - sag, lerp(z0, z1, t)], g, { glow: true }); b.userData.tw = Math.random() * TAU; }
   g.userData.fairy = true; return g;
 }
+/* ---------------- little lived-in details: lollies, coffee, a rap poster ---------------- */
+const LOLLY_COLS = ['#ff5c7a', '#ffd166', '#7fc8f8', '#7cc576', '#b9a3ff', '#ffa94d'];
+// a wrapped lolly: a round sweet with twisted wrapper ends
+function makeLolly(parent, x, y, z, col, rot) {
+  const g = grp(parent, x, y, z); g.rotation.y = rot || 0;
+  mk(G_SPH, col, [0.1, 0.08, 0.1], [0, 0.04, 0], g, { noShadow: true });
+  [-1, 1].forEach(s => { const e = mk(G_CONE, col, [0.07, 0.07, 0.05], [s * 0.08, 0.04, 0], g, { noShadow: true }); e.rotation.z = s * Math.PI / 2; });
+  return g;
+}
+// a jelly snake, curled in an S
+function makeSnake(parent, x, y, z, col, rot) {
+  const g = grp(parent, x, y, z); g.rotation.y = rot || 0;
+  for (let i = 0; i < 6; i++) mk(G_SPH, i === 5 ? col : [col, '#fff4e0'][i % 2 && i > 3 ? 1 : 0], [0.07, 0.05, 0.07], [i * 0.05, 0.03, Math.sin(i * 1.3) * 0.05], g, { noShadow: true });
+  return g;
+}
+function makeMug(parent, x, y, z, col, coffee) {
+  const g = grp(parent, x, y, z);
+  mk(G_CYL, col || '#fffaf0', [0.1, 0.11, 0.1], [0, 0.055, 0], g); mk(G_CYL, coffee || '#7a4a2a', [0.085, 0.01, 0.085], [0, 0.108, 0], g, { noShadow: true });
+  const h = mk(geo('ring', () => new THREE.TorusGeometry(0.5, 0.12, 6, 16)), col || '#fffaf0', [0.06, 0.06, 0.06], [0.06, 0.06, 0], g, { noShadow: true }); h.rotation.y = Math.PI / 2;
+  return g;
+}
+function makeLollyJar(parent, x, y, z) {
+  const g = grp(parent, x, y, z);
+  for (let i = 0; i < 14; i++) mk(G_SPH, LOLLY_COLS[i % 6], [0.07, 0.07, 0.07], [Math.cos(i * 2.1) * 0.06, 0.05 + Math.floor(i / 4) * 0.055, Math.sin(i * 2.1) * 0.06], g, { noShadow: true });
+  mk(G_CYL, '#e8f7ff', [0.26, 0.3, 0.26], [0, 0.15, 0], g, { alpha: 0.35, noShadow: true });
+  mk(G_CYL, '#ff7aa8', [0.2, 0.06, 0.2], [0, 0.32, 0], g); mk(G_SPH, '#ffd1e1', [0.08, 0.05, 0.08], [0, 0.36, 0], g);
+  return g;
+}
+// an original rap poster: gold mic, crown, stars and title bars (no real artwork)
+function makeRapPoster(w) {
+  const g = new THREE.Group(), pw = Math.min(1.5, w * 0.8);
+  mk(G_BOX, '#fffaf0', [pw + 0.08, 1.08, 0.05], [0, 0.85, 0.01], g);
+  mk(G_BOX, '#2b2d42', [pw, 1.0, 0.06], [0, 0.85, 0.02], g);
+  mk(G_BOX, '#ff5c7a', [pw, 0.12, 0.065], [0, 1.24, 0.02], g, { noShadow: true });
+  const mic = grp(g, -pw * 0.2, 0.78, 0.07); mk(G_SPH, '#ffd166', [0.18, 0.2, 0.08], [0, 0.14, 0], mic, { glow: true }); mk(G_BOX, '#ffd166', [0.06, 0.26, 0.04], [0, -0.06, 0], mic, { glow: true }); mk(G_BOX, '#c9a24a', [0.2, 0.03, 0.04], [0, -0.2, 0], mic);
+  const cr = grp(g, pw * 0.2, 0.98, 0.07); mk(G_BOX, '#ffd166', [0.3, 0.07, 0.03], [0, 0, 0], cr, { glow: true }); [-0.1, 0, 0.1].forEach(x => mk(G_CONE, '#ffd166', [0.07, 0.12, 0.03], [x, 0.09, 0], cr, { glow: true }));
+  [[0.2, 0.72, 0.36, '#fffaf0'], [0.2, 0.62, 0.28, '#7fc8f8'], [0.2, 0.52, 0.32, '#fffaf0']].forEach(([x, y, l, c]) => mk(G_BOX, c, [l, 0.05, 0.02], [pw * x + 0.02, y, 0.07], g, { noShadow: true }));
+  [[-0.5, 1.08], [0.45, 0.45], [-0.42, 0.45]].forEach(([x, y]) => mk(G_STAR, '#fff4b0', [0.1, 0.1, 0.1], [x * pw, y, 0.07], g, { noShadow: true, glow: true }));
+  return g;
+}
+WALL_BUILDERS['bedroom:R'] = makeRapPoster;
+WALL_BUILDERS['home:R'] = makeRapPoster;
+// bedroom coffee station: a little cart with a pod machine, pods and mugs
+OBJ_BUILDERS['bedroom:C'] = () => {
+  const g = new THREE.Group();
+  mk(G_BOX, '#ffe3ec', [0.8, 0.62, 0.55], [0, 0.31, 0], g); mk(G_BOX, '#fffaf0', [0.86, 0.05, 0.6], [0, 0.64, 0], g);
+  mk(G_BOX, '#3a3148', [0.28, 0.36, 0.3], [-0.16, 0.84, -0.05], g); mk(G_BOX, '#ff9fb8', [0.2, 0.05, 0.02], [-0.16, 0.9, 0.11], g, { glow: true }); mk(G_CYL, '#c7ccd6', [0.05, 0.06, 0.05], [-0.16, 0.72, 0.07], g, { noShadow: true });
+  for (let i = 0; i < 6; i++) mk(G_CYL, LOLLY_COLS[i], [0.06, 0.04, 0.06], [0.1 + (i % 3) * 0.08, 0.68, -0.1 + Math.floor(i / 3) * 0.08], g, { noShadow: true });
+  makeMug(g, 0.25, 0.665, 0.14, '#ffd1e1'); makeMug(g, -0.16, 0.665, 0.12, '#fffaf0');
+  return g;
+};
+OBJ_BUILDERS['bedroom:j'] = () => { const g = new THREE.Group(); mk(G_CYL, '#fff0f6', [0.55, 0.5, 0.55], [0, 0.25, 0], g); mk(G_CYL, '#ffd1e1', [0.6, 0.05, 0.6], [0, 0.52, 0], g); makeLollyJar(g, -0.08, 0.545, 0); makeMug(g, 0.17, 0.545, 0.1, '#b9a3ff'); return g; };
 function makePlant(parent, x, z, big) {
   const g = grp(parent, x, 0, z), s = big ? 1.3 : 1;
   mk(G_CYL, '#e8916b', [0.32 * s, 0.3 * s, 0.32 * s], [0, 0.15 * s, 0], g); mk(G_CYL, '#d97a55', [0.36 * s, 0.06, 0.36 * s], [0, 0.3 * s, 0], g);
