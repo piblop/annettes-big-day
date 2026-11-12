@@ -680,44 +680,47 @@ function softSkin(g) {
   return g;
 }
 
-/* ---------------- people: chibi proportions, big head, tiny body ---------------- */
+/* ---------------- people: clean vinyl-toy figures. One smooth head, one hair shell, a simple face, a bean body ---------------- */
+// the hair shell: a sphere cap tipped back, so it makes a tidy hairline across the forehead and reaches the nape
+const G_CAP = geo('haircap', () => new THREE.SphereGeometry(0.5, 32, 14, 0, TAU, 0, Math.PI * 0.56));
+const G_SMILE = geo('smile', () => new THREE.TorusGeometry(0.5, 0.11, 6, 14, Math.PI));
+const G_BAND = geo('band', () => new THREE.TorusGeometry(0.5, 0.07, 8, 28));
 function makePerson(o) {
   const g = new THREE.Group(), body = grp(g);
   const skin = o.skin || '#f9d1b0', hair = o.hair || '#6b4a32', top = o.top || '#7f93b3', bot = o.bottom || top, shoe = o.shoe || '#fdfdfd';
+  const bare = o.style === 'dress' || o.style === 'crop';
+  // legs and shoes
   const legL = grp(body, -0.075, 0.24, 0), legR = grp(body, 0.075, 0.24, 0);
-  [legL, legR].forEach(L => { mk(capsule(0.056, 0.27), o.style === 'dress' ? skin : bot, null, [0, -0.1, 0], L); mk(G_SPH, shoe, [0.14, 0.09, 0.19], [0, -0.205, 0.03], L); });
+  [legL, legR].forEach(L => { mk(capsule(0.054, 0.27), o.style === 'dress' ? skin : bot, null, [0, -0.1, 0], L); mk(G_SPH, shoe, [0.135, 0.09, 0.19], [0, -0.205, 0.03], L); });
+  // body: a dress, a crop top over leggings, or a top over pants
   if (o.style === 'dress') mk(G_SKIRT, top, [1, 1, 1], [0, 0.36, 0], body);
-  else if (o.style === 'crop') { mk(G_TORSO, skin, [0.8, 0.9, 0.8], [0, 0.37, 0], body); mk(G_TORSO, top, [1, 0.62, 1], [0, 0.44, 0], body); mk(G_HEAD, bot, [0.32, 0.18, 0.29], [0, 0.26, 0], body); }
-  else { mk(G_TORSO, top, [1, 1, 1], [0, 0.385, 0], body); mk(G_HEAD, bot, [0.335, 0.17, 0.3], [0, 0.25, 0], body); }
-  const armL = grp(body, -0.185, 0.5, 0), armR = grp(body, 0.185, 0.5, 0);
-  [armL, armR].forEach((A, i) => { const s = grp(A); s.rotation.z = (i ? 1 : -1) * 0.16; mk(capsule(0.047, 0.22), o.style === 'dress' || o.style === 'crop' ? skin : top, null, [0, -0.075, 0], s); mk(G_SPH, skin, [0.088, 0.088, 0.088], [0, -0.19, 0.008], s); });
-  const head = grp(body, 0, 0.78, 0);
+  else if (o.style === 'crop') { mk(G_TORSO, skin, [0.78, 0.9, 0.78], [0, 0.37, 0], body); mk(G_TORSO, top, [0.95, 0.62, 0.95], [0, 0.44, 0], body); mk(G_HEAD, bot, [0.31, 0.18, 0.28], [0, 0.26, 0], body); }
+  else { mk(G_TORSO, top, [0.95, 1, 0.95], [0, 0.385, 0], body); mk(G_HEAD, bot, [0.32, 0.17, 0.29], [0, 0.25, 0], body); }
+  if (o.apron) mk(G_HEAD, o.apron, [0.24, 0.28, 0.08], [0, 0.35, 0.13], body);
+  // arms end in little mitten hands
+  const armL = grp(body, -0.178, 0.5, 0), armR = grp(body, 0.178, 0.5, 0);
+  [armL, armR].forEach((A, i) => { const s = grp(A); s.rotation.z = (i ? 1 : -1) * 0.16; mk(capsule(0.045, 0.22), bare ? skin : top, null, [0, -0.075, 0], s); mk(G_SPH, skin, [0.086, 0.086, 0.086], [0, -0.19, 0.006], s); });
+  // head and face: two glossy eyes, soft cheeks, a small smile. Nothing else
+  const head = grp(body, 0, 0.78, 0), F = { noShadow: true };
   mk(G_HEAD, skin, [0.5, 0.47, 0.47], [0, 0, 0], head);
   [-1, 1].forEach(s => {
-    mk(G_SPH, o.eye || INK, [0.055, 0.08, 0.03], [s * 0.085, -0.005, 0.222], head, { noShadow: true });
-    mk(G_SPH, '#ffffff', [0.022, 0.022, 0.012], [s * 0.085 + 0.013, 0.02, 0.236], head, { noShadow: true });
-    mk(G_SPH, '#ff9fb2', [0.075, 0.035, 0.02], [s * 0.145, -0.065, 0.2], head, { noShadow: true });
+    mk(G_SPH, o.eye || INK, [0.066, 0.092, 0.03], [s * 0.09, -0.012, 0.217], head, F);
+    mk(G_SPH, '#ffffff', [0.026, 0.026, 0.012], [s * 0.09 + 0.014, 0.014, 0.231], head, { noShadow: true, glow: true });
+    mk(G_SPH, '#ff9fb2', [0.075, 0.042, 0.016], [s * 0.152, -0.072, 0.176], head, { noShadow: true, alpha: 0.75 });
+    if (o.lashes) mk(G_SPH, INK, [0.04, 0.013, 0.012], [s * 0.128, 0.03, 0.2], head, F).rotation.z = s * 0.55;
   });
-  mk(G_SPH, '#c2566e', [0.045, 0.018, 0.012], [0, -0.085, 0.228], head, { noShadow: true });
-  // little details the low camera now shows: nose, brows, ears, lashes, hair shine
-  mk(G_SPH, skin, [0.035, 0.028, 0.03], [0, -0.04, 0.232], head, { noShadow: true });
-  [-1, 1].forEach(s => {
-    const br = mk(G_BOX, o.brow || hair, [0.06, 0.012, 0.012], [s * 0.088, 0.075, 0.222], head, { noShadow: true }); br.rotation.z = s * -0.18;
-    mk(G_SPH, skin, [0.06, 0.09, 0.05], [s * 0.235, -0.02, 0.01], head, { noShadow: true });
-    if (o.lashes) { const l = mk(G_BOX, INK, [0.03, 0.01, 0.01], [s * 0.125, 0.035, 0.224], head, { noShadow: true }); l.rotation.z = s * -0.6; }
-  });
-  mk(G_SPH, '#ffffff', [0.16, 0.05, 0.08], [-0.1, 0.24, 0.12], head, { noShadow: true, glow: true, alpha: 0.35 });
-  // hair: cap + fringe + style extras
-  mk(G_HEAD, hair, [0.53, 0.52, 0.53], [0, 0.06, -0.05], head);
-  mk(G_SPH, hair, [0.44, 0.15, 0.22], [0, 0.14, 0.12], head);
-  if (o.hairStyle === 'long') { mk(G_HEAD, hair, [0.5, 0.62, 0.32], [0, -0.13, -0.11], head); [-1, 1].forEach(s => mk(G_SPH, hair, [0.13, 0.36, 0.15], [s * 0.2, -0.13, 0.03], head)); }
-  if (o.hairStyle === 'bun') mk(G_SPH, hair, [0.2, 0.2, 0.2], [0, 0.29, -0.06], head);
-  if (o.hairStyle === 'bob') [-1, 1].forEach(s => mk(G_SPH, hair, [0.16, 0.3, 0.3], [s * 0.19, -0.07, -0.01], head));
-  if (o.hairStyle === 'fluffy') [[-0.1, 0.25, 0.02], [0.08, 0.27, -0.04], [0.16, 0.2, 0.06], [-0.18, 0.18, -0.02]].forEach(p => mk(G_SPH, hair, [0.16, 0.14, 0.16], p, head));
-  if (o.bow) { const b = grp(head, 0.17, 0.22, 0.02); b.rotation.z = -0.4; [-1, 1].forEach(s => { const c = mk(G_CONE, o.bow, [0.09, 0.12, 0.06], [s * 0.06, 0, 0], b); c.rotation.z = s * Math.PI / 2; }); mk(G_SPH, o.bow, [0.05, 0.05, 0.05], [0, 0, 0], b); }
-  if (o.glasses) [-1, 1].forEach(s => { const r = mk(geo('ring', () => new THREE.TorusGeometry(0.5, 0.12, 6, 16)), INK, [0.09, 0.09, 0.09], [s * 0.085, 0, 0.235], head, { noShadow: true }); });
-  if (o.beanie) { mk(G_SPH, o.beanie, [0.57, 0.36, 0.57], [0, 0.21, -0.04], head); mk(G_CYL, '#ffffff', [0.57, 0.08, 0.57], [0, 0.13, -0.03], head, { noShadow: true }); mk(G_SPH, '#ffffff', [0.15, 0.15, 0.15], [0, 0.4, -0.05], head); }
-  if (o.apron) mk(G_BOX, o.apron, [0.24, 0.26, 0.02], [0, 0.34, 0.16], body);
+  const smile = mk(G_SMILE, '#b5566b', [0.052, 0.034, 0.05], [0, -0.078, 0.224], head, F); smile.rotation.z = Math.PI;
+  // hair: one shell, plus a few big clean shapes per style
+  const style = o.hairStyle, swept = style === 'long' || style === 'bob' || style === 'bun';
+  const cap = mk(G_CAP, hair, [0.545, 0.525, 0.53], [0, 0.005, -0.005], head); cap.rotation.x = swept ? -0.5 : -0.72; // short cuts sit higher off the forehead
+  if (swept) { const fr = mk(G_HEAD, hair, [0.4, 0.13, 0.15], [-0.03, 0.125, 0.172], head); fr.rotation.z = 0.2; }
+  if (style === 'long') { mk(G_HEAD, hair, [0.5, 0.62, 0.3], [0, -0.14, -0.1], head); [-1, 1].forEach(s => mk(G_HEAD, hair, [0.11, 0.36, 0.14], [s * 0.218, -0.14, 0.035], head)); }
+  if (style === 'bob') { mk(G_HEAD, hair, [0.5, 0.42, 0.3], [0, -0.07, -0.09], head); [-1, 1].forEach(s => mk(G_HEAD, hair, [0.13, 0.3, 0.3], [s * 0.21, -0.07, -0.01], head)); }
+  if (style === 'bun' && !o.beanie) mk(G_HEAD, hair, [0.2, 0.2, 0.2], [0, 0.3, -0.07], head);
+  if (style === 'fluffy' && !o.beanie) [[-0.12, 0.185, 0.1, 0.2], [0.02, 0.215, 0.11, 0.23], [0.15, 0.185, 0.09, 0.19]].forEach(([x, y, z, r]) => mk(G_HEAD, hair, [r, r * 0.55, r * 0.9], [x, y, z], head)); // a soft wavy top, not a quiff tower
+  if (o.bow) { const b = grp(head, 0.165, 0.205, 0.085); b.rotation.set(-0.3, 0.3, -0.45); [-1, 1].forEach(s => mk(G_SPH, o.bow, [0.115, 0.09, 0.05], [s * 0.062, 0, 0], b)); mk(G_SPH, o.bow, [0.05, 0.055, 0.055], [0, 0, 0.012], b); }
+  if (o.glasses) { [-1, 1].forEach(s => mk(G_BAND, INK, [0.115, 0.115, 0.06], [s * 0.09, -0.01, 0.238], head, F)); mk(G_SPH, INK, [0.07, 0.014, 0.014], [0, -0.005, 0.245], head, F); }
+  if (o.beanie) { const b = grp(head, 0, 0.03, -0.01); b.rotation.x = -0.28; mk(G_CAP, o.beanie, [0.575, 0.56, 0.565], [0, 0, 0], b).scale.y = 0.5; mk(G_CAP, o.beanie, [0.575, 0.56, 0.565], [0, 0, 0], b); const band = mk(G_BAND, '#ffffff', [0.55, 0.555, 0.5], [0, 0.085, 0], b, F); band.rotation.x = Math.PI / 2; mk(G_SPH, '#ffffff', [0.14, 0.14, 0.14], [0, 0.3, 0], b); }
   g.userData = { kind: 'person', body, head, legL, legR, armL, armR, walk: 0, bounce: 0 };
   return softSkin(mergeStatic(g));
 }
@@ -728,82 +731,31 @@ const LOOK = {
 };
 function makeAnnette(outfitKey) { return makePerson(LOOK.annette(OUTFITS[outfitKey] || OUTFITS.office)); }
 
-/* ---------------- Luca the cavoodle: golden caramel shag, a cream bib and beard, a fringe over the eyes and long feathered ears ---------------- */
-const G_CURL = geo('curl', () => new THREE.SphereGeometry(0.5, 10, 8));
-// evenly spread points over a unit sphere (fibonacci), used to cover a shape in fur
-function fibPts(n) { const o = [], ga = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < n; i++) { const y = 1 - (i + 0.5) / n * 2, r = Math.sqrt(1 - y * y), a = i * ga; o.push([Math.cos(a) * r, y, Math.sin(a) * r]); } return o; }
-const UP = new THREE.Vector3(0, 1, 0), WISP_D = new THREE.Vector3();
-// long soft strands that point outward and droop with gravity, so the coat reads shaggy rather than curly
-function wisps(parent, c, r, n, cols, size, droop, skip, seed) {
-  fibPts(n).forEach((p, i) => {
-    if (skip && skip(p)) return;
-    const h = hsh(i, n, seed || 5), s = size * (0.8 + h * 0.45), col = cols[Math.floor(hsh(i, n, 3) * cols.length)];
-    WISP_D.set(p[0] + (hsh(i, n, 9) - 0.5) * 0.5, p[1] - droop, p[2] + (hsh(i, n, 11) - 0.5) * 0.5).normalize();
-    const t = mk(G_CURL, col, [s * 0.78, s * 1.25, s * 0.8], [c[0] + p[0] * r[0] + WISP_D.x * s * 0.12, c[1] + p[1] * r[1] + WISP_D.y * s * 0.12, c[2] + p[2] * r[2] + WISP_D.z * s * 0.12], parent, { noShadow: true });
-    t.quaternion.setFromUnitVectors(UP, WISP_D);
-  });
-}
-function strand(parent, col, pos, dir, len, w) {
-  WISP_D.set(dir[0], dir[1], dir[2]).normalize();
-  const t = mk(G_CURL, col, [Math.max(w, len * 0.55), len, Math.max(w, len * 0.55) * 1.1], [pos[0] + WISP_D.x * len * 0.4, pos[1] + WISP_D.y * len * 0.4, pos[2] + WISP_D.z * len * 0.4], parent, { noShadow: true });
-  t.quaternion.setFromUnitVectors(UP, WISP_D); return t;
-}
+/* ---------------- Luca the cavoodle: a clean, rounded caramel pup with a cream bib and muzzle, a fluffy topknot, long floppy ears and a plume of a tail ---------------- */
 function buildLuca() {
   const g = new THREE.Group(), body = grp(g); body.name = 'body';
-  const A = '#e6bd88', a = '#f1d2a4', b = '#fbf3e6', d = '#dcaa74', r = '#cd9a64', C = [A, A, a, '#e0b27c'];
-  // compact torso under a shaggy coat, with a cream bib down the chest
-  mk(G_SPH, A, [0.46, 0.4, 0.56], [0, 0.32, -0.02], body);
-  wisps(body, [0, 0.34, -0.02], [0.19, 0.16, 0.24], 34, C, 0.15, 0.7);
-  wisps(body, [0, 0.3, 0.2], [0.11, 0.13, 0.06], 18, [b, b, '#efdcc2'], 0.12, 1.3, p => p[2] < -0.3, 6);
-  const legs = [];
-  [[-0.12, 0.15], [0.12, 0.15], [-0.12, -0.17], [0.12, -0.17]].forEach(([x, z], k) => {
-    const L = grp(body, x, 0.2, z);
-    mk(G_CYL, a, [0.13, 0.18, 0.13], [0, -0.07, 0], L);
-    for (let i = 0; i < 6; i++) { const an = i / 6 * TAU + k; strand(L, i % 2 ? a : (k < 2 ? b : A), [Math.cos(an) * 0.05, -0.02 - (i % 3) * 0.04, Math.sin(an) * 0.05], [Math.cos(an) * 0.4, -1, Math.sin(an) * 0.4], 0.14, 0.07); }
-    mk(G_SPH, a, [0.14, 0.07, 0.16], [0, -0.17, 0.03], L);
-    legs.push(L);
+  const A = '#e8bf8a', L = '#f3d6aa', C = '#fdf5e8', D = '#d6a46c', T = '#c48f5a', F = { noShadow: true };
+  mk(G_HEAD, A, [0.46, 0.4, 0.6], [0, 0.31, -0.02], body);
+  mk(G_HEAD, C, [0.31, 0.3, 0.24], [0, 0.29, 0.2], body);
+  const legs = [[-0.12, 0.15], [0.12, 0.15], [-0.12, -0.17], [0.12, -0.17]].map(([x, z], k) => {
+    const leg = grp(body, x, 0.2, z);
+    mk(capsule(0.07, 0.24), A, null, [0, -0.07, 0], leg); mk(G_SPH, k < 2 ? C : L, [0.16, 0.09, 0.19], [0, -0.165, 0.03], leg);
+    return leg;
   });
-  // head: a round dome under a mop of shaggy hair
-  const head = grp(body, 0, 0.64, 0.28);
-  mk(G_SPH, A, [0.47, 0.43, 0.43], [0, 0, 0], head);
-  wisps(head, [0, 0.02, -0.02], [0.2, 0.18, 0.17], 28, C, 0.13, 0.3, p => p[2] > 0.3 && p[1] < 0.55);
-  wisps(head, [0, 0.17, 0.03], [0.1, 0.04, 0.08], 8, [a, A, '#f0cf9f'], 0.08, -0.4, null, 7);
-  // short cream muzzle with a long scruffy beard
-  mk(G_SPH, b, [0.25, 0.16, 0.17], [0, -0.08, 0.16], head);
-  mk(G_SPH, b, [0.16, 0.1, 0.1], [0, 0.0, 0.18], head);
-  wisps(head, [0, -0.15, 0.15], [0.1, 0.04, 0.06], 16, [b, b, '#efdcc2'], 0.09, 1.4, p => p[2] < -0.3, 8);
-  mk(G_SPH, '#1b1513', [0.105, 0.085, 0.075], [0, -0.035, 0.265], head, { noShadow: true });
-  mk(G_SPH, '#6a5a58', [0.03, 0.02, 0.01], [0.025, -0.015, 0.3], head, { noShadow: true });
-  mk(G_SPH, '#4a2e28', [0.05, 0.012, 0.02], [0, -0.11, 0.245], head, { noShadow: true });
-  const tongue = mk(G_SPH, '#ff8fa3', [0.05, 0.024, 0.06], [0, -0.14, 0.23], head, { noShadow: true });
+  const head = grp(body, 0, 0.64, 0.27);
+  mk(G_HEAD, A, [0.5, 0.45, 0.45], [0, 0, 0], head);
+  [[0, 0.2, 0.03, 0.22], [-0.11, 0.165, 0.02, 0.16], [0.11, 0.165, 0.02, 0.16]].forEach(([x, y, z, r]) => mk(G_HEAD, L, [r, r * 0.85, r], [x, y, z], head));
   [-1, 1].forEach(s => {
-    // soft dark brown eyes peeking out under the fringe
-    mk(G_SPH, '#2a1a12', [0.09, 0.09, 0.05], [s * 0.1, 0.035, 0.18], head, { noShadow: true });
-    mk(G_SPH, '#5a3a26', [0.05, 0.03, 0.01], [s * 0.1, 0.015, 0.2], head, { noShadow: true });
-    mk(G_SPH, '#ffffff', [0.026, 0.026, 0.01], [s * 0.1 + 0.02, 0.058, 0.205], head, { noShadow: true, glow: true });
-    mk(G_SPH, '#e8a58a', [0.06, 0.028, 0.02], [s * 0.15, -0.05, 0.13], head, { noShadow: true, alpha: 0.45 });
-    // caramel cheeks and brows framing the cream muzzle
-    for (let i = 0; i < 2; i++) strand(head, i % 2 ? A : a, [s * (0.17 + i * 0.02), -0.04 - i * 0.04, 0.12], [s * 0.4, -1, 0.3], 0.1, 0.06);
+    mk(G_HEAD, L, [0.17, 0.16, 0.15], [s * 0.185, -0.095, 0.07], head);
+    mk(G_SPH, '#2a1a12', [0.078, 0.088, 0.04], [s * 0.105, 0.035, 0.198], head, F);
+    mk(G_SPH, '#ffffff', [0.026, 0.026, 0.012], [s * 0.105 + 0.017, 0.06, 0.218], head, { noShadow: true, glow: true });
   });
-  // the fringe: wispy strands falling over the brow
-  for (let i = 0; i < 7; i++) { const x = -0.15 + i * 0.05; strand(head, [a, A, '#f0cf9f'][i % 3], [x, 0.2 - Math.abs(x) * 0.25, 0.14], [x * 1.5, -0.7, 1], 0.09 + (i % 2) * 0.02, 0.06); }
-  // long feathered Cavalier ears that blend into the head fluff
-  const ears = [-1, 1].map(s => {
-    const e = grp(head, s * 0.2, 0.12, 0.0); e.rotation.z = s * 0.15;
-    mk(G_SPH, d, [0.1, 0.42, 0.22], [s * 0.02, -0.18, 0.01], e);
-    for (let i = 0; i < 14; i++) {
-      const y = -0.02 - (i % 7) * 0.055, z = (i < 7 ? 0.05 : -0.05) + (hsh(i, s + 3, 2) - 0.5) * 0.04;
-      strand(e, [d, r, A, a][i % 4], [s * 0.02, y, z], [s * 0.25, -1, (i < 7 ? 0.2 : -0.2)], 0.13, 0.08);
-    }
-    for (let i = 0; i < 4; i++) strand(e, [r, d][i % 2], [s * 0.03, -0.38, -0.06 + i * 0.04], [s * 0.2, -1, -0.15 + i * 0.1], 0.13, 0.06);
-    return e;
-  });
-  // feathered plume tail, carried high and flaring at the tip
-  const tail = grp(body, 0, 0.44, -0.27); tail.rotation.x = -0.35;
-  [[0, 0.02, 0], [0, 0.09, -0.01], [0, 0.16, 0.02], [0, 0.21, 0.08], [0, 0.23, 0.15], [0, 0.22, 0.21]].forEach((p, i) => {
-    mk(G_CURL, i % 2 ? a : A, [0.1, 0.1, 0.1], p, tail, { noShadow: true });
-    [-1, 1].forEach(s => strand(tail, i > 3 ? b : i % 2 ? A : a, p, [s * 0.9, -0.3, 0.2], 0.12 + i * 0.015, 0.05));
-  });
+  mk(G_HEAD, C, [0.28, 0.19, 0.2], [0, -0.085, 0.16], head);
+  mk(G_SPH, '#2a1f1c', [0.1, 0.075, 0.07], [0, -0.04, 0.262], head, F); mk(G_SPH, '#6a5a58', [0.03, 0.02, 0.01], [0.022, -0.02, 0.296], head, F);
+  const tongue = mk(G_SPH, '#ff8fa3', [0.06, 0.028, 0.07], [0, -0.138, 0.232], head, F);
+  const ears = [-1, 1].map(s => { const e = grp(head, s * 0.215, 0.1, 0); e.rotation.z = s * 0.15; mk(G_HEAD, D, [0.115, 0.38, 0.2], [s * 0.01, -0.17, 0], e); mk(G_HEAD, T, [0.125, 0.13, 0.185], [s * 0.015, -0.32, 0], e); return e; });
+  const tail = grp(body, 0, 0.42, -0.28); tail.rotation.x = -0.75;
+  [[A, 0.13, 0.02, 0], [L, 0.15, 0.1, 0.01], [C, 0.11, 0.17, 0.03]].forEach(([c, r, y, z]) => mk(G_HEAD, c, [r, r, r], [0, y, z], tail));
   head.name = 'head'; ears[0].name = 'earL'; ears[1].name = 'earR'; tail.name = 'tail'; legs.forEach((l, i) => l.name = 'leg' + i); tongue.name = 'tongue';
   return g;
 }
@@ -813,7 +765,7 @@ const FUR_RAMP = (() => { const d = new Uint8Array([178, 204, 226, 242, 255]); c
 function makeLuca() {
   if (!LUCA_T) {
     LUCA_T = buildLuca(); mergeStatic(LUCA_T, new Set([LUCA_T.getObjectByName('tongue')]), false);
-    // fur gets a soft, bright light ramp: shadows stay light and blend, so the tufts read as one fluffy coat instead of bubbles
+    // fur gets a soft, bright light ramp so the coat reads as one fluffy shape
     const soft = {};
     LUCA_T.traverse(o => { if (o.isMesh) o.receiveShadow = false; if (o.isMesh && o.material.isMeshToonMaterial) { const m = o.material, k = (m.vertexColors ? 'vc' : m.color.getHexString()) + m.opacity; o.material = soft[k] || (soft[k] = new THREE.MeshToonMaterial({ color: m.vertexColors ? '#ffffff' : m.color, vertexColors: m.vertexColors, gradientMap: FUR_RAMP, transparent: m.transparent, opacity: m.opacity })); } });
   }

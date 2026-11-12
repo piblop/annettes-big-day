@@ -8,7 +8,12 @@ Everything here is in `v2/` (the 3D diorama edition). The original pixel game at
 - A third holiday: drive down the south coast, hire a board and catch three waves, defend lunch from The Chip Thief, build a sandcastle, explore the rock pool, then pick an arvo and a dinner. New memories card, two new badges (Surf's up, Chip defender).
 - Content lives in `CONFIG.holiday.bt` in `v2/src/09-holiday.js`.
 
-### Smoother characters
+### Characters redrawn from scratch
+- People are clean vinyl-toy figures: one smooth head, a single hair shell with a tidy hairline, two glossy eyes, soft cheeks and a small smile. Noses, brows, ears and hair-shine patches are gone.
+- Each hairstyle is the shell plus a few big shapes (Annette's long hair and side fringe, Mum's bob, Paulo's wavy top, buns, beanies). Annette keeps her blue eyes, lashes and pink bow.
+- Luca is rebuilt from a dozen rounded shapes instead of hundreds of fur tufts: caramel body, cream bib, muzzle and paws, a fluffy topknot, long floppy ears and a plume tail. The other park dogs follow.
+
+### Smoother shading and shapes
 - People are no longer stacked cylinders: torsos and dresses are turned from smooth curves, limbs are rounded capsules, and heads and hair use a finer sphere.
 - Characters, the cat and the birds are shaded on a soft ramp instead of hard toon bands, and no longer get shadow lines across their faces.
 - Round props (rugs, tables, cakes, cones) have more sides, so their edges read as curves.
