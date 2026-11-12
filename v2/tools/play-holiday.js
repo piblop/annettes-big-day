@@ -8,7 +8,7 @@ const Wd = +process.env.W || 1280, Ht = +process.env.H || 800;
 const PORT = +process.env.PORT || 9402;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const SCRIPT = `(async () => {
-  const log = [], sleep = ms => new Promise(r => setTimeout(r, ms)), step = s => { log.push(s); window.__step = s; };
+  const log = [], sleep = async ms => { const t = G.t + ms / 1100; await new Promise(r => setTimeout(r, ms)); for (let i = 0; i < 400 && G.t < t; i++) await new Promise(r => setTimeout(r, 50)); }, step = s => { log.push(s); window.__step = s; };
   const flush = async (n) => { let idle = 0; for (let i = 0; i < 400 && idle < (n || 6); i++) { if (typeof MOMENT !== 'undefined' && MOMENT) { idle = 0; MOMENT.skip(); } else if (DLG) { idle = 0; DLG.q.length = 0; DLG.typing = false; nextLine(); } else idle++; await sleep(60); } };
   const btn = re => [...document.querySelectorAll('#ui button')].find(b => re.test(b.textContent));
   const pick = async re => { const b = btn(re); if (!b) throw new Error('no button ' + re + ' in ' + G.scene + '/' + G.mode); b.click(); await sleep(60); };
@@ -38,7 +38,7 @@ const SCRIPT = `(async () => {
 })()`;
 (async () => {
   const prof = fs.mkdtempSync(path.join(os.tmpdir(), 'abd2h-'));
-  const ch = spawn(CHROME, ['--headless=new', '--remote-debugging-port=' + PORT, '--user-data-dir=' + prof, '--use-angle=swiftshader', '--enable-unsafe-swiftshader', `--window-size=${Wd},${Ht}`, 'about:blank'], { stdio: 'ignore' });
+  const ch = spawn(CHROME, ['--headless=new', ...(process.getuid && process.getuid() === 0 ? ['--no-sandbox'] : []), '--remote-debugging-port=' + PORT, '--user-data-dir=' + prof, '--use-angle=swiftshader', '--enable-unsafe-swiftshader', `--window-size=${Wd},${Ht}`, 'about:blank'], { stdio: 'ignore' });
   let tabs; for (let i = 0; i < 50; i++) { try { tabs = await (await fetch('http://127.0.0.1:' + PORT + '/json')).json(); if (tabs.find(t => t.type === 'page')) break; } catch (e) {} await sleep(200); }
   const ws = new WebSocket(tabs.find(t => t.type === 'page').webSocketDebuggerUrl); await new Promise(r => ws.onopen = r);
   let id = 0; const pend = {}, errs = [];
@@ -49,7 +49,7 @@ const SCRIPT = `(async () => {
   await send('Runtime.enable'); await send('Page.enable');
   await send('Emulation.setDeviceMetricsOverride', { width: Wd, height: Ht, deviceScaleFactor: 1, mobile: Wd < 600 });
   await send('Page.navigate', { url }); await sleep(2500);
-  const r = await send('Runtime.evaluate', { expression: SCRIPT, awaitPromise: true, returnByValue: true, timeout: 240000 });
+  const r = await send('Runtime.evaluate', { expression: SCRIPT, awaitPromise: true, returnByValue: true, timeout: 900000 });
   const shot = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(path.join(out, 'play-holiday-end.png'), Buffer.from(shot.result.data, 'base64'));
   if (r.result.exceptionDetails) { const st = await send('Runtime.evaluate', { expression: 'window.__step + " " + G.scene + "/" + G.mode', returnByValue: true }); console.log('FAIL at', st.result.result.value, '\n', r.result.exceptionDetails.exception?.description); }
   else console.log('PASS', r.result.result.value);

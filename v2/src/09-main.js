@@ -20,9 +20,10 @@ function titleScreen() {
   for (let i = 0; i < 6; i++) { const b = makeBalloon(world, -2.6 + i * 1.05, 0, -2.4 + (i % 2) * 0.4, CONFETTI[i % 5], 1.6 + (i % 3) * 0.3); b.userData.bob = true; W.anim.push(b); }
   makeFairyLights(world, -3.5, -2.6, 3.5, -2.6, 2.2, 18);
   for (let i = 0; i < 7; i++) makeCloud(world, -22 + i * 7, -6 + hsh(i, 1) * 1.5, -10 + hsh(i, 2) * 18, 1.4);
+  charmIsland(8, 6, 0, 0, 5); skyFriends('morning');
   cam.base = 11; cam.pitch = 0.5; cam.zoomGoal = 1.35; cam.zoom = 1.35; cam.goal.set(0, 0.8, 0.2); cam.target.copy(cam.goal); cam.orbit = SET.calm ? 0.03 : 0.1;
 
-  const t = el('div', 'title', `<div class="logo"><h1>${esc(CONFIG.name)}'s Big Day</h1><span class="v2">v2 &middot; the whimsical edition</span></div>`);
+  const t = el('div', 'title', `<div class="logo"><h1>${esc(CONFIG.name)}'s Big Day</h1><span class="v2">v2 &middot; whimsy, drama and side quests</span></div>`);
   const w = el('div', 'tbtns'), btns = [];
   const saves = allCheckpoints(), save = saves.find(s => s.campaign === 'day');
   if (saves.length) btns.push(makeBtn('Continue', () => { audioInit(); if (saves.length === 1) return fade(() => resumeGame(saves[0])); pickMenu('Continue', 'Which adventure?', saves.map(s => ({ n: CAMPAIGNS[s.campaign], d: (MAPS[s.map].title || '').replace(/^.*?: /, ''), s })), d => fade(() => resumeGame(d.s))); G.mode = 'title'; }, 'big'));
@@ -40,7 +41,7 @@ function resetDay() {
   Object.assign(G, { outfit: 'office', wearing: 'pj', radio: null, tidied: 0, balloons: 0, b: null, lift: null, lunch: null, dish: null, drink: null });
   restorePackBadges();
 }
-function startGame() { cam.orbit = 0; resetDay(); G.campaign = 'day'; loadMap('bedroom'); }
+function startGame() { cam.orbit = 0; resetDay(); MAPS.bedroom.rows = BED_ROWS.slice(); G.campaign = 'day'; loadMap('bedroom'); }
 function resumeGame(s) {
   cam.orbit = 0; resetDay(); G.campaign = s.campaign || 'day';
   if (CAMPAIGN_STATE[G.campaign]) CAMPAIGN_STATE[G.campaign].load(s.extra || {});
@@ -57,6 +58,7 @@ const held = [];
 function heldDir() { return held.length ? held[held.length - 1] : null; }
 function press(k) {
   audioInit();
+  if (MOMENT) { if (k === 'a' || k === 'b') MOMENT.skip(); return; }
   if (DLG) { if (k === 'a' || k === 'b') advance(); return; }
   if (G.mode === 'bmsg') { if (k === 'a') bAdvance(); return; }
   if (G.mode === 'lift') { if (k === 'a') liftPress(); return; }
@@ -144,7 +146,7 @@ function frame(now) {
     else if (G.scene === 'snow') updateSnow(dt);
     else if (G.scene === 'finale' || G.scene === 'credits') { updateFireworks(dt); updateWorld(dt, t); }
     else if (G.scene === 'title') { updateWorld(dt, t); if (W && W.cast) W.cast.forEach((g, i) => { animatePerson(g, false, dt, t + i); g.position.y = 0.1 + (SET.calm ? 0 : Math.max(0, Math.sin(t * 2.4 + i * 1.3)) * 0.1); g.rotation.y = Math.sin(t * 0.7 + i) * 0.35; }); if (W && W.cake) W.cake.userData.flames.forEach((f, i) => f.scale.y = 0.1 * (0.85 + Math.sin(t * 14 + i) * 0.15)); }
-    updateDlg(dt); FX.update(dt); updateCamera(dt);
+    updateDlg(dt); FX.update(dt); updateCamera(dt); updateCharm(dt, t);
     renderer.render(scene, camera);
   } catch (err) { console.error(err); }
   requestAnimationFrame(frame);
@@ -154,7 +156,7 @@ addEventListener('resize', resize);
 saveSettings(); updateHUD(); resize();
 
 /* ---------------- static props are merged as they are built (they only ever move or sway as a whole) ---------------- */
-['makeFlower', 'makeTree', 'makePlant', 'makeGum', 'makePine', 'makeMountain', 'makeCloud', 'makeStreetLamp', 'makeHouse', 'makeTower', 'makeSnowman', 'makePalm'].forEach(n => {
+['makeFlower', 'makeTree', 'makeJacaranda', 'makePlant', 'makeGum', 'makePine', 'makeMountain', 'makeCloud', 'makeStreetLamp', 'makeHouse', 'makeTower', 'makeSnowman', 'makePalm'].forEach(n => {
   const fn = window[n]; if (typeof fn !== 'function') return;
   window[n] = function () { return mergeStatic(fn.apply(this, arguments)); };
 });

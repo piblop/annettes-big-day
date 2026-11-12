@@ -180,7 +180,7 @@ function finishLift() {
   F.lifted = true; stat('gains', 8 + good * 4); stat('energy', -10, true);
   if (perf >= 2) { F.pr = true; toast('New PR!', true); confetti(W.player.g.position.x, 1.4, W.player.g.position.z, 60); }
   G.mode = 'map';
-  say([perf >= 2 ? "NEW PR! " + CONFIG.name + " just lifted her heaviest ever. The whole gym turns around." : good >= 2 ? "Solid set. Strong and steady." : "Tough set, but she finished it.", "Wait... something clanks behind the rack.", "The Last Set appears!"], () => startBattle('lastset'));
+  say([perf >= 2 ? "NEW PR! " + CONFIG.name + " just lifted her heaviest ever. The whole gym turns around." : good >= 2 ? "Solid set. Strong and steady." : "Tough set, but she finished it.", "Wait... something clanks behind the rack."], () => sting('The Last Set', 'It will not be skipped', () => startBattle('lastset')));
 }
 
 /* ---------------- battles: silly foes, can't really lose ---------------- */

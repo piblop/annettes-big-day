@@ -202,6 +202,27 @@ button { font-family:'Fredoka', system-ui, sans-serif; }
 .logs div { border:2px dashed var(--tan); border-radius:14px; padding:8px 10px; font-size:14px; }
 .logs div.got { border-style:solid; background:#fff4c9; }
 .logs b { font-family:'Fredoka', sans-serif; display:block; }
+.logs div.on { border-color:var(--pink); background:#fff3f7; }
+.qhead { margin:14px 0 8px !important; font:600 16px 'Fredoka', sans-serif !important; color:var(--ink) !important; }
+
+/* dreamy edge glow over the diorama */
+#vig { position:fixed; inset:0; pointer-events:none; z-index:4; background:radial-gradient(ellipse at 50% 46%, rgba(255,255,255,0) 58%, rgba(255,190,214,.2) 86%, rgba(255,170,200,.34) 100%); }
+
+/* the sting: cinematic bars, speed lines and a tilted title for dramatic beats */
+.sting { position:fixed; inset:0; z-index:56; display:grid; place-items:center; overflow:hidden; cursor:pointer; animation:fadeIn .15s; background:radial-gradient(circle, rgba(74,51,85,.5) 0, rgba(74,51,85,.28) 45%, rgba(74,51,85,.5) 100%); }
+.sting.out { opacity:0; transition:opacity .25s; }
+.sting .lb { position:absolute; left:0; right:0; height:13vh; background:#4a3355; animation:barIn .35s cubic-bezier(.2,.9,.3,1) both; }
+.sting .lb.t { top:0; transform-origin:top; border-bottom:4px solid var(--pink); } .sting .lb.b { bottom:0; transform-origin:bottom; border-top:4px solid var(--pink); }
+.sting .burst { position:absolute; width:150vmax; height:150vmax; border-radius:50%; background:repeating-conic-gradient(from 0deg, rgba(255,255,255,.42) 0 5deg, rgba(255,255,255,0) 5deg 15deg); -webkit-mask-image:radial-gradient(circle, transparent 16%, #000 60%); mask-image:radial-gradient(circle, transparent 16%, #000 60%); animation:spinSlow 14s linear infinite; }
+.sting .card { position:relative; display:flex; flex-direction:column; align-items:center; gap:10px; padding:0 18px; text-align:center; transform:rotate(-4deg); animation:stingIn .5s cubic-bezier(.3,1.8,.5,1) both; }
+.sting .card b { font:700 max(38px, 7vw) 'Fredoka', sans-serif; line-height:1; letter-spacing:1px; color:#fff; text-shadow:0 4px 0 var(--pink), 0 9px 0 rgba(74,51,85,.45), 0 0 34px rgba(255,255,255,.9); }
+.sting .card small { background:var(--paper); border:2px solid var(--tan); border-radius:999px; padding:6px 18px; box-shadow:var(--shadow); font:600 max(15px, 1.5vw) 'Fredoka', sans-serif; color:var(--ink); }
+.sting.s-win { background:radial-gradient(circle, rgba(255,122,168,.5) 0, rgba(255,209,102,.25) 50%, rgba(255,122,168,.45) 100%); } .sting.s-win .lb { background:#ff7aa8; border-color:#fff4c9; } .sting.s-win .card b { text-shadow:0 4px 0 #ffb347, 0 9px 0 rgba(90,61,43,.3), 0 0 34px rgba(255,255,255,.9); }
+.sting.s-dark { background:rgba(29,27,74,.55); } .sting.s-dark .burst { display:none; }
+.sting.still *, .sting.still { animation:none !important; }
+@keyframes barIn { from { transform:scaleY(0); } }
+@keyframes stingIn { from { transform:scale(2.4) rotate(8deg); opacity:0; } }
+@keyframes spinSlow { to { transform:rotate(360deg); } }
 
 /* touch pad */
 #pad { position:fixed; inset:auto 0 0 0; padding:0 16px calc(16px + env(safe-area-inset-bottom,0px)); display:flex; justify-content:space-between; align-items:flex-end; pointer-events:none; z-index:8; }
@@ -216,6 +237,7 @@ button { font-family:'Fredoka', system-ui, sans-serif; }
 </head>
 <body>
 <div id="view"></div>
+<div id="vig"></div>
 <div id="hud" class="hidden">
   <span id="chapter" class="pill">Chapter</span>
   <span id="clock" class="pill">7:30 am</span>

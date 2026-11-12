@@ -7,7 +7,7 @@ const MAPS = {
   bedroom: {
     theme: 'bedroom', title: 'Chapter 1: Wake up', sky: 'morning', edge: GRASS,
     floor: ['#f6e3ff', '#efd8fb'], wall: ['#ffd1e1', '#ffc6da'],
-    rows: ["#o###R##GGGG###", "#..ww.kk.vvjbb#", "#.........x.bb#", "#........S....#", "#..x..........#", "#............C#", "#.......x.....#", "#.....h.......#", "#..M..........#", "######D########"],
+    rows: ["#o###R##GGGG###", "#..ww.kk.vvjbb#", "#.........x.bb#", "#........S....#", "#..x..........#", "#............C#", "#.......x.....#", "#.....h.......#", "#..M.....l....#", "######D########"],
     start: { x: 7, z: 5, dir: 'down' }, luca: { x: 8, z: 5 },
     npcs: c => c === 'M' ? LOOK.mum : null,
     decorate(g) {
@@ -64,17 +64,21 @@ const MAPS = {
   office: {
     theme: 'office', title: 'Chapter 3: Work', sky: 'day', edge: GRASS,
     floor: ['#e3f1ff', '#d8eaff'], wall: ['#fff4e0', '#fff0d6'],
-    rows: ["#ww#ww#ww#ww###", "#............p#", "#.............#", "#.dd..dd..YZ..#", "#..c...c......#", "#.............#", "#.dd..dd..dd..#", "#..c......c...#", "#.........h...#", "######D########"],
+    rows: ["#ww#ww#ww#ww###", "#..........K.p#", "#.............#", "#.dd..dd..YZ..#", "#..c...c......#", "#.............#", "#.dd..dd..dd..#", "#..c......c...#", "#.........h...#", "######D########"],
     start: { x: 6, z: 8, dir: 'up' },
     npcs: (c, x, z) => c === 'c' ? ((x + z) % 2 ? { skin: '#cf9b6f', hair: '#6b4a32', top: '#7f93b3', bottom: '#4a4658', glasses: true } : { skin: '#f0c39a', hair: '#3a2f2a', hairStyle: 'bun', top: '#c55a6c', bottom: '#3a3d5c' }) : null,
     hints: () => [!F.sorted && 'Y', !F.officeBattle && 'Z', F.sorted && F.officeBattle && 'D'],
     onEnter() { G.wearing = G.outfit; say([CONFIG.company + ", Sydney CBD. Birthday balloons on the project coordinator's desk.", "Out at Moorebank, trains are swapping containers for the Port Botany run.", "File the reports at your desk, then battle that inbox on the computer."]); },
     doorOpen: () => F.sorted && F.officeBattle,
     doorLocked: () => "Not yet. File the reports and beat the inbox first.",
-    onDoor() { G.mode = 'busy'; say(["Project updates sent. Exec reports signed off.", "Clock off for lunch! Everyone's starving."], () => fade(lunchScene)); },
+    onDoor() {
+      G.mode = 'busy';
+      say(["Project updates sent. Exec reports signed off.", "Then one last email lands. Subject: URGENT. From: the CEO."], () => sting('URGENT', 'The board pack. In five minutes.', () =>
+        say([{ n: CONFIG.name, t: "Sent it at 10:42 this morning." }, "The CEO replies with one word: 'Legend.'", "Clock off for lunch! Everyone's starving."], () => fade(lunchScene))));
+    },
     act: {
       Y: () => F.sorted ? say("Reports filed. Not a single stray page.") : sortGame(),
-      Z: () => F.officeBattle ? say("Inbox zero. Beautiful.") : startBattle('inbox'),
+      Z: () => F.officeBattle ? say("Inbox zero. Beautiful.") : sting('Inbox Overload', 'Four hundred unread. All urgent.', () => startBattle('inbox')),
       w: () => say("The harbour sparkles between the towers."),
       p: () => say("A desk plant, alive thanks to " + CONFIG.name + "'s watering reminders."),
       d: () => say(["A coworker's desk. Messier than " + CONFIG.name + " would ever allow.", "A tiny model freight train sits next to the keyboard."]),
@@ -89,7 +93,7 @@ const MAPS = {
     hints: () => ['J'],
     onEnter() { G.wearing = G.outfit; say(["Golden hour at the beach.", "The sea breeze is perfect.", CONFIG.car + " is parked by the sand whenever you're ready for dinner."]); },
     act: {
-      J: () => say([CONFIG.car + " the Corolla, parked and ready.", { n: CONFIG.boyfriend, t: "(Text message) Table's booked at The Botanist. Wear the blue dress?" }, { n: CONFIG.name, t: CONFIG.catchphrase }], () => { const c = W.objs.find(o => o.ch === 'J'); if (c) { sfx('honk'); confetti(c.x + 0.5, 1, c.z, 30); } fade(() => loadMap('botanist')); }),
+      J: () => say([CONFIG.car + " the Corolla, parked and ready.", { n: CONFIG.boyfriend, t: "(Text message) Table's booked at The Botanist. Wear the blue dress?" }, { n: CONFIG.name, t: CONFIG.catchphrase }, { n: CONFIG.boyfriend, t: "(Text message) Actually... tiny hiccup with the booking. Don't panic. Just come." }, { n: CONFIG.name, t: CONFIG.boyfriend + ". What did you do." }], () => sting('Uh oh', 'A hiccup. On her birthday.', () => { const c = W.objs.find(o => o.ch === 'J'); if (c) { sfx('honk'); confetti(c.x + 0.5, 1, c.z, 30); } fade(() => loadMap('botanist')); })),
       s: (x) => say(x < 6 ? CONFIG.insideJokes[2] : "Just a shell. Luca would have sniffed it suspiciously."),
       u: () => say("A beach umbrella. Shade for later."),
       p: () => say("A palm tree swaying in the breeze."),
@@ -110,7 +114,16 @@ const MAPS = {
       for (let i = 0; i < 4; i++) { const bt = grp(g, 3.3 + i * 0.35, 0.93, 2.2); mk(G_CYL, '#dff2ff', [0.1, 0.18, 0.1], [0, 0.09, 0], bt, { alpha: 0.7 }); mk(G_CYL, '#dff2ff', [0.04, 0.08, 0.04], [0, 0.22, 0], bt, { alpha: 0.7 }); }
     },
     hints: () => [!F.drink && 'n', F.drink && !F.dinner && 'A'],
-    onEnter() { G.wearing = 'dress'; say([CONFIG.dinnerSpot + ". Named after a botanist who once ran a bookshop on this very spot.", "Victorian apothecary vibes: botanical prints, hanging plants, water in little lab bottles.", CONFIG.name + "'s in her blue dress.", { n: CONFIG.boyfriend, t: "Wow! Look how beautiful your outfit is." }, "Grab a drink at the bar, then join " + CONFIG.boyfriend + " at the table."]); },
+    onEnter() {
+      G.wearing = 'dress';
+      const welcome = () => say([CONFIG.dinnerSpot + ". Named after a botanist who once ran a bookshop on this very spot.", "Victorian apothecary vibes: botanical prints, hanging plants, water in little lab bottles.", CONFIG.name + "'s in her blue dress.", { n: CONFIG.boyfriend, t: "Wow! Look how beautiful your outfit is." }, "Grab a drink at the bar, then join " + CONFIG.boyfriend + " at the table."]);
+      if (F.surprise) return welcome();
+      setSky('night'); G.mode = 'busy';
+      say([CONFIG.dinnerSpot + ". But the windows are dark.", { n: CONFIG.name, t: "Hello? Did they actually lose the booking?" }, "A match strikes. Then another. Then forty fairy lights."], () => {
+        F.surprise = true; setSky('evening');
+        sting('Surprise!', 'The whole bar was in on it', () => { [[3, 3], [7, 5], [11, 3], [7, 7]].forEach(([x, z]) => confetti(x, 1.6, z, 40)); G.mode = 'map'; welcome(); }, { kind: 'win', sfx: 'fanfare' });
+      });
+    },
     doorOpen: () => false,
     doorLocked: () => "Leaving? The night's just getting started.",
     act: {
@@ -129,7 +142,7 @@ HEARTS_TOTAL = STORY_MAPS.reduce((n, id) => n + MAPS[id].rows.join('').split('h'
 function loadMap(id) {
   clearUI(); G.scene = 'map'; G.mapId = id;
   const def = MAPS[id];
-  if (id === 'gym') G.wearing = 'gym'; else if (id === 'botanist') G.wearing = 'dress'; else if (id === 'bedroom' && !F.outfit) G.wearing = 'pj'; else G.wearing = G.outfit;
+  if (id === 'gym') G.wearing = 'gym'; else if (id === 'botanist') G.wearing = 'dress'; else if ((id === 'bedroom' || id === 'block') && !F.outfit) G.wearing = 'pj'; else G.wearing = G.outfit;
   buildMap(id);
   showHUD(true); setChapter(def.title); chapterCard(def.title); G.clock = SCENE_TIME[id] || G.clock;
   saveCheckpoint(id);
@@ -200,7 +213,7 @@ function talkMum() {
     else if (d.k === 'hug') { stat('happy', 5); const m = W.npcs.find(n => n.ch === 'M'); if (m) FX.emit(m.x, 1.2, m.z, '#ff7aa8', 12, 1.2, { g: -1, life: 1.2 }); say({ n: 'Mum', t: "Happy birthday, darling. Go shine." }, refreshHints); }
     else say({ n: 'Mum', t: "Have the best day, love!" }, refreshHints);
   });
-  if (first) { F.mum = true; stat('happy', 10); say([{ n: 'Mum', t: "Happy birthday, love! I can't believe how grown up you are." }, { n: 'Mum', t: "Luca's been waiting by your door since six." }, { n: 'Mum', t: "Make yourself a flat white and relax by the big window before your big day." }, { n: CONFIG.name, t: CONFIG.catchphrase }], menu); }
+  if (first) { F.mum = true; stat('happy', 10); say([{ n: 'Mum', t: "Happy birthday, love! I can't believe how grown up you are." }, { n: 'Mum', t: "Luca's been waiting by your door since six." }, { n: 'Mum', t: CONFIG.boyfriend + " has been texting me all morning about tonight. I'm saying nothing." }, { n: 'Mum', t: "Make yourself a flat white and relax by the big window before your big day." }, { n: CONFIG.name, t: CONFIG.catchphrase }], menu); }
   else menu();
 }
 function lucaTalk() { petGame(); }
@@ -243,11 +256,11 @@ function drinkMenu() {
 function dinnerMenu() {
   pickMenu('Dinner with ' + CONFIG.boyfriend, 'Order anything. It is your night.', CONFIG.dishes, d => {
     F.dinner = true; G.dish = d.n; stat('energy', 30); refreshHints();
-    say([{ n: CONFIG.boyfriend, t: "Good choice. The " + d.n.toLowerCase() + " here is unreal." }, d.n + ". Absolutely delicious. Five stars.", { n: CONFIG.boyfriend, t: "Okay. One more thing." }, "The staff bring out a birthday cake, candles lit.", "The whole bar starts singing."], cakeTime);
+    say([{ n: CONFIG.boyfriend, t: "Good choice. The " + d.n.toLowerCase() + " here is unreal." }, d.n + ". Absolutely delicious. Five stars.", { n: CONFIG.boyfriend, t: "Okay. One more thing." }, "Then every light in the bar goes out.", "Total darkness. Someone giggles.", "Three tiny flames float out of the kitchen. The whole bar starts singing."], cakeTime);
   });
 }
 function cakeTime() {
-  G.mode = 'busy';
+  G.mode = 'busy'; setSky('night');
   const t = W.objs.find(o => o.ch === 't');
   const cake = makeCake(world, t.x, 0.65, t.z, 3); popIn(cake); cake.scale.setScalar(0.001); sfx('pop');
   cam.goal.set(t.x - 0.4, 0.6, t.z); cam.zoomGoal = 2.2;
@@ -256,7 +269,7 @@ function cakeTime() {
     const f = cake.userData.flames.find(f => f.visible); if (!f) return;
     f.visible = false; sfx('blow'); const wp = new THREE.Vector3(); f.getWorldPosition(wp); FX.emit(wp.x, wp.y, wp.z, ['#ffffff', '#e8e0f0'], 10, 0.8, { g: -1, life: 1.2 });
     if (!cake.userData.flames.some(f => f.visible)) {
-      clearUI(); confetti(t.x, 1.4, t.z, 90); sfx('badge'); cam.shake = SET.calm ? 0 : 0.15;
+      clearUI(); setSky('evening'); confetti(t.x, 1.4, t.z, 90); heartBurst(t.x, 1.6, t.z, '#ff7aa8', 0.1); sfx('badge'); cam.shake = SET.calm ? 0 : 0.15;
       setTimeout(() => say(CONFIG.finaleMessage.map(t => ({ n: CONFIG.boyfriend, t })).concat([{ n: CONFIG.name, t: CONFIG.catchphrase }]), () => fade(finale)), 900);
     }
   }, 'big');
@@ -311,7 +324,9 @@ function updateFireworks(dt) {
   if (G.fwT <= 0) {
     G.fwT = (SET.calm ? 1.2 : 0.55) + Math.random() * 0.5;
     const x = (Math.random() - 0.5) * 16, y = 5 + Math.random() * 4, z = -6 + Math.random() * 5, c = CONFETTI[Math.floor(Math.random() * 5)];
-    FX.emit(x, y, z, [c, '#ffffff', c], SET.calm ? 26 : 60, 5, { g: 2.5, life: 1.6 }); sfx('boom');
+    G.fwN = (G.fwN || 0) + 1;
+    if (G.fwN % 4 === 0) heartBurst(x * 0.5, y + 0.5, z, '#ff7aa8', 0.2); else FX.emit(x, y, z, [c, '#ffffff', c], SET.calm ? 26 : 60, 5, { g: 2.5, life: 1.6 });
+    sfx('boom');
   }
   if (W && W.wheel) W.wheel.rotation.z += dt * (SET.calm ? 0.05 : 0.18);
   if (W && W.cast) W.cast.forEach((g, i) => { animatePerson(g, false, dt, G.t + i); g.position.y = 0.15 + (SET.calm ? 0 : Math.max(0, Math.sin(G.t * 3 + i * 1.5)) * 0.12); });
@@ -319,7 +334,7 @@ function updateFireworks(dt) {
 function credits() {
   clearUI(); G.scene = 'credits'; G.mode = 'credits'; clearCheckpoint();
   const got = Object.keys(BADGES).filter(k => G.badges[k]).map(k => '<p>' + BADGES[k].n + '</p>').join('') || '<p>None yet. Play again!</p>';
-  const c = el('div', 'credits', `<div class="roll"><h3>${esc(CONFIG.name)}'s Big Day</h3><p>v2, the whimsical edition</p><h3>Starring</h3><p>${esc(CONFIG.name)} as herself</p><p>Luca as the goodest boy</p><p>Mum as Mum</p><p>${esc(CONFIG.boyfriend)} as the boyfriend</p><p>${esc(CONFIG.car)} as the blue Corolla</p><h3>Filmed on location</h3><p>North Ryde</p><p>One Playground</p><p>${esc(CONFIG.company)}</p><p>The beach at golden hour</p><p>${esc(CONFIG.dinnerSpot)}</p><h3>Collection</h3><p>Hearts: ${heartsFound()} of ${HEARTS_TOTAL}</p><p>Secrets: ${Object.keys(G.secrets).length} of 4</p><p>Balloons caught: ${G.balloons}</p><h3>Badges</h3>${got}<h3>Made with love</h3><p>Design, code and cuddles: ${esc(CONFIG.boyfriend)}</p><p>Built with Claude Code and three.js</p><p>Fonts: Fredoka and Figtree (SIL OFL)</p><h3>Happy birthday, ${esc(CONFIG.name)}</h3></div>`);
+  const c = el('div', 'credits', `<div class="roll"><h3>${esc(CONFIG.name)}'s Big Day</h3><p>v2, the whimsical edition</p><h3>Starring</h3><p>${esc(CONFIG.name)} as herself</p><p>Luca as the goodest boy</p><p>Mum as Mum</p><p>${esc(CONFIG.boyfriend)} as the boyfriend</p><p>${esc(CONFIG.car)} as the blue Corolla</p><h3>Filmed on location</h3><p>Edmondson St, North Ryde</p><p>One Playground</p><p>${esc(CONFIG.company)}</p><p>The beach at golden hour</p><p>${esc(CONFIG.dinnerSpot)}</p><h3>Collection</h3><p>Hearts: ${heartsFound()} of ${HEARTS_TOTAL}</p><p>Secrets: ${Object.keys(G.secrets).length} of 4</p><p>Balloons caught: ${G.balloons}</p><p>Side quests: ${questsDone()} of ${Object.keys(QUESTS).length}</p><h3>Badges</h3>${got}<h3>Made with love</h3><p>Design, code and cuddles: ${esc(CONFIG.boyfriend)}</p><p>Built with Claude Code and three.js</p><p>Fonts: Fredoka and Figtree (SIL OFL)</p><h3>Happy birthday, ${esc(CONFIG.name)}</h3></div>`);
   ui.append(c);
   const bw = el('div', 'cbtns');
   const b = makeBtn('Play again', () => fade(titleScreen), 'big');
@@ -327,7 +342,7 @@ function credits() {
   saveAlbumPage('day', { title: CONFIG.name + "'s Big Day", sub: 'The birthday', head: 'Birthday memories', rows: [
     ['Outfit', (OUTFITS[G.outfit] || OUTFITS.office).name], ['Lunch', G.lunch || 'Something delicious'], ['Cocktail', G.drink || 'A little something'],
     ['Dinner', G.dish || 'With ' + CONFIG.boyfriend], ['Collection', heartsFound() + ' of ' + HEARTS_TOTAL + ' hearts, ' + Object.keys(G.secrets).length + ' secrets'],
-    ['Badges', Object.keys(BADGES).filter(k => G.badges[k] && !BADGES[k].pack).length + ' earned'] ] });
+    ['Side quests', questsDone() + ' of ' + Object.keys(QUESTS).length], ['Badges', Object.keys(BADGES).filter(k => G.badges[k] && !BADGES[k].pack).length + ' earned'] ] });
   if (typeof startWeekend === 'function') btns.push(makeBtn('Play the weekend', () => fade(startWeekend), 'big alt'));
   if (typeof startHoliday === 'function') btns.push(makeBtn('Go on holiday', () => fade(startHoliday), 'big sky'));
   bw.append(...btns); c.append(bw); setMenu(btns, { cols: btns.length, keepMode: true });

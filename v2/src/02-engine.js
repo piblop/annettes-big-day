@@ -13,7 +13,7 @@ function hsh(x, y, n) { let h = (x * 374761393 + y * 668265263 + (n || 0) * 9824
 
 // Extension registries: later modules add entries instead of editing the core files.
 // OBJ_BUILDERS["theme:ch"] = (w, h) => Group   WALL_BUILDERS["theme:ch"] = w => Group   QA_EXTRA.name = () => {}
-const OBJ_BUILDERS = {}, WALL_BUILDERS = {}, QA_EXTRA = {};
+const OBJ_BUILDERS = {}, WALL_BUILDERS = {}, QA_EXTRA = {}, MAP_HOOKS = []; // MAP_HOOKS: (def, id) => {} run after every buildMap
 
 /* ---------------- settings (guarded localStorage) ---------------- */
 const SET_KEY = 'abd2-settings-v1';
@@ -22,7 +22,7 @@ const SET = (() => {
   try { return Object.assign(d, JSON.parse(localStorage.getItem(SET_KEY) || '{}')); } catch (e) { return d; }
 })();
 function saveSettings() { try { localStorage.setItem(SET_KEY, JSON.stringify(SET)); } catch (e) {} document.body.classList.toggle('calm', SET.calm); }
-function buzz(ms) { if (SET.buzz && navigator.vibrate) try { navigator.vibrate(ms); } catch (e) {} }
+function buzz(ms) { if (SET.buzz && navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) try { navigator.vibrate(ms); } catch (e) {} }
 
 /* ---------------- renderer + scene ---------------- */
 const view = $('#view');
@@ -144,6 +144,7 @@ function setSky(name) {
   sun.color.set(s.sun); sun.intensity = s.k * 0.6; hemi.color.set(s.hs); hemi.groundColor.set(s.hg);
   stars.visible = name === 'night' || name === 'dusk' || name === 'evening';
   document.body.style.background = `linear-gradient(${s.top}, ${s.bot})`;
+  if (typeof skyFriends === 'function') skyFriends(name);
 }
 const stars = (() => {
   const n = 220, pos = new Float32Array(n * 3);
@@ -156,6 +157,11 @@ const clouds = [];
 function makeCloud(parent, x, y, z, s) {
   const g = grp(parent, x, y, z);
   [[0, 0, 0, 1], [0.7, -0.1, 0.1, 0.75], [-0.7, -0.12, 0, 0.7], [0.25, 0.3, -0.1, 0.7], [-0.3, 0.2, 0.2, 0.6]].forEach(([a, b, c, r]) => mk(G_SPH, '#ffffff', [r * s, r * s * 0.8, r * s], [a * s, b * s, c * s], g, { noShadow: true }));
+  // every other cloud is having a lovely nap
+  if (hsh(Math.round(x * 7), Math.round(z * 5), 5) < 0.55) {
+    [-1, 1].forEach(k => { mk(geo('dot', () => new THREE.SphereGeometry(0.5, 10, 6)), '#9a8ab0', [0.1 * s, 0.035 * s, 0.04 * s], [k * 0.2 * s, 0.03 * s, 0.49 * s], g, { noShadow: true }); mk(geo('dot', () => new THREE.SphereGeometry(0.5, 10, 6)), '#ffc2d6', [0.17 * s, 0.09 * s, 0.04 * s], [k * 0.34 * s, -0.08 * s, 0.45 * s], g, { noShadow: true }); });
+    mk(geo('dot', () => new THREE.SphereGeometry(0.5, 10, 6)), '#9a8ab0', [0.07 * s, 0.05 * s, 0.04 * s], [0, -0.08 * s, 0.5 * s], g, { noShadow: true });
+  }
   g.userData.speed = 0.15 + Math.random() * 0.25; clouds.push(g); return g;
 }
 function driftClouds(dt, span) { clouds.forEach(c => { c.position.x += c.userData.speed * dt; if (c.position.x > span) c.position.x = -span + (c.position.x - span); }); }

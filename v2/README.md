@@ -6,10 +6,25 @@ A 3D remake of the birthday game: the same day (bedroom, gym, office, lunch, bea
 Open `v2/index.html`. It is one self-contained file (fonts, three.js r128 and the game are all inlined, no network calls).
 
 ## Edit and build
-- Source lives in `v2/src/` (`01-config.js` is the EDIT ME block, `CONFIG.weekend` is in `08-weekend.js`). `shell.html` holds the HTML and CSS.
+- Source lives in `v2/src/` (`01-config.js` is the EDIT ME block, `CONFIG.weekend` is in `08-weekend.js`, `CONFIG.block` in `09-block.js`). `shell.html` holds the HTML and CSS. Files are joined in name order, and `09-main.js` boots the game, so new modules must sort before it.
+- Extension points: `OBJ_BUILDERS['theme:ch']`, `WALL_BUILDERS`, `QA_EXTRA`, `MAP_HOOKS` (run after every map build), and per-map `tint(ch, x, z)` for floor colours and `onStep(x, z)` for walk-on triggers.
 - Build: `node v2/tools/build.js` writes `v2/index.html`.
-- Test: `node v2/tools/play.js` plays title to credits, `node v2/tools/play-weekend.js` plays the weekend. Both run headless Chrome and fail on any console error (`W=390 H=844` for a phone).
-- Screenshots: `node v2/tools/shoot.js [scene ...]` writes `v2/screenshots/`. Scenes: title, map, drive, lift, battle, report, lunch, drinks, pet, finale, credits, wkbaths, wkshop, grocery, wkpark, fetch, wkhome, wknight, wkend (same names as `?qa=`).
+- Test: `node v2/tools/play.js` plays title to credits including every side quest, `node v2/tools/play-weekend.js` plays the weekend. Both run headless Chrome and fail on any console error (`W=390 H=844` for a phone). Set `CHROME=/path/to/chrome` if Chrome is not in the default Windows location. Waits follow game time, so the scripts also pass on slow software rendering.
+- Screenshots: `node v2/tools/shoot.js [scene ...]` writes `v2/screenshots/`. Scenes: title, map, drive, lift, battle, report, lunch, drinks, pet, finale, credits, block, blockcat, magpie, sting, caper, bottle, wkbaths, wkshop, grocery, wkpark, fetch, wkhome, wknight, wkend (same names as `?qa=`).
+
+## Side quests
+Optional detours on the birthday day, tracked in the Log (B) and counted in the credits. Finishing them earns the Good neighbour, Sleuth and Side quest badges.
+- **Around the block** (bedroom: Luca's lead by the door). A morning lap of Edmondson St, North Ryde with Luca, in pyjamas if you have not dressed yet. It is a stylised toy version of the real streets: Edmondson St meets Ryrie St at the corner, Blenheim Rd has the shops, and the gate leads to Blenheim Park and its dog park. Five quests live here: walk all four corners, Luca's five-stop sniff report, a stray parcel for "the house with the lemon tree" (with a twist), Biscuit the cat stuck up a jacaranda, and a swooping-season showdown with the Ryrie St magpie. Three hearts are hidden on the block too.
+- **The cake caper** (office: the cake table). Someone got into the birthday cake. Ask the four coworkers, then name the culprit at the cake.
+- **Message in a bottle** (beach). Follow three glints along the wet sand.
+
+Content lives in `CONFIG.block` at the top of `src/09-block.js` (street names, the cat, sniff reports, suspects, the bottle note).
+
+## Drama
+`sting(title, sub, cb)` in `src/09-atmosphere.js` is the cinematic beat: letterbox bars, speed lines, a tilted title and a camera shake (toned down by Reduced motion). The day uses it for The Last Set, Inbox Overload, the CEO's 4:59 email, the booking wobble at the beach, the dark-windows surprise at The Botanist and every quest ending. The cake arrives in a blackout and the finale throws heart-shaped fireworks.
+
+## Whimsy pass
+A sleepy sun, a dozing moon, a rainbow and a hot-air balloon live behind every island (parented to the camera, so they frame any zoom or rotation). Half the clouds are napping. Islands grow toadstools, flowering vines, crystals and a little waterfall. Butterflies loop the grassy islands, petals drift by day, gold dust at golden hour and fireflies at night. Footsteps puff, hearts pulse and the screen has a soft pink edge glow.
 
 ## Controls
 Arrows/WASD walk, Space/Enter/Z = A, Esc/X = B, Q/E rotate the diorama, B opens the collection log. Tap a spot to walk there, or tap a thing to walk up and use it.

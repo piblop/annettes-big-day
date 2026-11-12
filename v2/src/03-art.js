@@ -403,5 +403,17 @@ function makeIslandBase(parent, w, d, top, cx, cz) {
   }
   // hanging rocks underneath
   for (let i = 0; i < 7; i++) { const c = mk(G_CONE, i % 2 ? '#c89b74' : '#b98a64', [1.4 + hsh(i, 3) * 1.4, 1.6 + hsh(i, 4) * 2, 1.4 + hsh(i, 5) * 1.2], [(hsh(i, 6) - 0.5) * (w - 2), -1.6 - hsh(i, 7), (hsh(i, 8) - 0.5) * (d - 2)], g, { noShadow: true }); c.rotation.x = Math.PI; }
-  return g;
+  // whimsy: toadstools on the cake layers, flowering vines, glowing crystals and a little waterfall off the front
+  const n = Math.max(4, Math.floor(w / 2.4));
+  for (let i = 0; i < n; i++) {
+    const x = -w / 2 + 0.7 + (i + hsh(i, 21) * 0.6) * (w - 1.4) / n, z = d / 2 + 0.1, s = 0.7 + hsh(i, 22) * 0.6;
+    if (i % 3 === 1) { mk(G_CYL, '#fff4e8', [0.09 * s, 0.2 * s, 0.09 * s], [x, -0.62, z + 0.12], g, { noShadow: true }); mk(G_SPH, i % 2 ? '#ff7aa8' : '#ff9f6b', [0.3 * s, 0.2 * s, 0.3 * s], [x, -0.5, z + 0.12], g, { noShadow: true }); [[-0.07, 0.05], [0.06, 0.06], [0, 0.09]].forEach(([a, b]) => mk(G_SPH, '#ffffff', [0.06 * s, 0.03 * s, 0.06 * s], [x + a * s, -0.5 + b * s, z + 0.16 + Math.abs(a)], g, { noShadow: true })); }
+    else { const len = 0.5 + hsh(i, 23) * 0.9; mk(G_CYL, '#6fbf73', [0.035, len, 0.035], [x, -0.45 - len / 2, z + 0.08], g, { noShadow: true }); for (let k = 0; k < 3; k++) mk(G_SPH, k === 2 ? CONFETTI[i % 4] : '#8fd08a', [0.11, 0.08, 0.06], [x + (k % 2 ? 0.07 : -0.07), -0.55 - k * len / 3.2, z + 0.1], g, { noShadow: true }); }
+  }
+  for (let i = 0; i < 5; i++) { const c = mk(G_CONE, ['#cdb8ff', '#a9d8ff', '#ffc2d6'][i % 3], [0.28, 0.6 + hsh(i, 24) * 0.5, 0.28], [(hsh(i, 25) - 0.5) * (w - 1), -1.35 - hsh(i, 26) * 0.4, d / 2 - 0.4 - hsh(i, 27) * 1.2], g, { glow: true, alpha: 0.85 }); c.rotation.x = Math.PI; }
+  const fx = w / 2 - 1.6 - hsh(Math.round(w), 28) * 1.5;
+  mk(G_BOX, '#bfe9ff', [0.6, 2.6, 0.06], [fx, -1.55, d / 2 + 0.2], g, { glow: true, alpha: 0.6 }); mk(G_BOX, '#ffffff', [0.16, 2.6, 0.07], [fx - 0.12, -1.55, d / 2 + 0.2], g, { glow: true, alpha: 0.6 });
+  mk(G_SPH, '#9fdcf5', [0.8, 0.14, 0.4], [fx, -0.22, d / 2 + 0.08], g, { noShadow: true });
+  [[-0.2, 0.3], [0.15, 0.36], [0, 0.26], [0.3, 0.24], [-0.32, 0.22]].forEach(([a, r]) => mk(G_SPH, '#ffffff', [r, r, r], [fx + a, -2.9, d / 2 + 0.2], g, { glow: true, alpha: 0.85 }));
+  return mergeStatic(g);
 }

@@ -51,6 +51,15 @@ Title (party stage with Annette, Mum, Paulo and Luca) > Bedroom (outfit, skincar
 ## Expansion pack: Weekend Adventure
 An optional second campaign, launched from a "Weekend Adventure" button on the title screen AND a "Play the weekend" button on the credits screen (both call `startWeekend()`). A cozy Saturday with Paulo and Luca: Greenwich Baths (swim) > Drive > Top Ryde ALDI (grocery-grab mini-game) > Drive > dog park (walk Luca + fetch timing mini-game) > home (pick a movie, then chess OR a picnic) > night out (dinner OR wine bar) > weekend end card. State uses `F.wk*` flags (wkBaths, wkGroceries, wkFetch, wkMovie, wkActivity); `startWeekend()` resets them. Content lives in `CONFIG.weekend`. New scenes `wnight`/`wend` have their own renderers. Only two real mini-games (grocery grab reuses the sort/menu pattern; fetch reuses the lift timing-bar). No hearts in weekend maps (heartsTotal is global and shown in credits).
 
+## v2 (the 3D edition, in `v2/`)
+A three.js diorama remake with its own source tree and build. Read `v2/README.md` first. Short version:
+- Edit `v2/src/*.js` and `v2/src/shell.html`, then run `node v2/tools/build.js` to write `v2/index.html` (still one self-contained file). Never hand-edit `v2/index.html`.
+- Files are joined in name order and `09-main.js` boots the game, so a new module must sort before it.
+- `09-atmosphere.js`: whimsy (sky friends, butterflies, motes), `sting()` for dramatic beats, and the side-quest registry (`QUESTS`, `questStart`, `questDone`; progress lives in `F.q_<id>`).
+- `09-block.js`: the Edmondson St block map and all side quests. Personal content is in `CONFIG.block`.
+- Test with `CHROME=<path> node v2/tools/play.js` (also `play-weekend.js`, `play-holiday.js`); they must end with PASS and no console errors.
+- The Luca rule has one more exception in v2: he comes on the optional morning walk around the block.
+
 ## Rules
 - Keep it one self-contained `index.html` unless Paulo explicitly asks for a build setup. It must stay easy to share as a single file or link.
 - Original art only. No real Pokemon, Nintendo or other franchise characters, logos or names. No song lyrics or copyrighted audio (artist names on the radio are fine).

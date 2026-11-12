@@ -4,13 +4,13 @@ const { spawn } = require('child_process'), fs = require('fs'), path = require('
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const root = path.join(__dirname, '..'), out = path.join(root, 'screenshots'); fs.mkdirSync(out, { recursive: true });
 const url = 'file:///' + path.join(root, 'index.html').split(path.sep).join('/');
-const scenes = process.argv.slice(2).length ? process.argv.slice(2) : ['title', 'map', 'drive', 'lift', 'battle', 'report', 'lunch', 'drinks', 'pet', 'finale', 'credits'];
+const scenes = process.argv.slice(2).length ? process.argv.slice(2) : ['title', 'map', 'drive', 'lift', 'battle', 'report', 'lunch', 'drinks', 'pet', 'finale', 'credits', 'block', 'blockcat', 'magpie', 'sting', 'caper', 'bottle'];
 const Wd = +process.env.W || 1280, Ht = +process.env.H || 800, wait = +process.env.WAIT || 2600, sfx = process.env.SUFFIX || '';
 const PORT = +process.env.PORT || 9333;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const prof = fs.mkdtempSync(path.join(os.tmpdir(), 'abd2-'));
-  const ch = spawn(CHROME, ['--headless=new', '--remote-debugging-port=' + PORT, '--user-data-dir=' + prof, '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files', `--window-size=${Wd},${Ht}`, 'about:blank'], { stdio: 'ignore' });
+  const ch = spawn(CHROME, ['--headless=new', ...(process.getuid && process.getuid() === 0 ? ['--no-sandbox'] : []), '--remote-debugging-port=' + PORT, '--user-data-dir=' + prof, '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files', `--window-size=${Wd},${Ht}`, 'about:blank'], { stdio: 'ignore' });
   let tabs; for (let i = 0; i < 50; i++) { try { tabs = await (await fetch('http://127.0.0.1:' + PORT + '/json')).json(); if (tabs.find(t => t.type === 'page')) break; } catch (e) {} await sleep(200); }
   const ws = new WebSocket(tabs.find(t => t.type === 'page').webSocketDebuggerUrl); await new Promise(r => ws.onopen = r);
   let id = 0; const pend = {}, errs = [];

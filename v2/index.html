@@ -207,6 +207,27 @@ button { font-family:'Fredoka', system-ui, sans-serif; }
 .logs div { border:2px dashed var(--tan); border-radius:14px; padding:8px 10px; font-size:14px; }
 .logs div.got { border-style:solid; background:#fff4c9; }
 .logs b { font-family:'Fredoka', sans-serif; display:block; }
+.logs div.on { border-color:var(--pink); background:#fff3f7; }
+.qhead { margin:14px 0 8px !important; font:600 16px 'Fredoka', sans-serif !important; color:var(--ink) !important; }
+
+/* dreamy edge glow over the diorama */
+#vig { position:fixed; inset:0; pointer-events:none; z-index:4; background:radial-gradient(ellipse at 50% 46%, rgba(255,255,255,0) 58%, rgba(255,190,214,.2) 86%, rgba(255,170,200,.34) 100%); }
+
+/* the sting: cinematic bars, speed lines and a tilted title for dramatic beats */
+.sting { position:fixed; inset:0; z-index:56; display:grid; place-items:center; overflow:hidden; cursor:pointer; animation:fadeIn .15s; background:radial-gradient(circle, rgba(74,51,85,.5) 0, rgba(74,51,85,.28) 45%, rgba(74,51,85,.5) 100%); }
+.sting.out { opacity:0; transition:opacity .25s; }
+.sting .lb { position:absolute; left:0; right:0; height:13vh; background:#4a3355; animation:barIn .35s cubic-bezier(.2,.9,.3,1) both; }
+.sting .lb.t { top:0; transform-origin:top; border-bottom:4px solid var(--pink); } .sting .lb.b { bottom:0; transform-origin:bottom; border-top:4px solid var(--pink); }
+.sting .burst { position:absolute; width:150vmax; height:150vmax; border-radius:50%; background:repeating-conic-gradient(from 0deg, rgba(255,255,255,.42) 0 5deg, rgba(255,255,255,0) 5deg 15deg); -webkit-mask-image:radial-gradient(circle, transparent 16%, #000 60%); mask-image:radial-gradient(circle, transparent 16%, #000 60%); animation:spinSlow 14s linear infinite; }
+.sting .card { position:relative; display:flex; flex-direction:column; align-items:center; gap:10px; padding:0 18px; text-align:center; transform:rotate(-4deg); animation:stingIn .5s cubic-bezier(.3,1.8,.5,1) both; }
+.sting .card b { font:700 max(38px, 7vw) 'Fredoka', sans-serif; line-height:1; letter-spacing:1px; color:#fff; text-shadow:0 4px 0 var(--pink), 0 9px 0 rgba(74,51,85,.45), 0 0 34px rgba(255,255,255,.9); }
+.sting .card small { background:var(--paper); border:2px solid var(--tan); border-radius:999px; padding:6px 18px; box-shadow:var(--shadow); font:600 max(15px, 1.5vw) 'Fredoka', sans-serif; color:var(--ink); }
+.sting.s-win { background:radial-gradient(circle, rgba(255,122,168,.5) 0, rgba(255,209,102,.25) 50%, rgba(255,122,168,.45) 100%); } .sting.s-win .lb { background:#ff7aa8; border-color:#fff4c9; } .sting.s-win .card b { text-shadow:0 4px 0 #ffb347, 0 9px 0 rgba(90,61,43,.3), 0 0 34px rgba(255,255,255,.9); }
+.sting.s-dark { background:rgba(29,27,74,.55); } .sting.s-dark .burst { display:none; }
+.sting.still *, .sting.still { animation:none !important; }
+@keyframes barIn { from { transform:scaleY(0); } }
+@keyframes stingIn { from { transform:scale(2.4) rotate(8deg); opacity:0; } }
+@keyframes spinSlow { to { transform:rotate(360deg); } }
 
 /* touch pad */
 #pad { position:fixed; inset:auto 0 0 0; padding:0 16px calc(16px + env(safe-area-inset-bottom,0px)); display:flex; justify-content:space-between; align-items:flex-end; pointer-events:none; z-index:8; }
@@ -221,6 +242,7 @@ button { font-family:'Fredoka', system-ui, sans-serif; }
 </head>
 <body>
 <div id="view"></div>
+<div id="vig"></div>
 <div id="hud" class="hidden">
   <span id="chapter" class="pill">Chapter</span>
   <span id="clock" class="pill">7:30 am</span>
@@ -373,7 +395,7 @@ function hsh(x, y, n) { let h = (x * 374761393 + y * 668265263 + (n || 0) * 9824
 
 // Extension registries: later modules add entries instead of editing the core files.
 // OBJ_BUILDERS["theme:ch"] = (w, h) => Group   WALL_BUILDERS["theme:ch"] = w => Group   QA_EXTRA.name = () => {}
-const OBJ_BUILDERS = {}, WALL_BUILDERS = {}, QA_EXTRA = {};
+const OBJ_BUILDERS = {}, WALL_BUILDERS = {}, QA_EXTRA = {}, MAP_HOOKS = []; // MAP_HOOKS: (def, id) => {} run after every buildMap
 
 /* ---------------- settings (guarded localStorage) ---------------- */
 const SET_KEY = 'abd2-settings-v1';
@@ -382,7 +404,7 @@ const SET = (() => {
   try { return Object.assign(d, JSON.parse(localStorage.getItem(SET_KEY) || '{}')); } catch (e) { return d; }
 })();
 function saveSettings() { try { localStorage.setItem(SET_KEY, JSON.stringify(SET)); } catch (e) {} document.body.classList.toggle('calm', SET.calm); }
-function buzz(ms) { if (SET.buzz && navigator.vibrate) try { navigator.vibrate(ms); } catch (e) {} }
+function buzz(ms) { if (SET.buzz && navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) try { navigator.vibrate(ms); } catch (e) {} }
 
 /* ---------------- renderer + scene ---------------- */
 const view = $('#view');
@@ -504,6 +526,7 @@ function setSky(name) {
   sun.color.set(s.sun); sun.intensity = s.k * 0.6; hemi.color.set(s.hs); hemi.groundColor.set(s.hg);
   stars.visible = name === 'night' || name === 'dusk' || name === 'evening';
   document.body.style.background = `linear-gradient(${s.top}, ${s.bot})`;
+  if (typeof skyFriends === 'function') skyFriends(name);
 }
 const stars = (() => {
   const n = 220, pos = new Float32Array(n * 3);
@@ -516,6 +539,11 @@ const clouds = [];
 function makeCloud(parent, x, y, z, s) {
   const g = grp(parent, x, y, z);
   [[0, 0, 0, 1], [0.7, -0.1, 0.1, 0.75], [-0.7, -0.12, 0, 0.7], [0.25, 0.3, -0.1, 0.7], [-0.3, 0.2, 0.2, 0.6]].forEach(([a, b, c, r]) => mk(G_SPH, '#ffffff', [r * s, r * s * 0.8, r * s], [a * s, b * s, c * s], g, { noShadow: true }));
+  // every other cloud is having a lovely nap
+  if (hsh(Math.round(x * 7), Math.round(z * 5), 5) < 0.55) {
+    [-1, 1].forEach(k => { mk(geo('dot', () => new THREE.SphereGeometry(0.5, 10, 6)), '#9a8ab0', [0.1 * s, 0.035 * s, 0.04 * s], [k * 0.2 * s, 0.03 * s, 0.49 * s], g, { noShadow: true }); mk(geo('dot', () => new THREE.SphereGeometry(0.5, 10, 6)), '#ffc2d6', [0.17 * s, 0.09 * s, 0.04 * s], [k * 0.34 * s, -0.08 * s, 0.45 * s], g, { noShadow: true }); });
+    mk(geo('dot', () => new THREE.SphereGeometry(0.5, 10, 6)), '#9a8ab0', [0.07 * s, 0.05 * s, 0.04 * s], [0, -0.08 * s, 0.5 * s], g, { noShadow: true });
+  }
   g.userData.speed = 0.15 + Math.random() * 0.25; clouds.push(g); return g;
 }
 function driftClouds(dt, span) { clouds.forEach(c => { c.position.x += c.userData.speed * dt; if (c.position.x > span) c.position.x = -span + (c.position.x - span); }); }
@@ -1026,7 +1054,19 @@ function makeIslandBase(parent, w, d, top, cx, cz) {
   }
   // hanging rocks underneath
   for (let i = 0; i < 7; i++) { const c = mk(G_CONE, i % 2 ? '#c89b74' : '#b98a64', [1.4 + hsh(i, 3) * 1.4, 1.6 + hsh(i, 4) * 2, 1.4 + hsh(i, 5) * 1.2], [(hsh(i, 6) - 0.5) * (w - 2), -1.6 - hsh(i, 7), (hsh(i, 8) - 0.5) * (d - 2)], g, { noShadow: true }); c.rotation.x = Math.PI; }
-  return g;
+  // whimsy: toadstools on the cake layers, flowering vines, glowing crystals and a little waterfall off the front
+  const n = Math.max(4, Math.floor(w / 2.4));
+  for (let i = 0; i < n; i++) {
+    const x = -w / 2 + 0.7 + (i + hsh(i, 21) * 0.6) * (w - 1.4) / n, z = d / 2 + 0.1, s = 0.7 + hsh(i, 22) * 0.6;
+    if (i % 3 === 1) { mk(G_CYL, '#fff4e8', [0.09 * s, 0.2 * s, 0.09 * s], [x, -0.62, z + 0.12], g, { noShadow: true }); mk(G_SPH, i % 2 ? '#ff7aa8' : '#ff9f6b', [0.3 * s, 0.2 * s, 0.3 * s], [x, -0.5, z + 0.12], g, { noShadow: true }); [[-0.07, 0.05], [0.06, 0.06], [0, 0.09]].forEach(([a, b]) => mk(G_SPH, '#ffffff', [0.06 * s, 0.03 * s, 0.06 * s], [x + a * s, -0.5 + b * s, z + 0.16 + Math.abs(a)], g, { noShadow: true })); }
+    else { const len = 0.5 + hsh(i, 23) * 0.9; mk(G_CYL, '#6fbf73', [0.035, len, 0.035], [x, -0.45 - len / 2, z + 0.08], g, { noShadow: true }); for (let k = 0; k < 3; k++) mk(G_SPH, k === 2 ? CONFETTI[i % 4] : '#8fd08a', [0.11, 0.08, 0.06], [x + (k % 2 ? 0.07 : -0.07), -0.55 - k * len / 3.2, z + 0.1], g, { noShadow: true }); }
+  }
+  for (let i = 0; i < 5; i++) { const c = mk(G_CONE, ['#cdb8ff', '#a9d8ff', '#ffc2d6'][i % 3], [0.28, 0.6 + hsh(i, 24) * 0.5, 0.28], [(hsh(i, 25) - 0.5) * (w - 1), -1.35 - hsh(i, 26) * 0.4, d / 2 - 0.4 - hsh(i, 27) * 1.2], g, { glow: true, alpha: 0.85 }); c.rotation.x = Math.PI; }
+  const fx = w / 2 - 1.6 - hsh(Math.round(w), 28) * 1.5;
+  mk(G_BOX, '#bfe9ff', [0.6, 2.6, 0.06], [fx, -1.55, d / 2 + 0.2], g, { glow: true, alpha: 0.6 }); mk(G_BOX, '#ffffff', [0.16, 2.6, 0.07], [fx - 0.12, -1.55, d / 2 + 0.2], g, { glow: true, alpha: 0.6 });
+  mk(G_SPH, '#9fdcf5', [0.8, 0.14, 0.4], [fx, -0.22, d / 2 + 0.08], g, { noShadow: true });
+  [[-0.2, 0.3], [0.15, 0.36], [0, 0.26], [0.3, 0.24], [-0.32, 0.22]].forEach(([a, r]) => mk(G_SPH, '#ffffff', [r, r, r], [fx + a, -2.9, d / 2 + 0.2], g, { glow: true, alpha: 0.85 }));
+  return mergeStatic(g);
 }
 
 /* ===== 04-world.js ===== */
@@ -1128,7 +1168,7 @@ function buildMap(id) {
     const isWall = !W.outdoor && (z === 0 || x === 0 || x === Wd - 1 || z === H - 1) && ch !== 'D';
     if (ch === '~') { dm.position.set(x, -0.12, z); dm.scale.set(1, 1, 1); dm.updateMatrix(); water.setMatrixAt(nw, dm.matrix); water.setColorAt(nw++, col.set(def.water ? def.water[(x + z) % 2] : (x + z) % 2 ? '#8fd3f0' : '#9fdcf5')); continue; }
     dm.position.set(x, 0, z); dm.scale.set(1, 1, 1); dm.updateMatrix(); floor.setMatrixAt(nf, dm.matrix);
-    const c = ch === '_' ? def.wet : (isWall ? def.floor[1] : def.floor[(x + z) % 2]);
+    const c = (def.tint && def.tint(ch, x, z)) || (ch === '_' ? def.wet : (isWall ? def.floor[1] : def.floor[(x + z) % 2]));
     floor.setColorAt(nf++, col.set(c));
     if (isWall) W.walls.push({ x, z, ch });
   }
@@ -1175,7 +1215,8 @@ function buildMap(id) {
   if (def.luca) { W.luca = { x: def.luca.x, z: def.luca.z, tx: def.luca.x, tz: def.luca.z, t: 1, moving: false, dir: 'down', g: makeLuca(), trail: [] }; world.add(W.luca.g); }
   placeEntity(W.player, 1); if (W.luca) placeEntity(W.luca, 1);
   cam.goal.set(st.x, 0.5, st.z); cam.target.copy(cam.goal); cam.zoomGoal = 1; cam.zoom = 1; cam.orbit = 0; cam.pitch = MAP_PITCH; cam.base = MAP_BASE;
-  setSky(def.sky); refreshHints();
+  if (Math.abs(Math.sin(cam.yawGoal * 2)) > 0.01) cam.yaw = cam.yawGoal = 0; // an orbiting scene (title, finale) left the camera mid-turn
+  setSky(def.sky); MAP_HOOKS.forEach(f => f(def, id)); refreshHints();
 }
 function buildDoor(x, z) {
   const g = grp(world, x, 0, z);
@@ -1239,6 +1280,7 @@ function tryStep(dx, dz) {
   if (W.luca && !W.luca.moving) startMove(W.luca, p.x, p.z);
   else if (W.luca) W.luca.queue = [p.x, p.z];
   startMove(p, nx, nz); if (Math.random() < 0.5) sfx('step');
+  if (!SET.calm) FX.emit(p.x, 0.06, p.z, W.outdoor ? ['#ffffff', '#fff4c9'] : '#ffffff', 2, 0.5, { g: -0.6, life: 0.45 });
   return true;
 }
 function updateWalker(e, dt, speed) {
@@ -1263,6 +1305,7 @@ function onArrive() {
   const p = W.player, ch = charAt(p.x, p.z);
   const hi = W.hearts.findIndex(h => h.x === p.x && h.z === p.z);
   if (hi >= 0) collectHeart(hi);
+  if (W.def.onStep && G.mode === 'map' && W.def.onStep(p.x, p.z)) { p.path = []; p.pending = null; return; }
   if (ch === 'D') {
     p.path = []; p.pending = null;
     if (W.def.doorOpen && W.def.doorOpen()) { sfx('door'); W.def.onDoor(); }
@@ -1384,7 +1427,7 @@ function updateWorld(dt, t) {
     if (n.want > 0 || Math.abs(dx) + Math.abs(dz) <= 2) faceTo(n.g, [dx || 0.001, dz], dt, 5);
     else faceTo(n.g, [Math.sin(n.x + t * 0.2) * 0.3, 1], dt, 2);
   });
-  W.hearts.forEach(h => { h.m.rotation.y += dt * 2; h.m.position.y = 0.55 + Math.sin(t * 3 + h.x) * 0.08; });
+  W.hearts.forEach(h => { h.m.rotation.y += dt * 2; h.m.position.y = 0.55 + Math.sin(t * 3 + h.x) * 0.08; h.m.scale.setScalar(0.45 * (1 + Math.max(0, Math.sin(t * 5 + h.x)) * 0.12)); });
   W.markers.forEach(m => { m.rotation.y += dt * 2.5; if (m.userData.follow && W.luca) { m.position.x = W.luca.g.position.x; m.position.z = W.luca.g.position.z; } m.position.y = m.userData.base + Math.sin(t * 4) * 0.12; });
   W.anim = W.anim.filter(g => {
     if (g.userData.pop != null) { g.userData.pop += dt * 2.6; const k = clamp(g.userData.pop, 0, 1); g.scale.setScalar(Math.max(0.001, easeOutBack(k))); if (g.userData.pop >= 1) { g.scale.setScalar(1); g.userData.pop = null; return !!g.userData.bob; } return true; }
@@ -1611,6 +1654,7 @@ function openSettings() {
 function openLog() {
   if (G.mode !== 'map') return;
   const p = panel('Collection log', `Hearts ${heartsFound()} of ${HEARTS_TOTAL} &middot; Secrets ${Object.keys(G.secrets).length} of 4 &middot; Balloons ${G.balloons}`);
+  if ((G.campaign || 'day') === 'day') { p.append(el('p', 'sub qhead', `Side quests ${questsDone()} of ${Object.keys(QUESTS).length}`)); const q = el('div', 'logs'); Object.keys(QUESTS).forEach(id => { const s = questState(id), Q = QUESTS[id]; q.append(el('div', s === 2 ? 'got' : s ? 'on' : '', `<b>${esc(Q.n)}</b>${esc(s === 2 ? 'Done!' : s ? Q.how : Q.where)}`)); }); p.append(q); p.append(el('p', 'sub qhead', 'Secrets and badges')); }
   const g = el('div', 'logs');
   SECRET_IDS.forEach(id => g.append(el('div', G.secrets[id] ? 'got' : '', `<b>${G.secrets[id] ? SECRET_NAMES[id] : 'Secret ???'}</b>${G.secrets[id] ? 'Found!' : 'Keep poking around.'}`)));
   Object.keys(BADGES).forEach(id => g.append(el('div', G.badges[id] ? 'got' : '', `<b>${BADGES[id].n}</b>${esc(BADGES[id].how)}`)));
@@ -1647,7 +1691,7 @@ const MAPS = {
   bedroom: {
     theme: 'bedroom', title: 'Chapter 1: Wake up', sky: 'morning', edge: GRASS,
     floor: ['#f6e3ff', '#efd8fb'], wall: ['#ffd1e1', '#ffc6da'],
-    rows: ["#o###R##GGGG###", "#..ww.kk.vvjbb#", "#.........x.bb#", "#........S....#", "#..x..........#", "#............C#", "#.......x.....#", "#.....h.......#", "#..M..........#", "######D########"],
+    rows: ["#o###R##GGGG###", "#..ww.kk.vvjbb#", "#.........x.bb#", "#........S....#", "#..x..........#", "#............C#", "#.......x.....#", "#.....h.......#", "#..M.....l....#", "######D########"],
     start: { x: 7, z: 5, dir: 'down' }, luca: { x: 8, z: 5 },
     npcs: c => c === 'M' ? LOOK.mum : null,
     decorate(g) {
@@ -1704,17 +1748,21 @@ const MAPS = {
   office: {
     theme: 'office', title: 'Chapter 3: Work', sky: 'day', edge: GRASS,
     floor: ['#e3f1ff', '#d8eaff'], wall: ['#fff4e0', '#fff0d6'],
-    rows: ["#ww#ww#ww#ww###", "#............p#", "#.............#", "#.dd..dd..YZ..#", "#..c...c......#", "#.............#", "#.dd..dd..dd..#", "#..c......c...#", "#.........h...#", "######D########"],
+    rows: ["#ww#ww#ww#ww###", "#..........K.p#", "#.............#", "#.dd..dd..YZ..#", "#..c...c......#", "#.............#", "#.dd..dd..dd..#", "#..c......c...#", "#.........h...#", "######D########"],
     start: { x: 6, z: 8, dir: 'up' },
     npcs: (c, x, z) => c === 'c' ? ((x + z) % 2 ? { skin: '#cf9b6f', hair: '#6b4a32', top: '#7f93b3', bottom: '#4a4658', glasses: true } : { skin: '#f0c39a', hair: '#3a2f2a', hairStyle: 'bun', top: '#c55a6c', bottom: '#3a3d5c' }) : null,
     hints: () => [!F.sorted && 'Y', !F.officeBattle && 'Z', F.sorted && F.officeBattle && 'D'],
     onEnter() { G.wearing = G.outfit; say([CONFIG.company + ", Sydney CBD. Birthday balloons on the project coordinator's desk.", "Out at Moorebank, trains are swapping containers for the Port Botany run.", "File the reports at your desk, then battle that inbox on the computer."]); },
     doorOpen: () => F.sorted && F.officeBattle,
     doorLocked: () => "Not yet. File the reports and beat the inbox first.",
-    onDoor() { G.mode = 'busy'; say(["Project updates sent. Exec reports signed off.", "Clock off for lunch! Everyone's starving."], () => fade(lunchScene)); },
+    onDoor() {
+      G.mode = 'busy';
+      say(["Project updates sent. Exec reports signed off.", "Then one last email lands. Subject: URGENT. From: the CEO."], () => sting('URGENT', 'The board pack. In five minutes.', () =>
+        say([{ n: CONFIG.name, t: "Sent it at 10:42 this morning." }, "The CEO replies with one word: 'Legend.'", "Clock off for lunch! Everyone's starving."], () => fade(lunchScene))));
+    },
     act: {
       Y: () => F.sorted ? say("Reports filed. Not a single stray page.") : sortGame(),
-      Z: () => F.officeBattle ? say("Inbox zero. Beautiful.") : startBattle('inbox'),
+      Z: () => F.officeBattle ? say("Inbox zero. Beautiful.") : sting('Inbox Overload', 'Four hundred unread. All urgent.', () => startBattle('inbox')),
       w: () => say("The harbour sparkles between the towers."),
       p: () => say("A desk plant, alive thanks to " + CONFIG.name + "'s watering reminders."),
       d: () => say(["A coworker's desk. Messier than " + CONFIG.name + " would ever allow.", "A tiny model freight train sits next to the keyboard."]),
@@ -1729,7 +1777,7 @@ const MAPS = {
     hints: () => ['J'],
     onEnter() { G.wearing = G.outfit; say(["Golden hour at the beach.", "The sea breeze is perfect.", CONFIG.car + " is parked by the sand whenever you're ready for dinner."]); },
     act: {
-      J: () => say([CONFIG.car + " the Corolla, parked and ready.", { n: CONFIG.boyfriend, t: "(Text message) Table's booked at The Botanist. Wear the blue dress?" }, { n: CONFIG.name, t: CONFIG.catchphrase }], () => { const c = W.objs.find(o => o.ch === 'J'); if (c) { sfx('honk'); confetti(c.x + 0.5, 1, c.z, 30); } fade(() => loadMap('botanist')); }),
+      J: () => say([CONFIG.car + " the Corolla, parked and ready.", { n: CONFIG.boyfriend, t: "(Text message) Table's booked at The Botanist. Wear the blue dress?" }, { n: CONFIG.name, t: CONFIG.catchphrase }, { n: CONFIG.boyfriend, t: "(Text message) Actually... tiny hiccup with the booking. Don't panic. Just come." }, { n: CONFIG.name, t: CONFIG.boyfriend + ". What did you do." }], () => sting('Uh oh', 'A hiccup. On her birthday.', () => { const c = W.objs.find(o => o.ch === 'J'); if (c) { sfx('honk'); confetti(c.x + 0.5, 1, c.z, 30); } fade(() => loadMap('botanist')); })),
       s: (x) => say(x < 6 ? CONFIG.insideJokes[2] : "Just a shell. Luca would have sniffed it suspiciously."),
       u: () => say("A beach umbrella. Shade for later."),
       p: () => say("A palm tree swaying in the breeze."),
@@ -1750,7 +1798,16 @@ const MAPS = {
       for (let i = 0; i < 4; i++) { const bt = grp(g, 3.3 + i * 0.35, 0.93, 2.2); mk(G_CYL, '#dff2ff', [0.1, 0.18, 0.1], [0, 0.09, 0], bt, { alpha: 0.7 }); mk(G_CYL, '#dff2ff', [0.04, 0.08, 0.04], [0, 0.22, 0], bt, { alpha: 0.7 }); }
     },
     hints: () => [!F.drink && 'n', F.drink && !F.dinner && 'A'],
-    onEnter() { G.wearing = 'dress'; say([CONFIG.dinnerSpot + ". Named after a botanist who once ran a bookshop on this very spot.", "Victorian apothecary vibes: botanical prints, hanging plants, water in little lab bottles.", CONFIG.name + "'s in her blue dress.", { n: CONFIG.boyfriend, t: "Wow! Look how beautiful your outfit is." }, "Grab a drink at the bar, then join " + CONFIG.boyfriend + " at the table."]); },
+    onEnter() {
+      G.wearing = 'dress';
+      const welcome = () => say([CONFIG.dinnerSpot + ". Named after a botanist who once ran a bookshop on this very spot.", "Victorian apothecary vibes: botanical prints, hanging plants, water in little lab bottles.", CONFIG.name + "'s in her blue dress.", { n: CONFIG.boyfriend, t: "Wow! Look how beautiful your outfit is." }, "Grab a drink at the bar, then join " + CONFIG.boyfriend + " at the table."]);
+      if (F.surprise) return welcome();
+      setSky('night'); G.mode = 'busy';
+      say([CONFIG.dinnerSpot + ". But the windows are dark.", { n: CONFIG.name, t: "Hello? Did they actually lose the booking?" }, "A match strikes. Then another. Then forty fairy lights."], () => {
+        F.surprise = true; setSky('evening');
+        sting('Surprise!', 'The whole bar was in on it', () => { [[3, 3], [7, 5], [11, 3], [7, 7]].forEach(([x, z]) => confetti(x, 1.6, z, 40)); G.mode = 'map'; welcome(); }, { kind: 'win', sfx: 'fanfare' });
+      });
+    },
     doorOpen: () => false,
     doorLocked: () => "Leaving? The night's just getting started.",
     act: {
@@ -1769,7 +1826,7 @@ HEARTS_TOTAL = STORY_MAPS.reduce((n, id) => n + MAPS[id].rows.join('').split('h'
 function loadMap(id) {
   clearUI(); G.scene = 'map'; G.mapId = id;
   const def = MAPS[id];
-  if (id === 'gym') G.wearing = 'gym'; else if (id === 'botanist') G.wearing = 'dress'; else if (id === 'bedroom' && !F.outfit) G.wearing = 'pj'; else G.wearing = G.outfit;
+  if (id === 'gym') G.wearing = 'gym'; else if (id === 'botanist') G.wearing = 'dress'; else if ((id === 'bedroom' || id === 'block') && !F.outfit) G.wearing = 'pj'; else G.wearing = G.outfit;
   buildMap(id);
   showHUD(true); setChapter(def.title); chapterCard(def.title); G.clock = SCENE_TIME[id] || G.clock;
   saveCheckpoint(id);
@@ -1840,7 +1897,7 @@ function talkMum() {
     else if (d.k === 'hug') { stat('happy', 5); const m = W.npcs.find(n => n.ch === 'M'); if (m) FX.emit(m.x, 1.2, m.z, '#ff7aa8', 12, 1.2, { g: -1, life: 1.2 }); say({ n: 'Mum', t: "Happy birthday, darling. Go shine." }, refreshHints); }
     else say({ n: 'Mum', t: "Have the best day, love!" }, refreshHints);
   });
-  if (first) { F.mum = true; stat('happy', 10); say([{ n: 'Mum', t: "Happy birthday, love! I can't believe how grown up you are." }, { n: 'Mum', t: "Luca's been waiting by your door since six." }, { n: 'Mum', t: "Make yourself a flat white and relax by the big window before your big day." }, { n: CONFIG.name, t: CONFIG.catchphrase }], menu); }
+  if (first) { F.mum = true; stat('happy', 10); say([{ n: 'Mum', t: "Happy birthday, love! I can't believe how grown up you are." }, { n: 'Mum', t: "Luca's been waiting by your door since six." }, { n: 'Mum', t: CONFIG.boyfriend + " has been texting me all morning about tonight. I'm saying nothing." }, { n: 'Mum', t: "Make yourself a flat white and relax by the big window before your big day." }, { n: CONFIG.name, t: CONFIG.catchphrase }], menu); }
   else menu();
 }
 function lucaTalk() { petGame(); }
@@ -1883,11 +1940,11 @@ function drinkMenu() {
 function dinnerMenu() {
   pickMenu('Dinner with ' + CONFIG.boyfriend, 'Order anything. It is your night.', CONFIG.dishes, d => {
     F.dinner = true; G.dish = d.n; stat('energy', 30); refreshHints();
-    say([{ n: CONFIG.boyfriend, t: "Good choice. The " + d.n.toLowerCase() + " here is unreal." }, d.n + ". Absolutely delicious. Five stars.", { n: CONFIG.boyfriend, t: "Okay. One more thing." }, "The staff bring out a birthday cake, candles lit.", "The whole bar starts singing."], cakeTime);
+    say([{ n: CONFIG.boyfriend, t: "Good choice. The " + d.n.toLowerCase() + " here is unreal." }, d.n + ". Absolutely delicious. Five stars.", { n: CONFIG.boyfriend, t: "Okay. One more thing." }, "Then every light in the bar goes out.", "Total darkness. Someone giggles.", "Three tiny flames float out of the kitchen. The whole bar starts singing."], cakeTime);
   });
 }
 function cakeTime() {
-  G.mode = 'busy';
+  G.mode = 'busy'; setSky('night');
   const t = W.objs.find(o => o.ch === 't');
   const cake = makeCake(world, t.x, 0.65, t.z, 3); popIn(cake); cake.scale.setScalar(0.001); sfx('pop');
   cam.goal.set(t.x - 0.4, 0.6, t.z); cam.zoomGoal = 2.2;
@@ -1896,7 +1953,7 @@ function cakeTime() {
     const f = cake.userData.flames.find(f => f.visible); if (!f) return;
     f.visible = false; sfx('blow'); const wp = new THREE.Vector3(); f.getWorldPosition(wp); FX.emit(wp.x, wp.y, wp.z, ['#ffffff', '#e8e0f0'], 10, 0.8, { g: -1, life: 1.2 });
     if (!cake.userData.flames.some(f => f.visible)) {
-      clearUI(); confetti(t.x, 1.4, t.z, 90); sfx('badge'); cam.shake = SET.calm ? 0 : 0.15;
+      clearUI(); setSky('evening'); confetti(t.x, 1.4, t.z, 90); heartBurst(t.x, 1.6, t.z, '#ff7aa8', 0.1); sfx('badge'); cam.shake = SET.calm ? 0 : 0.15;
       setTimeout(() => say(CONFIG.finaleMessage.map(t => ({ n: CONFIG.boyfriend, t })).concat([{ n: CONFIG.name, t: CONFIG.catchphrase }]), () => fade(finale)), 900);
     }
   }, 'big');
@@ -1951,7 +2008,9 @@ function updateFireworks(dt) {
   if (G.fwT <= 0) {
     G.fwT = (SET.calm ? 1.2 : 0.55) + Math.random() * 0.5;
     const x = (Math.random() - 0.5) * 16, y = 5 + Math.random() * 4, z = -6 + Math.random() * 5, c = CONFETTI[Math.floor(Math.random() * 5)];
-    FX.emit(x, y, z, [c, '#ffffff', c], SET.calm ? 26 : 60, 5, { g: 2.5, life: 1.6 }); sfx('boom');
+    G.fwN = (G.fwN || 0) + 1;
+    if (G.fwN % 4 === 0) heartBurst(x * 0.5, y + 0.5, z, '#ff7aa8', 0.2); else FX.emit(x, y, z, [c, '#ffffff', c], SET.calm ? 26 : 60, 5, { g: 2.5, life: 1.6 });
+    sfx('boom');
   }
   if (W && W.wheel) W.wheel.rotation.z += dt * (SET.calm ? 0.05 : 0.18);
   if (W && W.cast) W.cast.forEach((g, i) => { animatePerson(g, false, dt, G.t + i); g.position.y = 0.15 + (SET.calm ? 0 : Math.max(0, Math.sin(G.t * 3 + i * 1.5)) * 0.12); });
@@ -1959,7 +2018,7 @@ function updateFireworks(dt) {
 function credits() {
   clearUI(); G.scene = 'credits'; G.mode = 'credits'; clearCheckpoint();
   const got = Object.keys(BADGES).filter(k => G.badges[k]).map(k => '<p>' + BADGES[k].n + '</p>').join('') || '<p>None yet. Play again!</p>';
-  const c = el('div', 'credits', `<div class="roll"><h3>${esc(CONFIG.name)}'s Big Day</h3><p>v2, the whimsical edition</p><h3>Starring</h3><p>${esc(CONFIG.name)} as herself</p><p>Luca as the goodest boy</p><p>Mum as Mum</p><p>${esc(CONFIG.boyfriend)} as the boyfriend</p><p>${esc(CONFIG.car)} as the blue Corolla</p><h3>Filmed on location</h3><p>North Ryde</p><p>One Playground</p><p>${esc(CONFIG.company)}</p><p>The beach at golden hour</p><p>${esc(CONFIG.dinnerSpot)}</p><h3>Collection</h3><p>Hearts: ${heartsFound()} of ${HEARTS_TOTAL}</p><p>Secrets: ${Object.keys(G.secrets).length} of 4</p><p>Balloons caught: ${G.balloons}</p><h3>Badges</h3>${got}<h3>Made with love</h3><p>Design, code and cuddles: ${esc(CONFIG.boyfriend)}</p><p>Built with Claude Code and three.js</p><p>Fonts: Fredoka and Figtree (SIL OFL)</p><h3>Happy birthday, ${esc(CONFIG.name)}</h3></div>`);
+  const c = el('div', 'credits', `<div class="roll"><h3>${esc(CONFIG.name)}'s Big Day</h3><p>v2, the whimsical edition</p><h3>Starring</h3><p>${esc(CONFIG.name)} as herself</p><p>Luca as the goodest boy</p><p>Mum as Mum</p><p>${esc(CONFIG.boyfriend)} as the boyfriend</p><p>${esc(CONFIG.car)} as the blue Corolla</p><h3>Filmed on location</h3><p>Edmondson St, North Ryde</p><p>One Playground</p><p>${esc(CONFIG.company)}</p><p>The beach at golden hour</p><p>${esc(CONFIG.dinnerSpot)}</p><h3>Collection</h3><p>Hearts: ${heartsFound()} of ${HEARTS_TOTAL}</p><p>Secrets: ${Object.keys(G.secrets).length} of 4</p><p>Balloons caught: ${G.balloons}</p><p>Side quests: ${questsDone()} of ${Object.keys(QUESTS).length}</p><h3>Badges</h3>${got}<h3>Made with love</h3><p>Design, code and cuddles: ${esc(CONFIG.boyfriend)}</p><p>Built with Claude Code and three.js</p><p>Fonts: Fredoka and Figtree (SIL OFL)</p><h3>Happy birthday, ${esc(CONFIG.name)}</h3></div>`);
   ui.append(c);
   const bw = el('div', 'cbtns');
   const b = makeBtn('Play again', () => fade(titleScreen), 'big');
@@ -1967,7 +2026,7 @@ function credits() {
   saveAlbumPage('day', { title: CONFIG.name + "'s Big Day", sub: 'The birthday', head: 'Birthday memories', rows: [
     ['Outfit', (OUTFITS[G.outfit] || OUTFITS.office).name], ['Lunch', G.lunch || 'Something delicious'], ['Cocktail', G.drink || 'A little something'],
     ['Dinner', G.dish || 'With ' + CONFIG.boyfriend], ['Collection', heartsFound() + ' of ' + HEARTS_TOTAL + ' hearts, ' + Object.keys(G.secrets).length + ' secrets'],
-    ['Badges', Object.keys(BADGES).filter(k => G.badges[k] && !BADGES[k].pack).length + ' earned'] ] });
+    ['Side quests', questsDone() + ' of ' + Object.keys(QUESTS).length], ['Badges', Object.keys(BADGES).filter(k => G.badges[k] && !BADGES[k].pack).length + ' earned'] ] });
   if (typeof startWeekend === 'function') btns.push(makeBtn('Play the weekend', () => fade(startWeekend), 'big alt'));
   if (typeof startHoliday === 'function') btns.push(makeBtn('Go on holiday', () => fade(startHoliday), 'big sky'));
   bw.append(...btns); c.append(bw); setMenu(btns, { cols: btns.length, keepMode: true });
@@ -2156,7 +2215,7 @@ function finishLift() {
   F.lifted = true; stat('gains', 8 + good * 4); stat('energy', -10, true);
   if (perf >= 2) { F.pr = true; toast('New PR!', true); confetti(W.player.g.position.x, 1.4, W.player.g.position.z, 60); }
   G.mode = 'map';
-  say([perf >= 2 ? "NEW PR! " + CONFIG.name + " just lifted her heaviest ever. The whole gym turns around." : good >= 2 ? "Solid set. Strong and steady." : "Tough set, but she finished it.", "Wait... something clanks behind the rack.", "The Last Set appears!"], () => startBattle('lastset'));
+  say([perf >= 2 ? "NEW PR! " + CONFIG.name + " just lifted her heaviest ever. The whole gym turns around." : good >= 2 ? "Solid set. Strong and steady." : "Tough set, but she finished it.", "Wait... something clanks behind the rack."], () => sting('The Last Set', 'It will not be skipped', () => startBattle('lastset')));
 }
 
 /* ---------------- battles: silly foes, can't really lose ---------------- */
@@ -3101,6 +3160,588 @@ Object.assign(QA_EXTRA, {
   wkend: () => { resetWeekend(); Object.assign(WKLOG, { list: 4, impulse: ['Kayak'], fetch: ['great', 'good', 'great'], movie: WK.movies[2].n, activity: 'Chess: Knight to f7', night: 'Dinner out: Margherita pizza' }); weekendEnd(); }
 });
 
+/* ===== 09-atmosphere.js ===== */
+/* =========================================================
+   CHARM: the whimsy pass. Sky friends (a sleepy sun, a dozing moon, a rainbow, a hot-air
+   balloon), butterflies, drifting petals and fireflies, plus the cinematic "sting" card
+   used for dramatic beats and the side-quest registry.
+   ========================================================= */
+
+const G_DOT = geo('dot', () => new THREE.SphereGeometry(0.5, 10, 6)); // light sphere for small or far-away blobs
+
+/* ---------------- sky friends: parented to the camera so they sit behind every island ---------------- */
+scene.add(camera);
+const SKYRIG = new THREE.Group(); SKYRIG.position.z = -220; camera.add(SKYRIG);
+const SKY = (() => {
+  const glow = (g, c, s, p, parent, a) => mk(g, c, s, p, parent, { glow: true, alpha: a });
+  const halfRing = geo('halfring', () => new THREE.TorusGeometry(0.5, 0.035, 5, 14, Math.PI));
+  // sleepy sun: soft halo, wobbly rays, closed happy eyes and blush
+  const sunG = grp(SKYRIG), rays = grp(sunG);
+  glow(G_SPH, '#fff6c9', [0.62, 0.62, 0.02], [0, 0, -0.02], sunG, 0.35);
+  glow(G_SPH, '#ffe08a', [0.36, 0.36, 0.03], [0, 0, 0], sunG);
+  for (let i = 0; i < 12; i++) { const a = i / 12 * TAU, r = glow(G_DOT, i % 2 ? '#ffd166' : '#ffe9a8', [0.05, i % 2 ? 0.13 : 0.09, 0.02], [Math.cos(a) * 0.27, Math.sin(a) * 0.27, -0.01], rays); r.rotation.z = a - Math.PI / 2; }
+  [-1, 1].forEach(s => { const e = glow(halfRing, '#c98a4a', [0.09, 0.07, 0.3], [s * 0.07, 0.015, 0.03], sunG); glow(G_DOT, '#ffb3a0', [0.07, 0.04, 0.01], [s * 0.12, -0.04, 0.03], sunG, 0.8); });
+  glow(halfRing, '#c98a4a', [0.1, 0.08, 0.3], [0, -0.035, 0.03], sunG).rotation.z = Math.PI;
+  // dozing moon with a nightcap
+  const moonG = grp(SKYRIG);
+  glow(G_SPH, '#fff8d6', [0.6, 0.6, 0.02], [0, 0, -0.02], moonG, 0.22);
+  glow(G_SPH, '#fff8d6', [0.34, 0.34, 0.03], [0, 0, 0], moonG);
+  [[-0.07, 0.07, 0.07], [0.09, -0.06, 0.05], [-0.02, -0.1, 0.04]].forEach(([x, y, r]) => glow(G_DOT, '#f1e6b4', [r, r, 0.01], [x, y, 0.02], moonG));
+  [-1, 1].forEach(s => { glow(halfRing, '#b59a6a', [0.07, 0.05, 0.3], [s * 0.06, 0.0, 0.035], moonG).rotation.z = Math.PI; glow(G_DOT, '#ffc2d6', [0.06, 0.035, 0.01], [s * 0.1, -0.045, 0.035], moonG, 0.8); });
+  glow(G_DOT, '#b59a6a', [0.03, 0.035, 0.01], [0, -0.06, 0.035], moonG);
+  const cap = glow(G_CONE, '#b9a3ff', [0.26, 0.3, 0.02], [0.09, 0.2, 0.03], moonG); cap.rotation.z = -0.5;
+  glow(G_DOT, '#ffffff', [0.07, 0.07, 0.02], [0.2, 0.3, 0.04], moonG);
+  // rainbow with a puff of cloud at each foot
+  const bowG = grp(SKYRIG), arc = geo('bowarc', () => new THREE.TorusGeometry(1, 0.03, 6, 48, Math.PI));
+  ['#ff9fb8', '#ffc98a', '#fff1a8', '#b5ead7', '#a9d8ff', '#cdb8ff'].forEach((c, i) => glow(arc, c, [1 - i * 0.055, 1 - i * 0.055, 0.5], [0, 0, 0], bowG, 0.6));
+  [-1, 1].forEach(s => [[0, 0, 0.24], [0.14, 0.03, 0.18], [-0.14, 0.02, 0.17], [0.03, 0.1, 0.16]].forEach(([x, y, r]) => glow(G_DOT, '#ffffff', [r, r * 0.8, 0.02], [s * 0.86 + x, y - 0.02, 0.02], bowG, 0.95)));
+  // hot-air balloon drifting across the far sky
+  const hotG = grp(SKYRIG), hot = grp(hotG);
+  for (let i = 0; i < 6; i++) glow(G_DOT, ['#ff9fb8', '#fff1a8', '#a9d8ff'][i % 3], [0.075, 0.3 - Math.abs(i - 2.5) * 0.028, 0.02], [(i - 2.5) * 0.045, 0.1, 0.001 * i], hot);
+  glow(G_SPH, '#ffffff', [0.3, 0.3, 0.015], [0, 0.1, -0.01], hot, 0.9);
+  glow(G_BOX, '#c89f7a', [0.08, 0.06, 0.02], [0, -0.14, 0], hot); [-1, 1].forEach(s => glow(G_BOX, '#ffffff', [0.006, 0.12, 0.01], [s * 0.035, -0.08, 0], hot));
+  [sunG, moonG, bowG, hotG].forEach(g => { mergeStatic(g, null, false); g.visible = false; });
+  return { sunG, rays, moonG, bowG, hotG, hot, t: 0.3 };
+})();
+function skyFriends(name) {
+  const dayish = name === 'morning' || name === 'day' || name === 'golden', calmSky = W && (W.id === 'wend' || W.id === 'finale');
+  SKY.sunG.visible = dayish; SKY.moonG.visible = !dayish && !calmSky;
+  SKY.bowG.visible = name === 'morning' || name === 'day'; SKY.hotG.visible = dayish;
+}
+
+/* ---------------- butterflies ---------------- */
+function makeButterfly(col) {
+  const g = new THREE.Group();
+  mk(G_DOT, '#5a3d2b', [0.035, 0.035, 0.14], [0, 0, 0], g, { noShadow: true });
+  const wings = [-1, 1].map(s => { const w = grp(g); mk(G_DOT, col, [0.16, 0.012, 0.14], [s * 0.08, 0, 0.03], w, { noShadow: true }); mk(G_DOT, '#ffffff', [0.1, 0.012, 0.09], [s * 0.065, 0.002, -0.05], w, { noShadow: true }); return w; });
+  g.userData = { wings, ph: Math.random() * TAU, sp: 0.18 + Math.random() * 0.14 };
+  return g;
+}
+
+/* ---------------- per-map charm: called at the end of buildMap and the little set pieces ---------------- */
+const GRASSY = new Set(['#a6dc8f', '#9bd483']);
+function charmIsland(w, h, cx, cz, n) {
+  if (!W) return;
+  W.flies = [];
+  for (let i = 0; i < (n == null ? 4 : n); i++) { const b = makeButterfly(CONFETTI[i % 5]); b.userData.box = [cx, cz, w / 2 + 0.7, h / 2 + 0.7]; world.add(b); W.flies.push(b); }
+}
+MAP_HOOKS.push((def, id) => { if (GRASSY.has(def.edge) && G.campaign !== 'holiday') charmIsland(W.w, W.h, (W.w - 1) / 2, (W.h - 1) / 2, W.outdoor ? 6 : 4); });
+
+const MOTES = {
+  morning: [['#ffc2d6', '#ffe3ec', '#ffffff'], 0.25, 4],
+  day: [['#ffffff', '#fff4c9', '#ffe3ec'], 0.12, 4],
+  golden: [['#ffe08a', '#fff4c9', '#ffd1a8'], -0.12, 3.5],
+  evening: [['#fff4b0', '#e4ffb0'], 0, 2.6], dusk: [['#fff4b0', '#e4ffb0'], 0, 2.6], night: [['#fff4b0', '#d8f0ff'], 0, 2.6]
+};
+let moteT = 0;
+function updateCharm(dt, t) {
+  // sky friends follow the frame, whatever the zoom or the screen shape
+  const top = camera.top, a = camera.right / top, S = SKY;
+  SKYRIG.scale.set(top, top, 1);
+  S.sunG.position.set(a * 0.74, 0.66, 0); S.sunG.scale.setScalar(SET.calm ? 1 : 1 + Math.sin(t * 1.3) * 0.03); S.rays.rotation.z = SET.calm ? 0 : t * 0.15;
+  S.moonG.position.set(a * 0.72, 0.64, 0); S.moonG.rotation.z = SET.calm ? 0 : Math.sin(t * 0.6) * 0.06;
+  S.bowG.position.set(-a * 0.42, -0.2, -1); S.bowG.scale.setScalar(Math.min(1.05, a * 0.62));
+  S.t += dt * (SET.calm ? 0.004 : 0.012); if (S.t > 1) S.t -= 1;
+  S.hotG.position.set(lerp(-a - 0.4, a + 0.4, S.t), 0.28 + Math.sin(t * 0.5) * 0.04, -0.5); S.hot.rotation.z = Math.sin(t * 0.8) * 0.06;
+  // butterflies loop lazily around the island edge
+  if (W && W.flies) W.flies.forEach((b, i) => {
+    const u = b.userData, [cx, cz, rx, rz] = u.box, k = t * u.sp + u.ph, px = b.position.x, pz = b.position.z;
+    b.position.set(cx + Math.cos(k) * rx + Math.sin(k * 3.1 + i) * 0.5, 0.55 + Math.sin(k * 2.3 + i) * 0.3 + Math.abs(Math.sin(t * 5 + i)) * 0.08, cz + Math.sin(k) * rz + Math.cos(k * 2.7 + i) * 0.5);
+    b.rotation.y = Math.atan2(b.position.x - px, b.position.z - pz);
+    const f = SET.calm ? 0.5 : Math.sin(t * 16 + i * 2) * 0.9; u.wings[0].rotation.z = f; u.wings[1].rotation.z = -f;
+  });
+  // drifting motes: petals by day, gold dust at golden hour, fireflies at night
+  if (SET.calm || !W || G.campaign === 'holiday' || !(G.scene === 'map' || G.scene === 'title' || G.scene === 'lunch')) return;
+  moteT -= dt; if (moteT > 0) return; moteT = 0.3;
+  const m = MOTES[skyNow] || MOTES.day, c = cam.target;
+  FX.emit(c.x + (Math.random() - 0.5) * 16, 0.6 + Math.random() * 2.6, c.z + (Math.random() - 0.5) * 11, m[0], 1, 0.35, { g: m[1], life: m[2] });
+}
+
+/* ---------------- a heart-shaped firework ---------------- */
+function heartBurst(x, y, z, col, k) {
+  const n = SET.calm ? 36 : 84, c = new THREE.Color(); k = k || 0.17;
+  for (let i = 0; i < n && FX.P.length < 880; i++) {
+    const a = i / n * TAU, hx = 16 * Math.pow(Math.sin(a), 3), hy = 13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a);
+    FX.P.push({ x, y, z, vx: hx * k, vy: hy * k + 0.8, vz: 0, life: 1.9 + Math.random() * 0.3, g: 0.6, c: c.set(i % 4 ? col : '#ffffff').toArray() });
+  }
+}
+
+/* ---------------- the sting: letterbox bars, speed lines and a big tilted title for dramatic beats ---------------- */
+SFX.sting = () => { tone(110, 0.55, 'sawtooth', 0.045, 0, 55); [392, 466, 587].forEach((f, i) => tone(f, 0.45, 'triangle', 0.05, 0.06 + i * 0.07)); };
+SFX.fanfare = () => [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, 0.22, 'triangle', 0.055, i * 0.09));
+SFX.sniff = () => [0, 0.12, 0.24].forEach(d => tone(900, 0.06, 'sine', 0.025, d, 500));
+SFX.meow = () => { tone(700, 0.18, 'triangle', 0.05, 0, 1000); tone(1000, 0.25, 'triangle', 0.05, 0.16, 600); };
+SFX.caw = () => [0, 0.16].forEach(d => { tone(1300, 0.1, 'sawtooth', 0.03, d, 800); tone(900, 0.12, 'square', 0.02, d + 0.05, 1400); });
+function sting(title, sub, cb, o) {
+  o = o || {}; endMoment();
+  const wrap = el('div', 'sting' + (SET.calm ? ' still' : '') + (o.kind ? ' s-' + o.kind : ''), `<i class="burst"></i><i class="lb t"></i><i class="lb b"></i><div class="card"><b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</div>`);
+  document.body.append(wrap);
+  const prev = G.mode; if (!o.free) G.mode = 'busy';
+  const done = () => { if (MOMENT !== m) return; endMoment(); if (!o.free && G.mode === 'busy') G.mode = prev === 'dialog' || prev === 'menu' ? 'map' : prev; cb && cb(); };
+  const m = MOMENT = { wrap, done, skip: done, timer: setTimeout(done, SET.calm ? 1100 : (o.ms || 1900)) };
+  wrap.addEventListener('pointerdown', e => { e.preventDefault(); done(); });
+  sfx(o.sfx || 'sting'); buzz([30, 40, 60]); if (!SET.calm) cam.shake = o.shake == null ? 0.22 : o.shake;
+}
+
+/* ---------------- side quests: progress lives in the F flags (q_<id>: 1 started, 2 done) so saves just work ---------------- */
+const QUESTS = {};
+const questState = id => F['q_' + id] || 0;
+const questsDone = () => Object.keys(QUESTS).filter(id => questState(id) === 2).length;
+function questStart(id) { if (questState(id)) return false; F['q_' + id] = 1; sfx('secret'); toast('Side quest: ' + QUESTS[id].n, true); refreshHints(); return true; }
+function questDone(id, cb) {
+  if (questState(id) === 2) { cb && cb(); return; }
+  F['q_' + id] = 2; stat('happy', 6, true);
+  if (W && W.player) confetti(W.player.g.position.x, 1.3, W.player.g.position.z, 50);
+  sting('Quest complete!', QUESTS[id].n, () => {
+    toast('Side quests: ' + questsDone() + ' of ' + Object.keys(QUESTS).length, true);
+    Object.keys(BADGES).forEach(b => { const need = BADGES[b].quests; if (need && need.every(q => questState(q) === 2)) earn(b); });
+    if (G.mode === 'busy' && G.scene === 'map') G.mode = 'map'; // quests always hand control back
+    refreshHints(); cb && cb();
+  }, { kind: 'win', sfx: 'fanfare', shake: 0 });
+}
+
+/* ===== 09-block.js ===== */
+/* =========================================================
+   SIDE QUESTS: a morning lap around the block with Luca (Edmondson St, North Ryde),
+   the office cake caper and a message in a bottle at the beach.
+   The block is a stylised toy version of the real streets: Edmondson St meets Ryrie St
+   at the corner, Blenheim Rd has the shops and Blenheim Park (with its dog park) is a short walk.
+   ========================================================= */
+CONFIG.block = {
+  street: "Edmondson St", cross: "Ryrie St", shops: "Blenheim Rd", park: "Blenheim Park", cat: "Biscuit", catOwner: "Dot",
+  // what Luca files in his sniff report, one per paw print
+  sniffs: [
+    "Luca's report: the lamp post. Seven dogs, one very confident cat. Fascinating.",
+    "Luca's report: the bins. He needs a moment. This is his art gallery.",
+    "Luca's report: one dropped chip. Gone before the paperwork could be filed.",
+    "Luca's report: coffee grounds from the cart. Three stars. Would sniff again.",
+    "Luca's report: the park gate. Smells like every good dog in North Ryde."
+  ],
+  // the whodunnit: who got into the office birthday cake? (culprit is the index into suspects)
+  suspects: ["Dev", "Marco", "Sam", "Jo"], culprit: 2,
+  bottleNote: ["If you're reading this, you're at the beach instead of answering my texts.", "Dinner at seven. Wear the blue dress. Don't be late.", "PS: look up."]
+};
+const BK = CONFIG.block;
+Object.assign(QUESTS, {
+  block:   { n: 'Around the block', how: 'Walk a full lap: all four corners', where: "Bedroom: Luca's lead by the door" },
+  sniff:   { n: 'The sniff report', how: 'Let Luca sniff all five paw prints', where: 'On the block' },
+  parcel:  { n: 'Special delivery', how: 'Get the parcel to the house with the lemon tree', where: 'On the block' },
+  biscuit: { n: BK.cat + ' the cat', how: 'Coax ' + BK.cat + ' out of the jacaranda', where: 'On the block' },
+  magpie:  { n: 'Swooping season', how: 'Face the magpie of ' + BK.cross, where: 'On the block' },
+  caper:   { n: 'The cake caper', how: 'Ask around, then name the cake thief at the cake table', where: 'Office: the cake table' },
+  bottle:  { n: 'Message in a bottle', how: 'Follow the glints along the wet sand', where: 'Beach: something glints by the water' }
+});
+const BLOCK_QUESTS = ['block', 'sniff', 'parcel', 'biscuit', 'magpie'];
+BADGES.neighbour = { n: 'Good neighbour badge', how: 'Finish every quest around the block', quests: BLOCK_QUESTS };
+BADGES.sleuth = { n: 'Sleuth badge', how: 'Crack the cake caper on the first guess' };
+BADGES.hero = { n: 'Side quest badge', how: 'Finish all ' + Object.keys(QUESTS).length + ' side quests', quests: Object.keys(QUESTS) };
+ICONS.push([/walk the block/i, '🐾', 'walk'], [/pspsps/i, '🐈', 'cat'], [/treat bag/i, '🦴', 'cat'], [/send luca/i, '🐶', 'cat'], [/back inside/i, '🏡', 'walk']);
+Object.assign(MOMENT_LINES, { walk: 'Leads on!', cat: 'Here, kitty' });
+Object.assign(MOMENT_PROPS, { walk: ['🌸', '🌸', '✨'], cat: ['❓'] });
+SCENE_TIME.block = 7 * 60 + 50;
+NPC_CHARS.block = 'ng';
+Object.assign(WHO_COL, { [BK.catOwner]: '#a78bfa', Neighbour: '#3fae7c', Dev: '#7f93b3', Marco: '#7f93b3', Sam: '#c55a6c', Jo: '#7f93b3' });
+
+/* ---------------- art: jacarandas, signs with real lettering, a cat, a magpie ---------------- */
+function makeJacaranda(parent, x, z, s) {
+  const g = grp(parent, x, 0, z); s = s || 1;
+  mk(G_CYL, '#8a6a55', [0.17 * s, 1.1 * s, 0.17 * s], [0, 0.55 * s, 0], g).rotation.z = -0.06;
+  mk(G_CYL, '#7a5c49', [0.09 * s, 0.5 * s, 0.09 * s], [-0.18 * s, 1.05 * s, 0], g).rotation.z = 0.7;
+  [[0, 1.5, 0, 1.0], [0.48, 1.32, 0.1, 0.72], [-0.45, 1.36, -0.1, 0.74], [0.1, 1.86, -0.05, 0.62], [-0.12, 1.24, 0.36, 0.52]].forEach(([a, b, c, r], i) => mk(G_SPH, ['#b9a3ff', '#c9b6f2', '#a890f0'][i % 3], [r * s, r * 0.72 * s, r * s], [a * s, b * s, c * s], g));
+  for (let i = 0; i < 7; i++) mk(G_CYL, i % 2 ? '#c9b6f2' : '#b9a3ff', [0.13, 0.012, 0.11], [Math.cos(i * 2.4) * (0.5 + hsh(i, 51) * 0.5) * s, 0.008, Math.sin(i * 2.4) * (0.5 + hsh(i, 52) * 0.5) * s], g, { noShadow: true });
+  g.userData.sway = Math.random() * TAU; return g;
+}
+const SIGNS = {}, G_PLANE = geo('plane', () => new THREE.PlaneGeometry(1, 1));
+function signMat(text, bg, fg) {
+  const key = text + bg; if (SIGNS[key]) return SIGNS[key].mat;
+  const c = document.createElement('canvas'); c.width = 320; c.height = 80;
+  const tex = new THREE.CanvasTexture(c), mat = new THREE.MeshBasicMaterial({ map: tex });
+  const draw = () => { const x = c.getContext('2d'); x.fillStyle = bg; x.fillRect(0, 0, 320, 80); x.strokeStyle = fg; x.lineWidth = 5; x.strokeRect(6, 6, 308, 68); x.fillStyle = fg; x.font = "700 40px Fredoka, 'Trebuchet MS', sans-serif"; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, 160, 43, 284); tex.needsUpdate = true; };
+  draw(); SIGNS[key] = { mat, draw }; return mat;
+}
+try { document.fonts.load("700 40px Fredoka").then(() => Object.values(SIGNS).forEach(s => s.draw())); document.fonts.ready.then(() => Object.values(SIGNS).forEach(s => s.draw())); } catch (e) {}
+function signPlate(parent, text, bg, fg, w, h, y, rot) {
+  const g = grp(parent, 0, y, 0); g.rotation.y = rot || 0;
+  mk(G_BOX, bg, [w + 0.04, h + 0.04, 0.04], [0, 0, 0], g);
+  [0, Math.PI].forEach(r => { const m = new THREE.Mesh(G_PLANE, signMat(text, bg, fg)); m.scale.set(w, h, 1); m.position.z = r ? -0.025 : 0.025; m.rotation.y = r; g.add(m); });
+  return g;
+}
+function makeCat() {
+  const g = new THREE.Group(), body = grp(g), O = '#f4a259', o2 = '#ffe1bd', dk = '#d9833a';
+  mk(G_SPH, O, [0.3, 0.27, 0.44], [0, 0.2, 0], body); mk(G_SPH, o2, [0.2, 0.2, 0.2], [0, 0.17, 0.15], body);
+  [-0.08, 0.02, 0.12].forEach(z => mk(G_BOX, dk, [0.24, 0.02, 0.05], [0, 0.325, z - 0.06], body, { noShadow: true }));
+  [[-0.09, 0.14], [0.09, 0.14], [-0.09, -0.13], [0.09, -0.13]].forEach(([x, z]) => { mk(G_CYL, O, [0.08, 0.12, 0.08], [x, 0.06, z], body); mk(G_SPH, o2, [0.09, 0.05, 0.1], [x, 0.02, z + 0.02], body); });
+  const head = grp(body, 0, 0.42, 0.2);
+  mk(G_SPH, O, [0.32, 0.28, 0.28], [0, 0, 0], head); mk(G_SPH, o2, [0.17, 0.12, 0.1], [0, -0.05, 0.1], head);
+  [-1, 1].forEach(s => {
+    const e = mk(G_CONE, O, [0.12, 0.14, 0.07], [s * 0.1, 0.15, 0], head); e.rotation.z = s * -0.25; mk(G_CONE, '#ffb3cc', [0.06, 0.08, 0.03], [s * 0.1, 0.14, 0.025], head, { noShadow: true }).rotation.z = s * -0.25;
+    mk(G_SPH, '#8fd06a', [0.07, 0.08, 0.03], [s * 0.075, 0.02, 0.125], head, { noShadow: true }); mk(G_SPH, INK, [0.022, 0.065, 0.02], [s * 0.075, 0.02, 0.138], head, { noShadow: true });
+    mk(G_SPH, '#ffffff', [0.02, 0.02, 0.01], [s * 0.075 + 0.015, 0.045, 0.143], head, { noShadow: true, glow: true });
+    [-1, 1].forEach(k => { const wk = mk(G_BOX, '#ffffff', [0.14, 0.006, 0.006], [s * 0.13, -0.05 + k * 0.012, 0.12], head, { noShadow: true }); wk.rotation.z = s * k * 0.14; });
+  });
+  mk(G_SPH, '#ff8fa3', [0.03, 0.022, 0.02], [0, -0.035, 0.15], head, { noShadow: true });
+  const tail = grp(body, 0, 0.26, -0.2); mk(G_CYL, O, [0.06, 0.34, 0.06], [0, 0.17, 0], tail); mk(G_SPH, o2, [0.075, 0.09, 0.075], [0, 0.35, 0], tail);
+  g.userData = { kind: 'cat', body, head, tail };
+  return mergeStatic(g);
+}
+function makeMagpie(foe) {
+  const g = new THREE.Group(), outer = grp(g), body = grp(outer), K = '#2b2733', Wt = '#ffffff'; body.scale.setScalar(foe ? 2.1 : 1);
+  mk(G_SPH, K, [0.34, 0.32, 0.46], [0, 0, 0], body); mk(G_SPH, Wt, [0.26, 0.14, 0.24], [0, 0.11, -0.06], body, { noShadow: true }); mk(G_SPH, Wt, [0.2, 0.1, 0.16], [0, 0.02, -0.19], body, { noShadow: true });
+  mk(G_SPH, K, [0.26, 0.24, 0.26], [0, 0.2, 0.2], body);
+  const beak = mk(G_CONE, '#cfd6e6', [0.08, 0.22, 0.08], [0, 0.17, 0.4], body); beak.rotation.x = Math.PI / 2; mk(G_SPH, K, [0.05, 0.05, 0.05], [0, 0.17, 0.5], body, { noShadow: true });
+  const wings = [-1, 1].map(s => { const w = grp(body, s * 0.15, 0.06, -0.02); mk(G_SPH, K, [0.09, 0.22, 0.42], [s * 0.04, -0.04, -0.02], w); mk(G_SPH, Wt, [0.06, 0.1, 0.2], [s * 0.075, -0.02, 0.02], w, { noShadow: true }); return w; });
+  mk(G_BOX, K, [0.14, 0.03, 0.26], [0, -0.03, -0.32], body); [-0.06, 0.06].forEach(x => mk(G_CYL, '#6b6f82', [0.02, 0.14, 0.02], [x, -0.2, 0.02], body, { noShadow: true }));
+  if (foe) googly(body, 0, 0.25, 0.31, 0.62);
+  else [-1, 1].forEach(s => { mk(G_SPH, '#c2553a', [0.05, 0.05, 0.03], [s * 0.09, 0.23, 0.3], body, { noShadow: true }); mk(G_SPH, Wt, [0.018, 0.018, 0.01], [s * 0.09 + 0.01, 0.245, 0.315], body, { noShadow: true, glow: true }); });
+  g.userData = { kind: 'foe', body: outer, wings };
+  return g;
+}
+// battles build their foe through makeFoe: teach it the magpie
+const makeFoeBase = makeFoe;
+makeFoe = function (kind) { return kind === 'magpie' ? makeMagpie(true) : makeFoeBase(kind); };
+
+let HOUSE_N = 0;
+// what makes each house on the street its own: in build order (north row west to east, then the south row)
+const HOUSE_FEAT = ['surf', 'pots', 'chimes', '', 'roses', 'hoop', ''];
+function blockHouse(home) {
+  const g = new THREE.Group(), n = home ? -1 : HOUSE_N++, i = home ? 1 : n + 2, feat = HOUSE_FEAT[n], h = makeHouse(g, 0, -0.12, i);
+  h.scale.setScalar(1.5);
+  if (home) {
+    ['#ff7aa8', '#ffd166', '#7fc8f8'].forEach((c, k) => { const b = makeBalloon(g, -0.8 + k * 0.16, 0.2, 0.95, c, 1.1 + k * 0.2); b.userData.bob = true; });
+    for (let k = 0; k < 7; k++) { const f = mk(G_CONE, CONFETTI[k % 5], [0.14, 0.2, 0.03], [-0.72 + k * 0.24, 1.12 - Math.sin((k + 0.5) / 7 * Math.PI) * 0.1, 0.66], g, { noShadow: true }); f.rotation.z = Math.PI; }
+    mk(G_HEART, '#ff7aa8', [0.3, 0.3, 0.3], [0, 1.02, 0.67], g);
+  } else if (feat === 'surf') { const sb = mk(G_SPH, '#7fc8f8', [0.26, 1.1, 0.06], [0.72, 0.56, 0.7], g); sb.rotation.z = 0.12; mk(G_BOX, '#ffffff', [0.03, 0.9, 0.065], [0.72, 0.56, 0.7], g, { noShadow: true }).rotation.z = 0.12; }
+  else if (feat === 'pots') [0, 1, 2].forEach(k => { mk(G_CYL, ['#e8916b', '#d97a55'][k % 2], [0.2, 0.2, 0.2], [-0.7 + k * 0.26, 0.1, 1.0], g); mk(G_SPH, '#5fae63', [0.2, 0.18, 0.2], [-0.7 + k * 0.26, 0.26, 1.0], g); });
+  else if (feat === 'chimes') { mk(G_BOX, '#c89f7a', [0.3, 0.03, 0.03], [0.6, 1.02, 0.68], g); [0, 1, 2, 3].forEach(k => mk(G_CYL, '#c7ccd6', [0.025, 0.16 + (k % 2) * 0.06, 0.025], [0.5 + k * 0.07, 0.9 - (k % 2) * 0.03, 0.68], g, { noShadow: true })); }
+  else if (feat === 'roses') [0, 1, 2, 3].forEach(k => { mk(G_SPH, '#5fae63', [0.3, 0.3, 0.3], [-0.75 + k * 0.5, 0.18, 1.0], g); [[-0.07, 0.1], [0.08, 0.06], [0, 0.14]].forEach(([a, b], q) => mk(G_SPH, (k + q) % 2 ? '#ff7aa8' : '#e2554f', [0.1, 0.1, 0.1], [-0.75 + k * 0.5 + a, 0.24 + b, 1.1], g, { noShadow: true })); });
+  else if (feat === 'hoop') { mk(G_CYL, '#8a8fa0', [0.06, 1.5, 0.06], [0.8, 0.75, 0.9], g); mk(G_BOX, '#ffffff', [0.44, 0.32, 0.04], [0.8, 1.5, 0.94], g); mk(geo('ring', () => new THREE.TorusGeometry(0.5, 0.12, 6, 16)), '#ff9f6b', [0.2, 0.2, 0.2], [0.8, 1.38, 1.08], g).rotation.x = Math.PI / 2; mk(G_SPH, '#ff9f6b', [0.2, 0.2, 0.2], [0.5, 0.1, 1.05], g); }
+  return g;
+}
+const BO = OBJ_BUILDERS;
+BO['block:H'] = BO['block:N'] = () => blockHouse(); BO['block:O'] = () => blockHouse(true);
+BO['block:C'] = () => { const g = new THREE.Group(), c = makeCar(); c.rotation.y = Math.PI / 2; g.add(c); g.userData.car = c; return g; };
+BO['block:J'] = () => makeJacaranda(null, 0, 0, 1.25);
+BO['block:L'] = () => { const g = new THREE.Group(); mk(G_CYL, '#8a6a55', [0.12, 0.7, 0.12], [0, 0.35, 0], g); [[0, 0.95, 0, 0.75], [0.22, 1.15, 0.05, 0.5], [-0.2, 1.1, -0.05, 0.5]].forEach(([a, b, c, r]) => mk(G_SPH, '#5fae63', [r, r * 0.8, r], [a, b, c], g)); for (let i = 0; i < 7; i++) mk(G_SPH, '#ffe14d', [0.11, 0.13, 0.11], [Math.cos(i * 0.9) * 0.3, 0.8 + (i % 3) * 0.16, Math.sin(i * 0.9) * 0.3 + 0.05], g, { noShadow: true }); mk(G_SPH, '#ffe14d', [0.11, 0.1, 0.13], [0.3, 0.06, 0.3], g); g.userData.sway = 1; return g; };
+BO['block:i'] = () => { const g = new THREE.Group(); mk(G_CYL, '#8a6a55', [0.07, 0.6, 0.07], [0, 0.3, 0], g); mk(G_BOX, '#fffaf0', [0.34, 0.24, 0.26], [0, 0.7, 0], g); mk(G_CYL, '#ff9fb2', [0.36, 0.27, 0.26], [0, 0.82, 0], g).rotation.z = Math.PI / 2; mk(G_BOX, '#e2554f', [0.03, 0.16, 0.08], [0.2, 0.8, 0], g); makeFlower(g, 0.28, 0.12, '#ffd166'); makeFlower(g, -0.28, -0.1, '#ff7aa8'); return g; };
+BO['block:p'] = () => { const g = new THREE.Group(); mk(G_CYL, '#e2554f', [0.5, 0.95, 0.5], [0, 0.48, 0], g); mk(G_SPH, '#e2554f', [0.5, 0.3, 0.5], [0, 0.95, 0], g); mk(G_BOX, '#3a2f4a', [0.28, 0.05, 0.02], [0, 0.72, 0.25], g, { noShadow: true }); mk(G_BOX, '#ffffff', [0.26, 0.18, 0.02], [0, 0.48, 0.25], g, { noShadow: true }); mk(G_CYL, '#c94a45', [0.56, 0.08, 0.56], [0, 0.05, 0], g); return g; };
+BO['block:q'] = () => { const g = new THREE.Group(); mk(G_BOX, '#d9b382', [0.5, 0.34, 0.4], [0, 0.17, 0], g).rotation.y = 0.3; const r = mk(G_BOX, '#ff7aa8', [0.52, 0.06, 0.08], [0, 0.35, 0], g, { noShadow: true }); r.rotation.y = 0.3; const r2 = mk(G_BOX, '#ff7aa8', [0.08, 0.06, 0.42], [0, 0.35, 0], g, { noShadow: true }); r2.rotation.y = 0.3; mk(G_BOX, '#ffffff', [0.2, 0.12, 0.01], [0.06, 0.2, 0.2], g, { noShadow: true }).rotation.y = 0.3; g.userData.keep = true; return g; };
+BO['block:r'] = () => { const g = new THREE.Group(); ['#e2554f', '#ffd166', '#5fae63'].forEach((c, i) => { const b = grp(g, -0.3 + i * 0.3, 0, (i % 2) * 0.06); b.rotation.y = (i - 1) * 0.15; mk(G_BOX, '#4a6a52', [0.26, 0.5, 0.3], [0, 0.27, 0], b); mk(G_BOX, c, [0.3, 0.06, 0.34], [0, 0.55, 0], b); mk(G_CYL, '#3a3148', [0.1, 0.04, 0.1], [0.11, 0.05, -0.14], b).rotation.z = Math.PI / 2; }); return g; };
+BO['block:u'] = () => { const g = new THREE.Group(); [[-0.25, 0.1, 0], [0.05, -0.05, 0.5], [0.3, 0.12, Math.PI]].forEach(([x, z, r], i) => { const n = grp(g, x, 0, z); n.rotation.y = r; mk(G_CYL, ['#7fc8f8', '#7cc576', '#ffd166'][i], [0.16, 0.2, 0.16], [0, 0.1, 0], n); mk(G_SPH, '#f9d1b0', [0.15, 0.14, 0.14], [0, 0.26, 0], n); mk(G_SPH, '#ffffff', [0.13, 0.12, 0.06], [0, 0.2, 0.06], n, { noShadow: true }); mk(G_CONE, '#e2554f', [0.17, 0.24, 0.17], [0, 0.43, 0], n); }); mk(G_SPH, '#ff7aa8', [0.2, 0.14, 0.2], [-0.02, 0.07, -0.3], g); mk(G_CYL, '#fff4e8', [0.06, 0.14, 0.06], [-0.02, 0.0, -0.3], g); return g; };
+BO['block:K'] = () => {
+  const g = new THREE.Group(), c = grp(g, 0, 0, 0.1); c.rotation.y = Math.PI;
+  mk(G_BOX, '#2f5d4a', [0.9, 0.7, 0.5], [0, 0.45, 0], c); mk(G_BOX, '#fffaf0', [1.0, 0.06, 0.6], [0, 0.82, 0], c);
+  [-0.3, 0.3].forEach(x => { mk(G_CYL, '#3a3148', [0.22, 0.06, 0.22], [x, 0.11, 0.26], c).rotation.x = Math.PI / 2; mk(G_CYL, '#c7ccd6', [0.03, 0.45, 0.03], [x * 1.3, 1.05, -0.1], c, { noShadow: true }); });
+  for (let i = 0; i < 4; i++) mk(G_BOX, i % 2 ? '#fffaf0' : '#ff9fb2', [0.26, 0.04, 0.5], [-0.39 + i * 0.26, 1.27, 0.08], c).rotation.x = 0.3;
+  makeMug(c, 0.2, 0.85, 0.05, '#fffaf0', '#c8955e'); makeMug(c, -0.15, 0.85, 0.1, '#ffd1e1', '#c8955e'); mk(G_BOX, '#c7ccd6', [0.3, 0.26, 0.24], [-0.02, 0.98, -0.12], c);
+  return g;
+};
+BO['block:G'] = () => { const g = new THREE.Group(); [-0.42, 0.42].forEach(s => { mk(G_CYL, '#8a6a55', [0.12, 1.5, 0.12], [0, 0.75, s], g); mk(G_SPH, '#7cc576', [0.24, 0.24, 0.24], [0, 1.55, s], g); }); for (let i = 0; i < 4; i++) mk(G_BOX, '#fffaf0', [0.05, 0.6, 0.12], [0, 0.34, -0.27 + i * 0.18], g); mk(G_BOX, '#f1e4d2', [0.04, 0.05, 0.8], [0, 0.5, 0], g, { noShadow: true }); signPlate(g, BK.park, '#3fae7c', '#ffffff', 0.86, 0.24, 1.38, -Math.PI / 2); g.userData.keep = true; return g; };
+BO['block:w'] = () => { const g = new THREE.Group(), b = grp(g); b.rotation.y = -Math.PI / 2; for (let i = 0; i < 3; i++) mk(G_BOX, '#b07a4a', [0.86, 0.05, 0.12], [0, 0.42, -0.12 + i * 0.13], b); mk(G_BOX, '#b07a4a', [0.86, 0.34, 0.05], [0, 0.66, -0.2], b); [-0.36, 0.36].forEach(x => mk(G_BOX, '#8a5a3b', [0.07, 0.42, 0.36], [x, 0.21, 0], b)); return g; };
+const streetSign = (a, b, extra) => () => { const g = new THREE.Group(); mk(G_CYL, '#8a8fa0', [0.07, 1.75, 0.07], [0, 0.875, 0], g); mk(G_SPH, '#c7ccd6', [0.12, 0.12, 0.12], [0, 1.78, 0], g); signPlate(g, a, '#3f7fbf', '#ffffff', 1.1, 0.26, 1.56, 0); if (b) signPlate(g, b, '#3f7fbf', '#ffffff', 0.9, 0.26, 1.26, Math.PI / 2); if (extra) extra(g); g.userData.keep = true; return g; };
+BO['block:e'] = streetSign(BK.street, BK.cross);
+BO['block:b'] = streetSign(BK.shops);
+BO['block:m'] = () => { const g = new THREE.Group(); mk(G_CYL, '#8a8fa0', [0.07, 1.5, 0.07], [0, 0.75, 0], g); const d = mk(G_BOX, '#ffd166', [0.62, 0.62, 0.05], [0, 1.3, 0], g); d.rotation.z = Math.PI / 4; signPlate(g, 'SWOOPING', '#ffd166', '#3a2f4a', 0.6, 0.16, 1.3, 0); g.userData.keep = true; return g; };
+OBJ_BUILDERS['bedroom:l'] = () => { const g = new THREE.Group(); mk(G_CYL, '#c89f7a', [0.4, 0.05, 0.4], [0, 0.025, 0], g); mk(G_CYL, '#c89f7a', [0.07, 1.2, 0.07], [0, 0.6, 0], g); mk(G_SPH, '#ffd166', [0.12, 0.12, 0.12], [0, 1.22, 0], g); [-1, 1].forEach(s => mk(G_BOX, '#c89f7a', [0.2, 0.04, 0.04], [s * 0.1, 1.05, 0], g).rotation.z = s * 0.5); const lead = mk(geo('ring', () => new THREE.TorusGeometry(0.5, 0.12, 6, 16)), '#ff7aa8', [0.22, 0.42, 0.22], [0.2, 0.86, 0.02], g); lead.rotation.y = 0.5; mk(G_BOX, '#c7ccd6', [0.04, 0.1, 0.04], [0.2, 0.62, 0.02], g); const b = makeTennisBall(g); b.position.set(-0.16, 0.13, 0.14); return g; };
+OBJ_BUILDERS['office:K'] = () => {
+  const g = new THREE.Group();
+  mk(G_BOX, '#fff4e8', [0.9, 0.07, 0.8], [0, 0.6, 0], g); [-1, 1].forEach(s => mk(G_BOX, '#c9b49a', [0.07, 0.6, 0.7], [s * 0.38, 0.3, 0], g));
+  mk(G_CYL, '#ffffff', [0.62, 0.04, 0.62], [0, 0.66, 0], g);
+  const slice = geo('cakecut', () => new THREE.CylinderGeometry(0.5, 0.5, 1, 20, 1, false, 0.5, TAU - 0.9));
+  mk(slice, '#f7a8c4', [0.5, 0.22, 0.5], [0, 0.79, 0], g); mk(slice, '#fff0f6', [0.52, 0.04, 0.52], [0, 0.91, 0], g);
+  [0.5, -0.4].forEach(th => { const f = mk(G_BOX, '#ffe9b8', [0.25, 0.22, 0.012], [Math.sin(th) * 0.125, 0.79, Math.cos(th) * 0.125], g, { noShadow: true }); f.rotation.y = th - Math.PI / 2; });
+  for (let i = 0; i < 5; i++) mk(G_SPH, CONFETTI[i % 5], [0.05, 0.05, 0.05], [Math.cos(1.8 + i * 0.9) * 0.18, 0.95, Math.sin(1.8 + i * 0.9) * 0.18], g, { noShadow: true });
+  [[0.34, 0.1], [0.4, 0.22], [0.3, 0.3], [0.42, 0.02]].forEach(([x, z]) => mk(G_SPH, '#f7a8c4', [0.04, 0.02, 0.04], [x, 0.65, z], g, { noShadow: true }));
+  mk(G_BOX, '#c7ccd6', [0.03, 0.01, 0.3], [-0.36, 0.645, 0.2], g, { noShadow: true });
+  return g;
+};
+
+/* ---------------- the block ---------------- */
+const BLOCK_CORNERS = [[2, 3], [18, 3], [18, 12], [2, 12]];
+const SNIFF_SPOTS = [[6, 12], [11, 12], [18, 9], [12, 3], [2, 6]];
+MAPS.block = {
+  theme: 'block', title: 'Around the block', sky: 'morning', outdoor: true, edge: '#a6dc8f', ambient: 'cicada',
+  floor: ['#fff1dc', '#ffe8cc'], wet: '#cfc6dd', wall: ['#fff', '#fff'],
+  tint: (ch, x, z) => ch === '_' || ch === '.' || ch === 'h' || ch === 'D' ? null : ['#a6dc8f', '#9bd483'][(x + z) % 2],
+  rows: [
+    "#_##NN##NN##NN#NN##_#",
+    "#_##NN##NN##NN#NN##_#",
+    "#_#b#i#L#iK#i#n#im#_#",
+    "#_..............h.._#",
+    "#_.###############._#",
+    "#_.###############._#",
+    "#_.G#############J._#",
+    "#_h##############g._#",
+    "#_.w##############._#",
+    "#_.#HH##OO##HH#HH#._#",
+    "#_.#HH##OO##HH#HH#._#",
+    "#_.pqi##Dir#i#u#ie._#",
+    "#_...........h....._#",
+    "#_________CC________#",
+    "#####################"
+  ],
+  start: { x: 8, z: 12, dir: 'down' }, luca: { x: 9, z: 12 },
+  npcs: c => c === 'n' ? { skin: '#cf9b6f', hair: '#3a2f2a', top: '#3fae7c', bottom: '#d9c7a8', glasses: true } : c === 'g' ? { skin: '#f5cfae', hair: '#d8d3dc', hairStyle: 'bun', top: '#c9b6f2', bottom: '#8a7fa0', glasses: true } : null,
+  hints: () => [!questState('parcel') && 'q', questState('biscuit') !== 2 && 'J', blockAllDone() && 'D'],
+  decorate(g) {
+    HOUSE_N = 0;
+    // back gardens: a Hills hoist, a paddling pool, veggie beds and shade trees
+    const hoist = grp(g, 7, 0, 6.3); mk(G_CYL, '#c7ccd6', [0.06, 1.4, 0.06], [0, 0.7, 0], hoist);
+    for (let i = 0; i < 4; i++) { const a = grp(hoist, 0, 1.38, 0); a.rotation.y = i * Math.PI / 2 + 0.4; mk(G_BOX, '#c7ccd6', [0.03, 0.03, 0.9], [0, 0, 0.45], a); mk(G_BOX, CONFETTI[i], [0.02, 0.3, 0.26], [0, -0.17, 0.5 + (i % 2) * 0.2], a); mk(G_BOX, '#ffffff', [0.02, 0.24, 0.2], [0, -0.14, 0.25], a); }
+    mk(G_CYL, '#7fc8f8', [1.3, 0.16, 1.3], [11, 0.08, 6], g); mk(G_CYL, '#bfe9ff', [1.1, 0.17, 1.1], [11, 0.085, 6], g, { noShadow: true }); mk(G_SPH, '#ffd166', [0.3, 0.24, 0.3], [11.2, 0.25, 5.9], g); mk(G_SPH, '#ff9f6b', [0.1, 0.06, 0.12], [11.2, 0.3, 6.08], g, { noShadow: true });
+    for (let i = 0; i < 2; i++) { mk(G_BOX, '#b07a4a', [1.2, 0.18, 0.6], [14.6, 0.09, 5.4 + i * 0.9], g); for (let k = 0; k < 4; k++) mk(G_SPH, k % 2 ? '#5fae63' : '#e2554f', [0.2, 0.2, 0.2], [14.2 + k * 0.28, 0.24, 5.4 + i * 0.9], g, { noShadow: true }); }
+    makeTree(g, 5, 7, 0.8); makeJacaranda(g, 9, 7.2, 0.7); makeGum(g, 13, 7.4, 0.65); makeTree(g, 15.6, 7.2, 0.75, '#ffb3cc'); makeTree(g, 5, 5, 0.6, '#ffb3cc');
+    for (let i = 0; i < 14; i++) makeFlower(g, 4.2 + hsh(i, 81) * 12, 4.4 + hsh(i, 82) * 3.4, CONFETTI[i % 5]).scale.setScalar(0.8);
+    // the verge: jacarandas, gums and street lamps around the outside
+    [[0, 14], [20, 14], [0, 7.5], [20, 10], [0, 3], [20, 4.5], [2.2, 0.6], [17.8, 0.4]].forEach(([x, z], i) => (i % 3 === 2 ? makeGum : makeJacaranda)(g, x, z, 0.95 + hsh(i, 61) * 0.25));
+    makeStreetLamp(g, 6, 11); makeStreetLamp(g, 13.3, 2.2); makeStreetLamp(g, 20, 7); makeStreetLamp(g, 0, 10.5);
+    // road paint: centre dashes and a zebra crossing to the house
+    for (let x = 2; x <= 18; x += 2) if (x !== 10 && x !== 8) mk(G_BOX, '#ffffff', [0.5, 0.012, 0.07], [x, 0.006, 13], g, { noShadow: true });
+    for (let z = 0; z <= 12; z += 2) [1, 19].forEach(x => mk(G_BOX, '#ffffff', [0.07, 0.012, 0.5], [x, 0.006, z], g, { noShadow: true }));
+    for (let i = 0; i < 4; i++) mk(G_BOX, '#ffffff', [0.16, 0.012, 0.8], [7.64 + i * 0.24, 0.006, 13], g, { noShadow: true });
+    for (let i = 0; i < 26; i++) { const t = hsh(i, 71); mk(G_CYL, i % 2 ? '#c9b6f2' : '#b9a3ff', [0.1, 0.01, 0.08], i % 3 ? [17.6 + hsh(i, 72) * 1.6, 0.007, 4.5 + t * 4.5] : [2 + t * 16, 0.007, 11.7 + hsh(i, 73) * 1.5], g, { noShadow: true }); }
+    makeFairyLights(g, 7, 11.4, 10, 11.4, 1.75, 10);
+    // the neighbour's watering can
+    const n = W.npcs.find(n => n.ch === 'n'); if (n) { const can = grp(n.g, 0.26, 0.3, 0.14); mk(G_CYL, '#7fc8f8', [0.14, 0.14, 0.14], [0, 0, 0], can); mk(G_CYL, '#7fc8f8', [0.03, 0.2, 0.03], [0, 0.03, 0.14], can).rotation.x = 1.0; }
+    // quest pieces
+    const B = W.blk = { spots: [], sniff: null, t: 0 };
+    SNIFF_SPOTS.forEach(([x, z], i) => { if (F['sn' + i]) return; const m = grp(world, x, 0.1, z); mk(G_SPH, '#ffd166', [0.3, 0.03, 0.26], [0, 0, 0.06], m, { glow: true }); [-0.15, -0.05, 0.05, 0.15].forEach((a, k) => mk(G_SPH, '#ffd166', [0.1, 0.03, 0.12], [a, 0, -0.14 + Math.abs(k - 1.5) * -0.03 + 0.03], m, { glow: true })); B.spots.push({ i, x, z, m }); });
+    const tree = W.objs.find(o => o.ch === 'J'), cat = makeCat(); B.cat = cat; B.catHome = [tree.x - 0.05, 1.42, tree.z + 0.45]; B.catDown = [tree.x + 0.55, 0, tree.z + 1.3];
+    cat.position.set(...(questState('biscuit') === 2 ? B.catDown : B.catHome)); cat.rotation.y = 0.5; world.add(cat);
+    const sign = W.objs.find(o => o.ch === 'm'), mag = makeMagpie(false); B.mag = mag; mag.position.set(sign.x, 1.95, sign.z); mag.rotation.y = Math.PI / 2; world.add(mag);
+    wkTicker(updateBlock);
+  },
+  onEnter() {
+    if (!F.blockSeen) { F.blockSeen = true; stat('happy', 5, true);
+      say([BK.street + ", North Ryde. Jacarandas out, sprinklers on, magpies plotting.", "Luca hits the footpath like he has been waiting all year.", F.outfit ? { n: CONFIG.name, t: "Quick lap, then the big day." } : { n: CONFIG.name, t: "Pyjamas in public. It's my birthday, I do what I want." }, "Walk a lap of the block and poke around. The neighbours always have something going on.", "Q and E (or the arrows up top) spin the street around."]);
+    } else say("Back on " + BK.street + ". Luca picks up exactly where he left off.");
+  },
+  onStep: (x, z) => blockStep(x, z),
+  doorOpen: () => true,
+  onDoor() {
+    G.mode = 'busy';
+    const left = BLOCK_QUESTS.filter(q => questState(q) !== 2).length;
+    const home = () => { F.walked = true; G.mode = 'busy'; say([left ? "Home again. The rest of the block can wait for another lap." : "Every corner sniffed, every neighbour sorted. What a lap.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(() => loadMap('bedroom'))); };
+    pickMenu('The front gate', left ? left + ' block quest' + (left > 1 ? 's' : '') + ' still out there.' : 'The whole block, done and dusted.', [
+      { n: 'Back inside', d: 'On with the birthday', k: 'in' }, { n: 'Keep walking', d: 'Luca votes for this one', k: 'stay', quick: true }
+    ], d => { if (d.k === 'in') home(); else tryStep(0, 1); }, false);
+  },
+  act: {
+    O: () => say(["Home. Mum has tied balloons to the letterbox.", "Luca would like it noted that he lives here."]),
+    H: () => say("A neat brick house with a very proud front garden."),
+    N: () => say("A weatherboard house. Someone is practising piano inside. Badly, but with feeling."),
+    C: () => say([CONFIG.car + " the Corolla, parked out the front and gleaming.", "Later, old girl. Big day ahead."]),
+    e: () => say(["The corner of " + BK.street + " and " + BK.cross + ".", "Home turf."]),
+    b: () => say([BK.shops + ". The shops and the good coffee are just up there.", "Luca knows the word 'cafe'. It is a problem."]),
+    m: () => say(questState('magpie') === 2 ? ["The swooping sign. The magpie sits on top of it now, looking smug but peaceful.", "Someone has drawn a tiny crown on the bird."] : ["A bright yellow sign: SWOOPING BIRD.", "Someone has drawn a tiny crown on the bird. Ominous."]),
+    G: () => say(["The path to " + BK.park + ". The dog park is that way.", "Luca pulls hard. Not today, mate. Big day."]),
+    w: () => { const first = !F.blockBench; F.blockBench = true; if (first) stat('energy', 4, true); say(["A bench under the jacaranda. Purple petals all over the seat.", first ? "Thirty seconds of sitting. Luca allows it." : "Still a very good bench."]); },
+    p: () => say(["The red postbox on the corner.", "Luca has strong opinions about the postie."]),
+    r: () => say(["Bin night. Red, yellow and green, lined up like a little parade.", "One lid is open. Luca investigates. Luca regrets nothing."]),
+    u: () => say(["A garden gnome army.", "One has been turned to face the wall. Nobody on the street will say why."]),
+    L: () => say(["A lemon tree, absolutely heaving.", "There is a bucket of free lemons by the gate. Very North Ryde."]),
+    K: () => { const first = !F.blockCoffee; F.blockCoffee = true; if (first) { stat('energy', 8); if (W.luca) W.luca.g.userData.spin = 1; } say(first ? ["The coffee cart on the " + BK.shops + " corner.", "One flat white, and a puppuccino for the gentleman.", "Luca wears most of his."] : "The barista waves. Luca stares at the puppuccino cups."); },
+    n: () => say([{ n: 'Neighbour', t: "Morning! Happy birthday! The street chat is feral today. Someone put a greasy pizza box in the yellow bin." }, { n: 'Neighbour', t: "Also, " + CONFIG.boyfriend + " was out here at six, sneaking around with a parcel. I've said too much." }, { n: CONFIG.name, t: "A parcel?" }]),
+    g: () => talkDot(),
+    J: () => catTree(),
+    q: (x, z, o) => pickParcel(o),
+    i: (x, z) => letterbox(x, z)
+  }
+};
+HEARTS_TOTAL += MAPS.block.rows.join('').split('h').length - 1;
+const blockAllDone = () => BLOCK_QUESTS.every(q => questState(q) === 2);
+
+// the bedroom end: the lead on its stand, and coming home again
+const BED_ROWS = MAPS.bedroom.rows.slice();
+(() => {
+  const bed = MAPS.bedroom, enter = bed.onEnter, hints = bed.hints;
+  bed.onEnter = function () { if (!F.walked) return enter.call(this); G.clock = 8 * 60 + 15; if (!F.outfit) G.wearing = 'pj'; say(["Back home. Luca flops onto the rug, extremely pleased with himself.", { n: 'Mum', t: "Good walk? You two were gone long enough to meet the whole street." }]); };
+  bed.hints = () => hints().concat([!F.walked && !questState('block') && 'l']);
+  bed.act.l = () => {
+    if (F.walked && blockAllDone()) return say("Luca's lead, back on its stand. He keeps looking at it anyway.");
+    pickMenu("Luca's lead", F.walked ? 'Another lap? There is unfinished business out there.' : 'A quick lap of the block before the big day?', [{ n: 'Walk the block', d: BK.street + ', with Luca', k: 'go' }, { n: 'Not yet', d: 'Still getting ready', k: 'no', quick: true }], d => {
+      if (d.k !== 'go') return;
+      G.mode = 'busy'; questStart('block'); if (W.luca) W.luca.g.userData.spin = 1; sfx('woof');
+      say(["Luca hears the clip of the lead and loses his entire mind.", { n: 'Mum', t: "Go on, you two. I'll put the kettle on." }], () => { MAPS.bedroom.rows = W.grid.map(r => r.join('')); fade(() => loadMap('block')); });
+    });
+  };
+})();
+function addBandana(g) {
+  if (!g || g.userData.bandana) return; const u = g.userData;
+  const b = grp(u.body, 0, 0.47, 0.2); b.rotation.x = 0.5;
+  mk(G_CONE, '#ff7aa8', [0.3, 0.2, 0.1], [0, -0.06, 0.03], b, { noShadow: true }).rotation.z = Math.PI; mk(G_CYL, '#ff7aa8', [0.3, 0.05, 0.26], [0, 0.05, -0.04], b, { noShadow: true }); mk(G_STAR, '#fff4c9', [0.07, 0.07, 0.07], [0, -0.06, 0.09], b, { noShadow: true });
+  u.bandana = b;
+}
+MAP_HOOKS.push((def, id) => {
+  if (F.bandana && W.luca && (G.campaign || 'day') === 'day') addBandana(W.luca.g);
+  if (id !== 'block' || !F.parcel) return;
+  const o = W.objs.find(o => o.ch === 'q'); if (o) { W.objs.splice(W.objs.indexOf(o), 1); world.remove(o.g); }
+  if (F.parcel === 1) carryParcel(true);
+});
+
+/* ---------------- block quests ---------------- */
+function carryParcel(on) {
+  const B = W.blk; if (!B) return;
+  if (B.parcel) { W.player.g.remove(B.parcel); B.parcel = null; }
+  if (on) { const p = grp(W.player.g, 0, 0.36, 0.28); mk(G_BOX, '#d9b382', [0.3, 0.2, 0.22], [0, 0, 0], p); mk(G_BOX, '#ff7aa8', [0.31, 0.04, 0.05], [0, 0.11, 0], p, { noShadow: true }); mk(G_BOX, '#ff7aa8', [0.05, 0.04, 0.23], [0, 0.11, 0], p, { noShadow: true }); B.parcel = p; }
+}
+function pickParcel(o) {
+  if (F.parcel) return;
+  F.parcel = 1; questStart('parcel');
+  if (o) { W.objs.splice(W.objs.indexOf(o), 1); world.remove(o.g); sparkle(o.x, 0.4, o.z, 16); }
+  carryParcel(true); sfx('pop');
+  say(["A parcel, left beside the postbox. One corner is soggy from the sprinklers.", "The label has run: '...ette. Hide at the house with the lemon tree.'", { n: CONFIG.name, t: "Hide? Okay, weird. Let's find that lemon tree." }]);
+}
+const BOX_NOTES = { '5,2': "No. 14. A surfboard leans on the porch. No lemon tree.", '12,2': "No. 18. Wind chimes and a cat flap. No lemon tree.", '16,2': "No. 20, right under the swooping sign. Brave people. No lemon tree.", '5,11': "No. 9. Roses, roses and more roses.", '12,11': "No. 13. A basketball hoop over the garage.", '16,11': "No. 15, the corner house, home of the gnome army." };
+function letterbox(x, z) {
+  const k = x + ',' + z;
+  if (k === '9,11') return say(["Our letterbox. Already stuffed with birthday cards.", "One is from Luca. The handwriting looks a lot like Mum's."]);
+  if (k !== '9,2') return say(F.parcel === 1 ? [BOX_NOTES[k] || "No lemon tree here.", "Not this one. Keep looking."] : (BOX_NOTES[k] || "A tidy little letterbox."));
+  if (F.parcel !== 1) return say(questState('parcel') === 2 ? "The lemon tree house. Their secret-keeping days are over." : "No. 16, the house with the lemon tree. Free lemons in a bucket by the gate.");
+  G.mode = 'busy';
+  say(["No. 16: the house with the lemon tree. The front door opens before the knock.", { n: 'Neighbour', t: "Oh no. You found it early! That one's not for me, love." }, { n: 'Neighbour', t: "Wipe the label. Go on." }, "Under the smudge: 'For " + CONFIG.name + ". Hide at the lemon tree house till her birthday. P.'"], () =>
+    sting('Plot twist', 'It was hers all along', () => {
+      F.parcel = 2; F.bandana = true; carryParcel(false); if (W.luca) { addBandana(W.luca.g); W.luca.g.userData.spin = 1; confetti(W.luca.g.position.x, 0.9, W.luca.g.position.z, 40); }
+      stat('happy', 8); sfx('woof');
+      say(["Inside: a tiny pink bandana for Luca. It says BIRTHDAY SECURITY.", "And a note: 'He takes the job very seriously. See you tonight. P'", { n: CONFIG.name, t: CONFIG.boyfriend + ", you absolute sneak." }], () => questDone('parcel'));
+    }));
+}
+function talkDot() {
+  const s = questState('biscuit');
+  if (s === 2) return say({ n: BK.catOwner, t: BK.cat + " has not stopped purring. Happy birthday, love. You're a good egg." });
+  questStart('biscuit');
+  say([{ n: BK.catOwner, t: "Oh, thank goodness. " + BK.cat + " has been up that jacaranda since the magpie had a go at her." }, { n: BK.catOwner, t: "She won't come down for me. She's a drama queen. Would you try, love?" }]);
+}
+function catTree() {
+  if (questState('biscuit') === 2) return say("The jacaranda, minus one cat. The branch looks relieved.");
+  if (!questState('biscuit')) { questStart('biscuit'); return say(["A big jacaranda in full bloom.", "Halfway up, two green eyes and an orange tail. A cat, very stuck and very offended."], catTree); }
+  pickMenu(BK.cat + ' the cat', 'She is not coming down on her own. Ideas?', [
+    { n: 'Pspsps', d: 'The classic', k: 'p' }, { n: 'Shake the treat bag', d: "Borrowed from Luca's stash", k: 't' }, { n: 'Send Luca up', d: 'Bold strategy', k: 'l' }
+  ], d => {
+    if (d.k === 'p') { sfx('meow'); return say([BK.cat + " looks down. Blinks slowly. Looks away.", "Devastating."]); }
+    if (d.k === 'l') { sfx('woof'); if (W.luca) W.luca.g.userData.spin = 1; return say(["Luca puts two paws on the trunk and gives one polite woof.", BK.cat + " is unimpressed. Luca is thrilled with himself."]); }
+    G.mode = 'busy';
+    say(["One shake of the treat bag.", BK.cat + "'s ears swivel like satellite dishes."], () => sting('She leaps!', 'Four paws, zero fear', () => {
+      W.blk.jump = 0; sfx('meow'); G.mode = 'busy';
+      setTimeout(() => say([BK.cat + " lands, boops Luca on the nose and struts off like nothing happened.", { n: BK.catOwner, t: BK.cat + "! You little drama queen. Thank you, love!" }, { n: BK.catOwner, t: "Lamington for the road. Birthday rules." }], () => { stat('energy', 6); questDone('biscuit'); }), 1100);
+    }, { ms: 1400 }));
+  });
+}
+ENEMIES.magpie = {
+  name: 'The ' + BK.cross + ' Magpie', lv: 'Spring', hp: 90, intro: "Swooping season. It has chosen " + CONFIG.name + ".",
+  attacks: [["Swoop", 12], ["Beak clack", 8], ["Menacing warble", 10]],
+  moves: [
+    { n: 'Umbrella up', d: 'Big damage', f: b => hit(b, 30) },
+    { n: 'Zip-tie helmet', d: 'Damage, next hit +10', f: b => { const m = hit(b, 18); b.bonus += 10; return m + ' Spiky and proud.'; } },
+    { n: 'Cuddle Luca', d: 'Restore HP', f: b => heal(b, 25) },
+    { n: 'Stare it down', d: 'Next hit doubles', f: b => { b.mult = 2; sfx('good'); return 'Unbroken eye contact. Next hit doubles!'; } }
+  ],
+  win() {
+    const B = W.blk; if (B && B.mag) { B.mag.visible = true; popIn(B.mag); sparkle(B.mag.position.x, 2.1, B.mag.position.z, 24); }
+    stat('gains', 4); sfx('caw');
+    say(["The magpie lands on its sign and warbles what is clearly an apology.", "Peace treaty signed: safe passage for one blonde and one cavoodle.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => questDone('magpie'));
+  }
+};
+function magpieSwoop() {
+  questStart('magpie'); W.player.dir = 'up'; // it drops in from the north, facing the camera
+  if (W.blk.mag) W.blk.mag.visible = false; sfx('caw');
+  sting('Swoop!', 'The ' + BK.cross + ' magpie has entered the chat', () => startBattle('magpie'));
+}
+function updateBlock(dt, t) {
+  const B = W && W.blk; if (!B) return;
+  const p = W.player, L = W.luca;
+  B.spots.forEach(s => { s.m.position.y = 0.1 + Math.sin(t * 3 + s.i) * 0.04; s.m.rotation.y = Math.sin(t * 1.2 + s.i) * 0.4; });
+  // the cat: tail flicks, and one heroic leap
+  const c = B.cat, cu = c.userData; cu.tail.rotation.x = -0.3 + Math.sin(t * 2.2) * 0.25; cu.tail.rotation.z = Math.sin(t * 1.4) * 0.4; cu.head.rotation.z = Math.sin(t * 0.9) * 0.12;
+  if (B.jump != null) { B.jump = Math.min(1, B.jump + dt * 1.3); const k = B.jump, a = B.catHome, b = B.catDown; c.position.set(lerp(a[0], b[0], k), lerp(a[1], b[1], k) + Math.sin(k * Math.PI) * 1.1, lerp(a[2], b[2], k)); c.rotation.x = Math.sin(k * Math.PI) * 0.6; if (k >= 1) { B.jump = null; c.rotation.x = 0; confetti(b[0], 0.4, b[2], 24); } }
+  // the magpie: glaring from its sign, or flapping in a battle
+  if (B.mag.visible) { const calm = questState('magpie') === 2; B.mag.position.y = 1.95 + Math.abs(Math.sin(t * (calm ? 2 : 5))) * (calm ? 0.02 : 0.05); B.mag.userData.body.rotation.z = Math.sin(t * 1.8) * (calm ? 0.06 : 0.16); }
+  if (G.b && G.b.kind === 'magpie' && G.b.foe) G.b.foe.userData.wings.forEach((w, i) => w.rotation.z = (i ? 1 : -1) * (0.5 + Math.sin(t * 14) * 0.6));
+  // the neighbour waters the garden
+  if (!SET.calm && Math.random() < dt * 9) FX.emit(14.3, 0.55, 2.4, ['#bfe9ff', '#ffffff'], 1, 0.9, { g: 4, life: 0.5 });
+  // Luca files a sniff report
+  if (B.sniff) {
+    const s = B.sniff; s.t -= dt;
+    if (L) { L.g.userData.body.rotation.x = 0.32 + Math.sin(t * 22) * 0.05; if (Math.random() < dt * 10) FX.emit(L.g.position.x, 0.15, L.g.position.z, ['#ffffff', '#ffd166'], 1, 0.7, { g: -0.8, life: 0.5 }); }
+    if (s.t <= 0) {
+      B.sniff = null; if (L) L.g.userData.body.rotation.x = 0;
+      F['sn' + s.i] = 1; const n = SNIFF_SPOTS.filter((q, i) => F['sn' + i]).length; G.mode = 'map'; stat('happy', 2, true);
+      toast('Sniff report ' + n + ' of ' + SNIFF_SPOTS.length);
+      say(BK.sniffs[s.i], () => { if (n >= SNIFF_SPOTS.length) questDone('sniff'); });
+    }
+    return;
+  }
+}
+// walk-on triggers: corners of the lap, Luca's paw prints, and one territorial magpie
+function blockStep(x, z) {
+  const B = W.blk; if (!B) return false;
+  const ci = BLOCK_CORNERS.findIndex(([cx, cz]) => Math.abs(x - cx) + Math.abs(z - cz) <= 1);
+  if (ci >= 0 && !F['bc' + ci]) {
+    F['bc' + ci] = 1; const n = BLOCK_CORNERS.filter((q, i) => F['bc' + i]).length; questStart('block');
+    if (n >= 4) { questDone('block'); return true; }
+    toast('Corner ' + n + ' of 4'); sfx('good');
+  }
+  const si = B.spots.findIndex(s => s.x === x && s.z === z);
+  if (si >= 0) {
+    const s = B.spots.splice(si, 1)[0]; world.remove(s.m); questStart('sniff');
+    G.mode = 'busy'; B.sniff = { i: s.i, t: 1.2 }; sfx('sniff'); sparkle(s.x, 0.3, s.z, 16); return true;
+  }
+  if (x === 18 && (z === 4 || z === 5) && questState('magpie') !== 2) { magpieSwoop(); return true; }
+  return false;
+}
+
+/* ---------------- office: the cake caper ---------------- */
+const CAPER_AT = { '3,4': 0, '7,4': 1, '3,7': 2, '10,7': 3 };
+const CAPER_CLUES = [
+  [{ n: 'Dev', t: "The cake? Not me, I'm off sugar till Friday. But I did see pink icing on a keyboard over on the door side." }],
+  [{ n: 'Marco', t: "I was in stand-up till ten. Sam skipped it. Said there was 'a thing' to take care of." }],
+  [{ n: 'Sam', t: "Me? No. Never. Ask Jo. There's a fork on Jo's desk." }, "There is pink icing on Sam's sleeve."],
+  [{ n: 'Jo', t: "The fork is for my salad! And for the record, Sam's 'thing' this morning was in the kitchen." }]
+];
+(() => {
+  const off = MAPS.office, talk = off.act.c;
+  off.act.K = () => {
+    const s = questState('caper');
+    if (s === 2) return say("The birthday cake, safe at last. Minus one slice of evidence.");
+    if (!s) { G.mode = 'busy'; return say(["The birthday cake for three o'clock. Pink icing, rainbow sprinkles.", "One slice is already missing. A trail of crumbs leads off across the carpet."], () => sting('The cake caper', 'Somebody in this office knows something', () => { G.mode = 'map'; questStart('caper'); say("Ask around the desks, then come back to the cake to name the culprit."); })); }
+    pickMenu('The cake caper', 'Who got into the birthday cake?', BK.suspects.map((n, i) => ({ n, d: ['Off sugar till Friday', 'In stand-up till ten', "Had 'a thing' this morning", 'Has a fork on the desk'][i], k: i, quick: true })), d => {
+      if (d.k !== BK.culprit) { F.caperMiss = true; sfx('bad'); return say([d.n + " gasps across the office.", { n: d.n, t: "Excuse me? I would NEVER. Check your notes, detective." }]); }
+      G.mode = 'busy';
+      sting('Case closed', 'The icing never lies', () => say([{ n: 'Sam', t: "Okay! Okay. It was a quality check. For YOU. You deserve a cake that has been tested." }, { n: CONFIG.name, t: "And?" }, { n: 'Sam', t: "Ten out of ten. Coffees are on me for a month." }], () => { if (!F.caperMiss) earn('sleuth'); stat('happy', 6); questDone('caper'); }));
+    });
+  };
+  off.act.c = (x, z, o) => { const i = CAPER_AT[x + ',' + z]; if (questState('caper') !== 1 || i == null) return talk(x, z, o); F['cc' + i] = 1; say(CAPER_CLUES[i]); };
+})();
+
+/* ---------------- beach: a message in a bottle ---------------- */
+const GLINTS = [[3, 2], [12, 2], [8, 2]];
+MAPS.beach.decorate = function (g) {
+  const B = W.blk2 = { g: null, i: -1 };
+  const place = () => { if (B.g) { world.remove(B.g); B.g = null; } const n = F.glint || 0; if (questState('bottle') === 2 || n >= GLINTS.length) return; const m = grp(world, GLINTS[n][0], 0.3, GLINTS[n][1]); mk(G_STAR, '#ffffff', [0.26, 0.26, 0.1], [0, 0, 0], m, { glow: true }); mk(G_SPH, '#bfe9ff', [0.14, 0.14, 0.14], [0, -0.2, 0], m, { glow: true, alpha: 0.7 }); B.g = m; B.i = n; };
+  place();
+  wkTicker((dt, t) => {
+    if (B.g) { B.g.rotation.y += dt * 3; B.g.position.y = 0.32 + Math.sin(t * 4) * 0.06; B.g.scale.setScalar(0.8 + Math.abs(Math.sin(t * 2.5)) * 0.5); }
+  });
+  MAPS.beach.onStep = (x, z) => {
+    const p = W.player; if (!B.g || x !== GLINTS[B.i][0] || z !== GLINTS[B.i][1]) return false;
+    F.glint = B.i + 1; sparkle(p.x, 0.4, p.z, 20); sfx('pop'); questStart('bottle');
+    if (B.i === 0) say(["Just a piece of sea glass, worn smooth. Pretty, though. Into the pocket.", "Further along the wet sand, something else catches the light."], place);
+    else if (B.i === 1) say(["A bottle cap. Glamorous.", "But there, half buried near the water line: a whole bottle. With paper inside."], place);
+    else { place(); G.mode = 'busy'; say(["A glass bottle, corked, with a rolled-up note."], () => sting('A message', 'In an actual bottle', () => say(BK.bottleNote.map(t => ({ n: CONFIG.boyfriend, t: '(Note) ' + t })), () => { heartBurst(p.x, 2.3, 0.5, '#ff7aa8', 0.11); sfx('heart'); G.mode = 'busy'; setTimeout(() => say(["A heart of sea spray hangs over the water for a second, then drifts off.", { n: CONFIG.name, t: "How did he even. Okay. That's very good." }], () => { stat('happy', 8); questDone('bottle'); }), 900); }))); }
+    return true;
+  };
+};
+
+/* ---------------- QA jumps ---------------- */
+const qaAfter = fn => setTimeout(() => { if (DLG) { DLG.q = []; nextLine(); } fn(); }, 950);
+Object.assign(QA_EXTRA, {
+  block: () => { G.campaign = 'day'; loadMap('block'); },
+  blockcat: () => { G.campaign = 'day'; loadMap('block'); qaAfter(() => { Object.assign(W.player, { x: 18, z: 7, tx: 18, tz: 7, dir: 'left' }); placeEntity(W.player, 1); Object.assign(W.luca, { x: 18, z: 8, tx: 18, tz: 8 }); placeEntity(W.luca, 1); F.q_magpie = 2; }); },
+  magpie: () => { G.campaign = 'day'; loadMap('block'); qaAfter(() => { Object.assign(W.player, { x: 18, z: 7, tx: 18, tz: 7, dir: 'up' }); placeEntity(W.player, 1); W.blk.mag.visible = false; F.q_magpie = 1; startBattle('magpie'); }); },
+  sting: () => { G.campaign = 'day'; loadMap('block'); qaAfter(() => sting('Swoop!', 'The ' + BK.cross + ' magpie has entered the chat', null, { ms: 60000 })); },
+  caper: () => { loadMap('office'); qaAfter(() => { F.q_caper = 1; Object.assign(W.player, { x: 11, z: 2, tx: 11, tz: 2, dir: 'up' }); placeEntity(W.player, 1); MAPS.office.act.K(); }); },
+  bottle: () => { loadMap('beach'); qaAfter(() => { Object.assign(W.player, { x: 4, z: 3, tx: 4, tz: 3, dir: 'up' }); placeEntity(W.player, 1); }); }
+});
+
 /* ===== 09-holiday.js ===== */
 /* =========================================================
    HOLIDAY PACK: go on holiday with Paulo. Pick a trip:
@@ -3772,9 +4413,10 @@ function titleScreen() {
   for (let i = 0; i < 6; i++) { const b = makeBalloon(world, -2.6 + i * 1.05, 0, -2.4 + (i % 2) * 0.4, CONFETTI[i % 5], 1.6 + (i % 3) * 0.3); b.userData.bob = true; W.anim.push(b); }
   makeFairyLights(world, -3.5, -2.6, 3.5, -2.6, 2.2, 18);
   for (let i = 0; i < 7; i++) makeCloud(world, -22 + i * 7, -6 + hsh(i, 1) * 1.5, -10 + hsh(i, 2) * 18, 1.4);
+  charmIsland(8, 6, 0, 0, 5); skyFriends('morning');
   cam.base = 11; cam.pitch = 0.5; cam.zoomGoal = 1.35; cam.zoom = 1.35; cam.goal.set(0, 0.8, 0.2); cam.target.copy(cam.goal); cam.orbit = SET.calm ? 0.03 : 0.1;
 
-  const t = el('div', 'title', `<div class="logo"><h1>${esc(CONFIG.name)}'s Big Day</h1><span class="v2">v2 &middot; the whimsical edition</span></div>`);
+  const t = el('div', 'title', `<div class="logo"><h1>${esc(CONFIG.name)}'s Big Day</h1><span class="v2">v2 &middot; whimsy, drama and side quests</span></div>`);
   const w = el('div', 'tbtns'), btns = [];
   const saves = allCheckpoints(), save = saves.find(s => s.campaign === 'day');
   if (saves.length) btns.push(makeBtn('Continue', () => { audioInit(); if (saves.length === 1) return fade(() => resumeGame(saves[0])); pickMenu('Continue', 'Which adventure?', saves.map(s => ({ n: CAMPAIGNS[s.campaign], d: (MAPS[s.map].title || '').replace(/^.*?: /, ''), s })), d => fade(() => resumeGame(d.s))); G.mode = 'title'; }, 'big'));
@@ -3792,7 +4434,7 @@ function resetDay() {
   Object.assign(G, { outfit: 'office', wearing: 'pj', radio: null, tidied: 0, balloons: 0, b: null, lift: null, lunch: null, dish: null, drink: null });
   restorePackBadges();
 }
-function startGame() { cam.orbit = 0; resetDay(); G.campaign = 'day'; loadMap('bedroom'); }
+function startGame() { cam.orbit = 0; resetDay(); MAPS.bedroom.rows = BED_ROWS.slice(); G.campaign = 'day'; loadMap('bedroom'); }
 function resumeGame(s) {
   cam.orbit = 0; resetDay(); G.campaign = s.campaign || 'day';
   if (CAMPAIGN_STATE[G.campaign]) CAMPAIGN_STATE[G.campaign].load(s.extra || {});
@@ -3809,6 +4451,7 @@ const held = [];
 function heldDir() { return held.length ? held[held.length - 1] : null; }
 function press(k) {
   audioInit();
+  if (MOMENT) { if (k === 'a' || k === 'b') MOMENT.skip(); return; }
   if (DLG) { if (k === 'a' || k === 'b') advance(); return; }
   if (G.mode === 'bmsg') { if (k === 'a') bAdvance(); return; }
   if (G.mode === 'lift') { if (k === 'a') liftPress(); return; }
@@ -3896,7 +4539,7 @@ function frame(now) {
     else if (G.scene === 'snow') updateSnow(dt);
     else if (G.scene === 'finale' || G.scene === 'credits') { updateFireworks(dt); updateWorld(dt, t); }
     else if (G.scene === 'title') { updateWorld(dt, t); if (W && W.cast) W.cast.forEach((g, i) => { animatePerson(g, false, dt, t + i); g.position.y = 0.1 + (SET.calm ? 0 : Math.max(0, Math.sin(t * 2.4 + i * 1.3)) * 0.1); g.rotation.y = Math.sin(t * 0.7 + i) * 0.35; }); if (W && W.cake) W.cake.userData.flames.forEach((f, i) => f.scale.y = 0.1 * (0.85 + Math.sin(t * 14 + i) * 0.15)); }
-    updateDlg(dt); FX.update(dt); updateCamera(dt);
+    updateDlg(dt); FX.update(dt); updateCamera(dt); updateCharm(dt, t);
     renderer.render(scene, camera);
   } catch (err) { console.error(err); }
   requestAnimationFrame(frame);
@@ -3906,7 +4549,7 @@ addEventListener('resize', resize);
 saveSettings(); updateHUD(); resize();
 
 /* ---------------- static props are merged as they are built (they only ever move or sway as a whole) ---------------- */
-['makeFlower', 'makeTree', 'makePlant', 'makeGum', 'makePine', 'makeMountain', 'makeCloud', 'makeStreetLamp', 'makeHouse', 'makeTower', 'makeSnowman', 'makePalm'].forEach(n => {
+['makeFlower', 'makeTree', 'makeJacaranda', 'makePlant', 'makeGum', 'makePine', 'makeMountain', 'makeCloud', 'makeStreetLamp', 'makeHouse', 'makeTower', 'makeSnowman', 'makePalm'].forEach(n => {
   const fn = window[n]; if (typeof fn !== 'function') return;
   window[n] = function () { return mergeStatic(fn.apply(this, arguments)); };
 });

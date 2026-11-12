@@ -96,7 +96,7 @@ function buildMap(id) {
     const isWall = !W.outdoor && (z === 0 || x === 0 || x === Wd - 1 || z === H - 1) && ch !== 'D';
     if (ch === '~') { dm.position.set(x, -0.12, z); dm.scale.set(1, 1, 1); dm.updateMatrix(); water.setMatrixAt(nw, dm.matrix); water.setColorAt(nw++, col.set(def.water ? def.water[(x + z) % 2] : (x + z) % 2 ? '#8fd3f0' : '#9fdcf5')); continue; }
     dm.position.set(x, 0, z); dm.scale.set(1, 1, 1); dm.updateMatrix(); floor.setMatrixAt(nf, dm.matrix);
-    const c = ch === '_' ? def.wet : (isWall ? def.floor[1] : def.floor[(x + z) % 2]);
+    const c = (def.tint && def.tint(ch, x, z)) || (ch === '_' ? def.wet : (isWall ? def.floor[1] : def.floor[(x + z) % 2]));
     floor.setColorAt(nf++, col.set(c));
     if (isWall) W.walls.push({ x, z, ch });
   }
@@ -143,7 +143,8 @@ function buildMap(id) {
   if (def.luca) { W.luca = { x: def.luca.x, z: def.luca.z, tx: def.luca.x, tz: def.luca.z, t: 1, moving: false, dir: 'down', g: makeLuca(), trail: [] }; world.add(W.luca.g); }
   placeEntity(W.player, 1); if (W.luca) placeEntity(W.luca, 1);
   cam.goal.set(st.x, 0.5, st.z); cam.target.copy(cam.goal); cam.zoomGoal = 1; cam.zoom = 1; cam.orbit = 0; cam.pitch = MAP_PITCH; cam.base = MAP_BASE;
-  setSky(def.sky); refreshHints();
+  if (Math.abs(Math.sin(cam.yawGoal * 2)) > 0.01) cam.yaw = cam.yawGoal = 0; // an orbiting scene (title, finale) left the camera mid-turn
+  setSky(def.sky); MAP_HOOKS.forEach(f => f(def, id)); refreshHints();
 }
 function buildDoor(x, z) {
   const g = grp(world, x, 0, z);
@@ -207,6 +208,7 @@ function tryStep(dx, dz) {
   if (W.luca && !W.luca.moving) startMove(W.luca, p.x, p.z);
   else if (W.luca) W.luca.queue = [p.x, p.z];
   startMove(p, nx, nz); if (Math.random() < 0.5) sfx('step');
+  if (!SET.calm) FX.emit(p.x, 0.06, p.z, W.outdoor ? ['#ffffff', '#fff4c9'] : '#ffffff', 2, 0.5, { g: -0.6, life: 0.45 });
   return true;
 }
 function updateWalker(e, dt, speed) {
@@ -231,6 +233,7 @@ function onArrive() {
   const p = W.player, ch = charAt(p.x, p.z);
   const hi = W.hearts.findIndex(h => h.x === p.x && h.z === p.z);
   if (hi >= 0) collectHeart(hi);
+  if (W.def.onStep && G.mode === 'map' && W.def.onStep(p.x, p.z)) { p.path = []; p.pending = null; return; }
   if (ch === 'D') {
     p.path = []; p.pending = null;
     if (W.def.doorOpen && W.def.doorOpen()) { sfx('door'); W.def.onDoor(); }
@@ -352,7 +355,7 @@ function updateWorld(dt, t) {
     if (n.want > 0 || Math.abs(dx) + Math.abs(dz) <= 2) faceTo(n.g, [dx || 0.001, dz], dt, 5);
     else faceTo(n.g, [Math.sin(n.x + t * 0.2) * 0.3, 1], dt, 2);
   });
-  W.hearts.forEach(h => { h.m.rotation.y += dt * 2; h.m.position.y = 0.55 + Math.sin(t * 3 + h.x) * 0.08; });
+  W.hearts.forEach(h => { h.m.rotation.y += dt * 2; h.m.position.y = 0.55 + Math.sin(t * 3 + h.x) * 0.08; h.m.scale.setScalar(0.45 * (1 + Math.max(0, Math.sin(t * 5 + h.x)) * 0.12)); });
   W.markers.forEach(m => { m.rotation.y += dt * 2.5; if (m.userData.follow && W.luca) { m.position.x = W.luca.g.position.x; m.position.z = W.luca.g.position.z; } m.position.y = m.userData.base + Math.sin(t * 4) * 0.12; });
   W.anim = W.anim.filter(g => {
     if (g.userData.pop != null) { g.userData.pop += dt * 2.6; const k = clamp(g.userData.pop, 0, 1); g.scale.setScalar(Math.max(0.001, easeOutBack(k))); if (g.userData.pop >= 1) { g.scale.setScalar(1); g.userData.pop = null; return !!g.userData.bob; } return true; }

@@ -211,6 +211,7 @@ function openSettings() {
 function openLog() {
   if (G.mode !== 'map') return;
   const p = panel('Collection log', `Hearts ${heartsFound()} of ${HEARTS_TOTAL} &middot; Secrets ${Object.keys(G.secrets).length} of 4 &middot; Balloons ${G.balloons}`);
+  if ((G.campaign || 'day') === 'day') { p.append(el('p', 'sub qhead', `Side quests ${questsDone()} of ${Object.keys(QUESTS).length}`)); const q = el('div', 'logs'); Object.keys(QUESTS).forEach(id => { const s = questState(id), Q = QUESTS[id]; q.append(el('div', s === 2 ? 'got' : s ? 'on' : '', `<b>${esc(Q.n)}</b>${esc(s === 2 ? 'Done!' : s ? Q.how : Q.where)}`)); }); p.append(q); p.append(el('p', 'sub qhead', 'Secrets and badges')); }
   const g = el('div', 'logs');
   SECRET_IDS.forEach(id => g.append(el('div', G.secrets[id] ? 'got' : '', `<b>${G.secrets[id] ? SECRET_NAMES[id] : 'Secret ???'}</b>${G.secrets[id] ? 'Found!' : 'Keep poking around.'}`)));
   Object.keys(BADGES).forEach(id => g.append(el('div', G.badges[id] ? 'got' : '', `<b>${BADGES[id].n}</b>${esc(BADGES[id].how)}`)));

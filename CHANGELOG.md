@@ -1,5 +1,27 @@
 # Changelog
 
+## v2: whimsy, drama and side quests (2026-11-12)
+
+Everything here is in `v2/` (the 3D diorama edition). The original pixel game at the repo root is unchanged.
+
+### Side quests
+- **Around the block**: a morning lap of Edmondson St, North Ryde with Luca, started from his lead by the bedroom door. A new 21 by 15 street map with the Ryrie St corner, the Blenheim Rd coffee cart and the gate to Blenheim Park. Five quests: the lap, Luca's sniff report, the lemon tree parcel (plot twist included), Biscuit the cat, and a battle with the Ryrie St magpie. Luca keeps his BIRTHDAY SECURITY bandana afterwards.
+- **The cake caper**: an office whodunnit with four suspects and one icing-covered sleeve.
+- **Message in a bottle**: three glints on the wet sand at the beach.
+- Side quests show in the Log, the credits and the album page. Three new badges, three more hearts.
+
+### Drama
+- Cinematic sting cards for the big beats, a CEO email cliffhanger, a booking scare that turns into a surprise at The Botanist, a blackout before the cake and heart-shaped fireworks in the finale.
+
+### Whimsy
+- Sky friends (sun, moon, rainbow, hot-air balloon), napping clouds, toadstools, vines, crystals and waterfalls on every island, butterflies, drifting petals and fireflies, footstep puffs, a soft edge glow.
+
+### Fixes
+- Maps now always open square-on after the title screen's slow orbit.
+- A new day restores the bedroom clutter after a resumed save.
+- Walk-on triggers fire as you pass, not only when you stop.
+- Test scripts run on Linux and under slow software rendering.
+
 ## v1.0.0 — 2026-09-28
 
 The first tagged release: the full birthday day plus the Weekend Adventure expansion.
