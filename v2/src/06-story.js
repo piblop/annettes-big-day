@@ -238,6 +238,7 @@ function lunchScene() {
   for (let i = 0; i < 6; i++) makeCloud(world, -20 + i * 8, -5.5 + hsh(i, 1) * 1.5, -6 + hsh(i, 2) * 14, 1.3);
   cam.goal.set(3, 0.5, 2); cam.target.copy(cam.goal); cam.zoomGoal = 1.5; cam.pitch = 0.96; cam.orbit = 0; cam.base = 11; cam.yawGoal = Math.round(cam.yawGoal / (Math.PI / 2)) * (Math.PI / 2);
   setTimeout(() => {
+    if (G.scene !== 'lunch') return; // skipped past lunch already
     pickMenu('Lunch break', 'Midday hunger hits. What are we grabbing?', CONFIG.lunches, d => {
       G.mode = 'busy'; G.lunch = d.n; stat('energy', 20, true); stat('happy', 8, true); confetti(3, 1.2, 2, 30); sfx('good');
       say([{ n: CONFIG.name, t: "Lunch sorted: " + d.n + "." }, "Refuelled and ready. Golden hour at the beach next.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => startDrive('coast', 'beach', 'the beach'));

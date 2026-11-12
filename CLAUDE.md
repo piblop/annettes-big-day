@@ -58,7 +58,8 @@ A three.js diorama remake with its own source tree and build. Read `v2/README.md
 - `09-atmosphere.js`: whimsy (sky friends, butterflies, motes), `sting()` for dramatic beats, and the side-quest registry (`QUESTS`, `questStart`, `questDone`; progress lives in `F.q_<id>`).
 - `09-block.js`: the Edmondson St block map and all side quests. Personal content is in `CONFIG.block`.
 - `09-holiday.js`: the Holiday Pack. Four trips, each under `CONFIG.holiday`: `qt` (Queenstown ski trip, New Zealand), `hv` (Hunter Valley), `bt` (Thirroul beach trip), `pm` (Port Macquarie). `barGame()` is a shared three-round timing bar (whale watch, balloon flight). `G.holiday` holds the trip key and `holidayEnd()` builds the memories card for whichever one it is.
-- Test with `CHROME=<path> node v2/tools/play.js` (also `play-weekend.js`, `play-holiday.js`); they must end with PASS and no console errors.
+- `09-fastskip.js`: the Skip button (HUD and Tab). `SKIP_TO` maps each place to the next section; a new map needs an entry there.
+- Test with `CHROME=<path> node v2/tools/play.js` (also `play-weekend.js`, `play-holiday.js`, `play-skip.js`); they must end with PASS and no console errors.
 - The Luca rule has one more exception in v2: he comes on the optional morning walk around the block.
 
 ## Rules

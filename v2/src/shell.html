@@ -133,6 +133,8 @@ button { font-family:'Fredoka', system-ui, sans-serif; }
 #dlg.her { background:#fff3f7; border-color:#ffc2d6; }
 #dlg .who { position:absolute; top:-15px; left:18px; padding:3px 14px; border-radius:999px; font:700 15px 'Fredoka', sans-serif; color:#fff; background:var(--ink2); box-shadow:0 3px 0 rgba(0,0,0,.12); }
 #dlg .txt { font:500 max(17px, 1.5vw) 'Fredoka', sans-serif; line-height:1.4; min-height:2.8em; }
+#dlg .skip { position:absolute; top:-15px; right:18px; padding:3px 14px; border-radius:999px; border:2px solid var(--tan); background:var(--paper); color:var(--ink2); font:600 14px 'Fredoka', sans-serif; box-shadow:0 3px 0 rgba(0,0,0,.08); cursor:pointer; }
+#dlg .skip:active { transform:translateY(2px); }
 #dlg .more { position:absolute; right:18px; bottom:10px; color:var(--pink); animation:bob 1s ease-in-out infinite; font-size:14px; }
 @keyframes bob { 50% { transform:translateY(-4px); } }
 
@@ -245,6 +247,7 @@ button { font-family:'Fredoka', system-ui, sans-serif; }
   <div id="hudBtns">
     <button class="ib" id="rotL" title="Rotate (Q)" aria-label="Rotate left">&#10226;</button>
     <button class="ib" id="rotR" title="Rotate (E)" aria-label="Rotate right">&#10227;</button>
+    <button class="ib" id="skipBtn" title="Skip (Tab)" aria-label="Skip">Skip &#9197;</button>
     <button class="ib" id="logBtn" title="Collection (B)">Log</button>
     <button class="ib" id="setBtn">Settings</button>
   </div>

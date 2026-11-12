@@ -9,7 +9,7 @@ Open `v2/index.html`. It is one self-contained file (fonts, three.js r128 and th
 - Source lives in `v2/src/` (`01-config.js` is the EDIT ME block, `CONFIG.weekend` is in `08-weekend.js`, `CONFIG.block` in `09-block.js`). `shell.html` holds the HTML and CSS. Files are joined in name order, and `09-main.js` boots the game, so new modules must sort before it.
 - Extension points: `OBJ_BUILDERS['theme:ch']`, `WALL_BUILDERS`, `QA_EXTRA`, `MAP_HOOKS` (run after every map build), and per-map `tint(ch, x, z)` for floor colours and `onStep(x, z)` for walk-on triggers.
 - Build: `node v2/tools/build.js` writes `v2/index.html`.
-- Test: `node v2/tools/play.js` plays title to credits including every side quest, `node v2/tools/play-weekend.js` plays the weekend. Both run headless Chrome and fail on any console error (`W=390 H=844` for a phone). Set `CHROME=/path/to/chrome` if Chrome is not in the default Windows location. Waits follow game time, so the scripts also pass on slow software rendering.
+- Test: `node v2/tools/play.js` plays title to credits including every side quest, `node v2/tools/play-weekend.js` plays the weekend, `node v2/tools/play-skip.js` presses Skip through all three campaigns. Both run headless Chrome and fail on any console error (`W=390 H=844` for a phone). Set `CHROME=/path/to/chrome` if Chrome is not in the default Windows location. Waits follow game time, so the scripts also pass on slow software rendering.
 - Screenshots: `node v2/tools/shoot.js [scene ...]` writes `v2/screenshots/`. Scenes: title, map, drive, lift, battle, report, lunch, drinks, pet, finale, credits, block, blockcat, magpie, sting, caper, bottle, wkbaths, wkshop, grocery, wkpark, fetch, wkhome, wknight, wkend (same names as `?qa=`).
 
 ## Side quests
@@ -27,6 +27,8 @@ Content lives in `CONFIG.block` at the top of `src/09-block.js` (street names, t
 A sleepy sun, a dozing moon, a rainbow and a hot-air balloon live behind every island (parented to the camera, so they frame any zoom or rotation). Half the clouds are napping. Islands grow toadstools, flowering vines, crystals and a little waterfall. Butterflies loop the grassy islands, petals drift by day, gold dust at golden hour and fireflies at night. Footsteps puff, hearts pulse and the screen has a soft pink edge glow.
 
 ## Controls
+**Skip** (top right, or Tab) always moves things along: it skips a whole conversation, finishes a mini-game, battle or drive with a decent result, or offers to jump to the next section when you are walking around. Every conversation box also has its own Skip button. Skipped side quests and hearts stay unfinished.
+
 Arrows/WASD walk, Space/Enter/Z = A, Esc/X = B, Q/E rotate the diorama, B opens the collection log. Tap a spot to walk there, or tap a thing to walk up and use it.
 
 ## Holiday Pack

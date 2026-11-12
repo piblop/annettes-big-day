@@ -52,8 +52,8 @@ function nextLine() {
   if (DLG.box) DLG.box.remove();
   if (!DLG.q.length) { const d = DLG; DLG = null; G.mode = d.ret === 'dialog' ? 'map' : d.ret; if (d.done) d.done(); return; }
   const L = DLG.q.shift(), who = typeof L === 'string' ? null : L.n, text = typeof L === 'string' ? L : L.t;
-  const box = el('div', who === CONFIG.name ? 'her' : '', (who ? `<span class="who" style="background:${WHO_COL[who] || '#8a6a55'}">${esc(who)}</span>` : '') + '<div class="txt"></div><span class="more">&#9660;</span>');
-  box.id = 'dlg'; box.addEventListener('pointerdown', e => { e.preventDefault(); advance(); });
+  const box = el('div', who === CONFIG.name ? 'her' : '', (who ? `<span class="who" style="background:${WHO_COL[who] || '#8a6a55'}">${esc(who)}</span>` : '') + '<div class="txt"></div><span class="more">&#9660;</span><button class="skip" title="Skip this conversation (Tab)">Skip &#9197;</button>');
+  box.id = 'dlg'; box.addEventListener('pointerdown', e => { e.preventDefault(); if (e.target.closest('.skip')) skipTalk(); else advance(); });
   document.body.append(box);
   Object.assign(DLG, { box, full: text, shown: SET.calm ? text.length : 0, typing: true });
   if (who) talkBlip(who);
