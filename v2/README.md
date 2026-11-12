@@ -30,11 +30,12 @@ A sleepy sun, a dozing moon, a rainbow and a hot-air balloon live behind every i
 Arrows/WASD walk, Space/Enter/Z = A, Esc/X = B, Q/E rotate the diorama, B opens the collection log. Tap a spot to walk there, or tap a thing to walk up and use it.
 
 ## Holiday Pack
-"Go on holiday" on the title screen and credits. Pick a trip:
-- **Queenstown ski trip** (from the real Aug 2026 itinerary): Lomond Lodge, Fergburger, a winter-jacket pick (Arc'teryx, Patagonia, ALDI, Kathmandu, Macpac), board or skis at Greentoad, then Cardrona, The Remarkables or a Coronet Peak night ski. Remarkables runs come from its trail map (Homeward Run, Alta Blue, Shadow Basin, Alta Chutes, graded green/blue/red/black). The snowboard run has a chairlift and a cheeky kiwi. Then a rest day, a farewell dinner and a memories card.
-- **Hunter Valley**: blind tasting at the cellar door, cheese shop, a morning adventure and dinner in the vines.
+"Go on holiday" on the title screen and credits. Pick one of four trips:
+- **Queenstown ski trip**, New Zealand (from the real Aug 2026 itinerary; the rest day can also be a Milford Sound day trip): Lomond Lodge, Fergburger, a winter-jacket pick (Arc'teryx, Patagonia, ALDI, Kathmandu, Macpac), board or skis at Greentoad, then Cardrona, The Remarkables or a Coronet Peak night ski. Remarkables runs come from its trail map (Homeward Run, Alta Blue, Shadow Basin, Alta Chutes, graded green/blue/red/black). The snowboard run has a chairlift and a cheeky kiwi. Then a rest day, a farewell dinner and a memories card.
+- **Hunter Valley**: blind tasting at the cellar door, cheese shop, a morning adventure and dinner in the vines. Pick the sunrise hot air balloon and you fly it: three burner blasts on a timing bar lift the balloon over the vines.
 - **Thirroul beach trip**: the Grand Pacific Drive down to Thirroul, 80 minutes south of Sydney, with the Illawarra escarpment behind the sand. Hire a board at the surf shack and catch three waves on a timing bar, then lunch from the kiosk (a seagull has other ideas), a sandcastle, a rock pool, base camp under the umbrella (including a dip in the ocean pool), an arvo out (Sea Cliff Bridge, Sublime Point lookout or stargazing) and dinner as the escarpment turns pink. Dolphins jump in the shallows and a pelican keeps watch from its post.
-Travel scenes: a flight over the Southern Alps to Queenstown, a drive up the M1 to the Hunter. The Queenstown rest day can be a playable Skyline luge race against Paulo. Best scores per run are kept on the device. Content lives in `CONFIG.holiday` in `src/09-holiday.js`. Test: `node v2/tools/play-holiday.js`. QA scenes: holiday, flight, luge, qtown, qtjacket, qtfield, snowrun, skirun, nightrun, qtnight, hunter, tasting, thirroul, surf, gull, holend, hvend, btend.
+- **Port Macquarie**: up the Pacific Highway to the north coast. A volunteer at the Koala Hospital needs a head count, so check the gum trees for five sleeping koalas (they move every visit). Then watch for whale breaches from Tacking Point Lighthouse on a timing bar, paint a rock for the breakwall, pick an arvo (camel ride on Lighthouse Beach, the coastal walk or the rainforest boardwalk) and dinner by the river.
+Travel scenes: a flight over the Southern Alps to Queenstown, a drive up the M1 to the Hunter. The Queenstown rest day can be a playable Skyline luge race against Paulo. Best scores per run are kept on the device. Content lives in `CONFIG.holiday` in `src/09-holiday.js`. Test: `node v2/tools/play-holiday.js`. QA scenes: holiday, flight, luge, qtown, qtjacket, qtfield, snowrun, skirun, nightrun, qtnight, hunter, tasting, balloon, thirroul, surf, gull, portmac, koalas, whale, pmend, holend, hvend, btend.
 
 ## Weekend Adventure
 Greenwich Baths > ALDI grocery grab > dog park fetch > home (movie, then chess or a picnic) > night out > end card. Luca tags along everywhere except inside ALDI, where he waits in the car.
@@ -42,7 +43,7 @@ Greenwich Baths > ALDI grocery grab > dog park fetch > home (movie, then chess o
 ## Saves, album and badges
 - Each campaign (birthday, weekend, holiday) has its own save slot; Continue asks which one when there are several.
 - Every ending saves a page to the memories album (title screen: Album). Endings also offer Save photo, a snapshot of the 3D scene.
-- Pack badges (Powder hound, Black diamond, Sommelier, Luge legend, Surf's up, Chip defender, Centre aisle victim) persist across playthroughs.
+- Pack badges (Powder hound, Black diamond, Sommelier, Luge legend, Surf's up, Chip defender, Koala counter, Whale spotter, Balloon pilot, Centre aisle victim) persist across playthroughs.
 
 ## Performance
 Characters and static props are merged per material with vertex colours (`mergeStatic` in `src/02-engine.js`); Luca is built once and cloned. Keep animated parts in their own groups so they survive merging.

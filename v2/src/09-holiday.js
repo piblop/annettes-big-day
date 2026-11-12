@@ -1,9 +1,10 @@
 /* =========================================================
    HOLIDAY PACK: go on holiday with Paulo. Pick a trip:
-   Queenstown ski trip (NZ, from our real Aug 2026 itinerary), a Hunter Valley wine weekend or a beach trip to Thirroul.
+   Queenstown ski trip (NZ, from our real Aug 2026 itinerary), a Hunter Valley wine weekend, a beach trip to Thirroul or a few days up at Port Macquarie.
    Queenstown: lake town > Greentoad gear > ski bus > snowboard run > rest day > farewell dinner > memories.
    Hunter Valley: vineyard > blind tasting at the cellar door > cheese > morning adventure > dinner > memories.
    Thirroul: golden sand under the escarpment > surf hire and three waves > kiosk lunch (mind the seagull) > an arvo out > dinner > memories.
+   Port Macquarie: koala count at the Koala Hospital > whale watch at the lighthouse > a painted rock on the breakwall > an arvo out > dinner > memories.
    Luca stays home with Mum for these (he is having a sleepover).
    ========================================================= */
 
@@ -64,7 +65,8 @@ CONFIG.holiday = {
       { n: "Skyline gondola and luge", d: "Right behind the lodge" },
       { n: "Shotover Jet", d: "Spins through the canyons" },
       { n: "Arrowtown", d: "Gold-rush village and cosy pubs" },
-      { n: "Glenorchy drive", d: "Red shed, big mountains" }
+      { n: "Glenorchy drive", d: "Red shed, big mountains" },
+      { n: "Milford Sound day trip", d: "Fiords, waterfalls and a boat" }
     ],
     dinner: [
       { n: "Botswana Butchery", d: "Lamb shoulder by the fire" },
@@ -134,12 +136,40 @@ CONFIG.holiday = {
       { n: "Prawns at the pub", d: "A cold drink and a sea breeze" },
       { n: "Barbecue at the beach house", d: "Paulo on the tongs, apron and all" }
     ]
+  },
+  // Port Macquarie: up the north coast for koalas, whales and painted rocks
+  pm: {
+    place: "Port Macquarie",
+    // the five regulars in the gum trees
+    koalas: [
+      { n: "Gumnut", d: "Fast asleep, one paw dangling." },
+      { n: "Banjo", d: "Mid-chew, eyes closed. Multitasking." },
+      { n: "Matilda", d: "She opens one eye, decides you are fine, and closes it again." },
+      { n: "Bluey Blinks", d: "The oldest one here. Has not moved since Tuesday." },
+      { n: "Pudding", d: "Round, fluffy and wedged in a fork like a dropped scone." }
+    ],
+    rocks: [
+      { n: "A + P and a heart", d: "The classic", c: '#ff7aa8', k: 'heart', say: "A big pink rock: A + P, with a heart around it." },
+      { n: "Luca's paw print", d: "He should be here in spirit", c: '#7fc8f8', k: 'paw', say: "A blue rock with one perfect paw print. Luca would approve." },
+      { n: "Birthday star", d: "For the birthday girl", c: '#ffd166', k: 'star', say: "A gold rock with a star and today's date." }
+    ],
+    arvo: [
+      { n: "Camel ride", d: "Along the sand at Lighthouse Beach" },
+      { n: "Coastal walk", d: "Nine kilometres, beach after beach" },
+      { n: "Rainforest boardwalk", d: "Up in the treetops at Sea Acres" }
+    ],
+    dinner: [
+      { n: "Oysters by the river", d: "Straight off the Hastings" },
+      { n: "Fish and chips at Town Beach", d: "On the grass, seagulls on notice" },
+      { n: "Wood-fired pizza in town", d: "And a gelato for the walk back" }
+    ]
   }
 };
 const HOL = CONFIG.holiday;
 let HLOG = {};
-Object.assign(SCENE_TIME, { qtown: 13 * 60 + 50, hunter: 11 * 60, thirroul: 10 * 60 + 30, hstart: 7 * 60, snow: 9 * 60 + 15, hend: 22 * 60 });
-Object.assign(NPC_CHARS, { qtown: 'A', hunter: 'A', thirroul: 'A' });
+Object.assign(SCENE_TIME, { qtown: 13 * 60 + 50, hunter: 11 * 60, thirroul: 10 * 60 + 30, portmac: 9 * 60 + 40, hstart: 7 * 60, snow: 9 * 60 + 15, hend: 22 * 60 });
+Object.assign(NPC_CHARS, { qtown: 'A', hunter: 'A', thirroul: 'A', portmac: 'An' });
+WHO_COL.Volunteer = '#3fae7c';
 OUTFITS.beachy = { name: "Sundress", style: "dress", note: "Coral sundress, salty hair", top: '#ff8a6b', bottom: '#ff8a6b' };
 LOOK.pauloBeach = Object.assign({}, LOOK.paulo, { top: '#fff4e8', bottom: '#5fb8d9', shoe: '#c89f7a' });
 OUTFITS.winter = { name: "Cosy knit", style: "pants", note: "Cream knit, jeans and a beanie", top: '#f3e2c7', bottom: '#3f6fb0', beanie: '#ff7aa8' };
@@ -151,14 +181,19 @@ Object.assign(BADGES, {
   somm: { n: 'Sommelier', how: 'Guess all four wines at the cellar door', pack: true },
   luge: { n: 'Luge legend', how: 'Beat Paulo down the Skyline luge', pack: true },
   surf: { n: "Surf's up", how: 'Catch three clean waves at Thirroul', pack: true },
-  chips: { n: 'Chip defender', how: 'See off the seagull at the kiosk', pack: true }
+  chips: { n: 'Chip defender', how: 'See off the seagull at the kiosk', pack: true },
+  koala: { n: 'Koala counter', how: 'Find all five koalas at Port Macquarie', pack: true },
+  whale: { n: 'Whale spotter', how: 'Catch three breaches from the lighthouse', pack: true },
+  pilot: { n: 'Balloon pilot', how: 'Three clean burns over the Hunter', pack: true }
 });
 DRIVE_THEMES.hunter = { sky: 'golden', ground: '#b8d98a', side: 'gum', label: 'Up the M1 to the Hunter' };
+DRIVE_THEMES.portmac = { sky: 'day', ground: '#a6dc8f', side: 'gum', label: 'Up the Pacific Highway to Port Macquarie' };
 DRIVE_THEMES.thirroul = { sky: 'day', ground: '#ffe9b8', side: 'palm', label: 'Grand Pacific Drive to Thirroul' };
-const HOL_FLAGS = ['qtGear', 'qtSki', 'qtRest', 'qtLuge', 'hvTaste', 'hvCheese', 'hvMorning', 'btSurf', 'btLunch', 'btGull', 'btCastle', 'btBag', 'btPool'];
+const HOL_FLAGS = ['qtGear', 'qtSki', 'qtRest', 'qtLuge', 'hvTaste', 'hvCheese', 'hvMorning', 'btSurf', 'btLunch', 'btGull', 'btCastle', 'btBag', 'btPool', 'pmTask', 'pmKoala', 'pmWhale', 'pmRock'];
 
 // pictures and moments for the holiday choices (checked before the everyday ones)
 ICONS.unshift(
+  [/port macquarie/i, '🐨', 'trip'], [/a \+ p/i, '💗', 'adventure'], [/paw print/i, '🐾', 'adventure'], [/birthday star/i, '⭐', 'adventure'], [/camel/i, '🐪', 'adventure'], [/coastal walk/i, '🥾', 'adventure'], [/rainforest/i, '🌿', 'adventure'], [/oysters/i, '🦪', 'dine'], [/milford/i, '⛴️', 'adventure'],
   [/thirroul/i, '🏖️', 'trip'], [/ocean pool/i, '🏊', 'adventure'], [/sea cliff bridge/i, '🌉', 'adventure'], [/sublime point/i, '⛰️', 'adventure'], [/longboard/i, '🏄', 'surf'], [/bodyboard/i, '🌊', 'surf'], [/paddle board/i, '🛶', 'surf'],
   [/sunscreen/i, '🧴', 'adventure'], [/beach nap/i, '😴', 'adventure'], [/fish and chips/i, '🍟', 'dine'], [/prawn/i, '🍤', 'dine'], [/smoothie/i, '🥭', 'drink'], [/ice cream/i, '🍦', 'picnic'],
   [/classic castle/i, '🏰', 'adventure'], [/sand luca/i, '🐶', 'adventure'], [/tiny harbour bridge/i, '🌉', 'adventure'],
@@ -383,11 +418,11 @@ function startHoliday() {
   cam.base = 11; cam.pitch = 0.5; cam.zoomGoal = 1.5; cam.zoom = 1.5; cam.goal.set(0.4, 0.8, 0.3); cam.target.copy(cam.goal); cam.orbit = SET.calm ? 0.02 : 0.05;
   wkTicker((dt, t) => { updateWorld(dt, t); W.cast.forEach((g, i) => animatePerson(g, false, dt, t + i)); });
   const pn = panel('Go on holiday', 'Bags are packed. Where are we off to?', 'grid2'); pn.classList.add('low');
-  const trips = [{ n: 'Queenstown ski trip', d: 'New Zealand snow, ' + HOL.qt.dates, k: 'qt' }, { n: 'Hunter Valley', d: 'Wine, cheese and hot air balloons', k: 'hv' }, { n: HOL.bt.place + ' beach trip', d: 'Surf, an ocean pool and the escarpment', k: 'bt' }];
+  const trips = [{ n: 'Queenstown ski trip', d: 'New Zealand snow, ' + HOL.qt.dates, k: 'qt' }, { n: 'Hunter Valley', d: 'Wine, cheese and hot air balloons', k: 'hv' }, { n: HOL.bt.place + ' beach trip', d: 'Surf, an ocean pool and the escarpment', k: 'bt' }, { n: HOL.pm.place, d: 'Koalas, whales and painted rocks', k: 'pm' }];
   const btns = trips.map(tr => makeBtn(`<span>${esc(tr.n)}</span><small>${esc(tr.d)}</small>`, () => {
-    clearUI(); moment(tr.n, { line: tr.k === 'qt' ? 'SYD to ZQN, window seat' : tr.k === 'bt' ? 'Windows down, down the coast' : 'Road trip up the M1', ms: 1900 }, () => {
+    clearUI(); moment(tr.n, { line: tr.k === 'qt' ? 'SYD to ZQN, window seat' : tr.k === 'bt' ? 'Windows down, down the coast' : tr.k === 'pm' ? 'Four hours north, snacks packed' : 'Road trip up the M1', ms: 1900 }, () => {
       G.holiday = tr.k; HLOG.trip = tr.n; G.outfit = tr.k === 'qt' ? 'winter' : tr.k === 'bt' ? 'beachy' : 'sunny';
-      say([{ n: 'Mum', t: "Go! Luca and I will be fine. Send photos." }, { n: CONFIG.name, t: CONFIG.catchphrase }], () => tr.k === 'qt' ? fade(flightScene) : tr.k === 'bt' ? startDrive('thirroul', 'thirroul', HOL.bt.place) : startDrive('hunter', 'hunter', 'the Hunter Valley'));
+      say([{ n: 'Mum', t: "Go! Luca and I will be fine. Send photos." }, { n: CONFIG.name, t: CONFIG.catchphrase }], () => tr.k === 'qt' ? fade(flightScene) : tr.k === 'bt' ? startDrive('thirroul', 'thirroul', HOL.bt.place) : tr.k === 'pm' ? startDrive('portmac', 'portmac', HOL.pm.place) : startDrive('hunter', 'hunter', 'the Hunter Valley'));
     });
   }));
   pn.querySelector('.grid2').append(...btns);
@@ -425,7 +460,8 @@ function qtEvening() {
   pickMenu('Rest day tomorrow', 'Legs need a break. What are we doing?', HOL.qt.rest, r => {
     HLOG.rest = r.n; F.qtRest = true; stat('happy', 8, true);
     if (/luge/i.test(r.n)) { say([{ n: CONFIG.boyfriend, t: "Gondola up Bob's Peak, then a luge race. Loser buys hot chocolate." }, "Steer around the cones. Grab the stars for a speed boost."], () => fade(() => buildSnowRun('luge'))); return; }
-    say([{ n: CONFIG.name, t: r.n + ". Done." }, { n: CONFIG.boyfriend, t: "And for the farewell dinner?" }], qtDinner);
+    const extra = /milford/i.test(r.n) ? ["A long, beautiful drive, then a boat between cliffs a kilometre high.", "Waterfalls on both sides and a seal asleep on a rock. Worth every hour."] : [];
+    say([{ n: CONFIG.name, t: r.n + ". Done." }].concat(extra, [{ n: CONFIG.boyfriend, t: "And for the farewell dinner?" }]), qtDinner);
   });
 }
 function qtDinner() {
@@ -596,7 +632,7 @@ function updateSnow(dt) {
 }
 
 /* ---------------- Hunter Valley ---------------- */
-function updateHunter(dt, t) { const k = W && W.hol; if (!k) return; k.balloons.forEach((b, i) => { b.position.y += Math.sin(t * 0.6 + b.userData.phase) * dt * 0.2; b.position.x += dt * 0.08; b.rotation.y += dt * 0.1; }); }
+function updateHunter(dt, t) { const k = W && W.hol; if (!k) return; const fl = k.flight; if (fl) { fl.y = lerp(fl.y, fl.goal, Math.min(1, dt * 1.5)); if (!fl.done) cam.goal.set(7, 0.8 + fl.y * 0.5, 3); } k.balloons.forEach((b, i) => { if (fl && fl.b === b) { b.position.set(7 + Math.sin(t * 0.5) * 0.3, fl.y + Math.sin(t * 1.4) * 0.05, 2.5); b.rotation.y += dt * 0.1; return; } b.position.y += Math.sin(t * 0.6 + b.userData.phase) * dt * 0.2; b.position.x += dt * 0.08; b.rotation.y += dt * 0.1; }); }
 function tastingGame() {
   const glasses = shuffle(HOL.hv.wines.slice()); let i = 0, score = 0;
   const round = () => {
@@ -626,11 +662,24 @@ function hvEvening() {
   pickMenu('Tomorrow morning', 'Early start or a lazy one?', HOL.hv.morning, m => {
     HLOG.morning = m.n; F.hvMorning = true; stat('happy', 8, true);
     const after = /balloon/i.test(m.n) ? "Up before dawn. The mist lifts and the vines glow gold beneath the basket." : /gardens/i.test(m.n) ? "Eight kilometres of garden paths, waterfalls and ponds. Coffee in hand." : "Robes on, phones off. Bliss.";
-    say([{ n: CONFIG.name, t: m.n + "." }, after, { n: CONFIG.boyfriend, t: "Now, dinner tonight?" }], () => pickMenu('Dinner in the vines', 'The sun is going down over the vines.', HOL.hv.dinner, d => {
+    const dinner = () => pickMenu('Dinner in the vines', 'The sun is going down over the vines.', HOL.hv.dinner, d => {
       HLOG.dinner = d.n; stat('energy', 15, true);
       say([{ n: CONFIG.boyfriend, t: d.n + ". Good call." }, "Golden light, a full glass, nowhere to be.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(holidayEnd));
-    }, false));
+    }, false);
+    const rest = () => say([after, { n: CONFIG.boyfriend, t: "Now, dinner tonight?" }], dinner);
+    say([{ n: CONFIG.name, t: m.n + "." }], () => /balloon/i.test(m.n) ? balloonFlight(rest) : rest());
   });
+}
+// the sunrise balloon: three burner blasts on the timing bar lift our balloon up over the vines
+function balloonFlight(next) {
+  const k = W.hol, b = k.balloons[1]; G.mode = 'busy';
+  k.flight = { b, y: 1.6, goal: 1.6 }; b.position.set(7, 1.6, 2.5); W.camHold = true; cam.zoomGoal = 0.8; cam.goal.set(7, 1.6, 3);
+  say(["Up before dawn. The basket creaks, the burner roars.", { n: CONFIG.boyfriend, t: "You're on the burner. Don't land us in the Semillon." }], () => barGame({
+    title: 'Hot air balloon', hint: 'Tap Burn! in the pink zone to climb over the vines.', btn: 'Burn!', rounds: 3,
+    said: { perfect: 'A perfect burn. Up she goes!', good: 'Whoosh! Climbing nicely.', miss: 'Too early. The basket skims a vine.' },
+    onRound: res => { k.flight.goal += res === 'perfect' ? 1.5 : res === 'good' ? 1.0 : 0.2; if (res !== 'miss') FX.emit(b.position.x, b.position.y - 0.6, b.position.z, ['#ffd166', '#ff9f6b', '#fff4c9'], 14, 1.6, { g: -2, life: 0.6 }); },
+    onDone: res => { const n = res.filter(r => r !== 'miss').length; HLOG.burns = n; W.camHold = false; cam.zoomGoal = 1; k.flight.done = true; stat('happy', 4 + n * 2, true); if (n === 3) earn('pilot'); G.mode = 'busy'; say(n === 3 ? "Three clean burns. The pilot offers you a job." : n ? "A wobbly climb, but the view at the top is unreal." : "A low, leafy tour of the vineyard. Technically still flying.", next); }
+  }));
 }
 
 /* ---------------- Thirroul: the beach trip ---------------- */
@@ -801,16 +850,173 @@ function btEvening() {
   });
 }
 
+/* ---------------- a little timing-bar game shared by the trips (whale watch, balloon burner) ---------------- */
+// barGame({ title, hint, btn, rounds, said: { perfect, good, miss }, onRound(res, i), onDone(results) })
+let BAR = null;
+function barGame(o) {
+  const n = o.rounds || 3, B = BAR = { o, n, i: 0, pos: 0, dir: 1, speed: 0.85, zc: 0.5, zw: 0.24, res: [], lock: 0, last: performance.now() };
+  const pn = panel(esc(o.title), esc(o.hint));
+  pn.insertAdjacentHTML('beforeend', '<div class="bar"><div class="zone"></div><div class="mark"></div></div><p class="sub" id="barRes" style="text-align:center;margin:4px 0">Round 1 of ' + n + '</p><div class="reps">' + '<span class="rep"></span>'.repeat(n) + '</div>');
+  const tap = makeBtn(esc(o.btn || 'Now!'), barPress, 'big'); tap.style.width = '100%'; pn.append(tap); pn.classList.add('low'); B.el = pn;
+  const zone = () => { const z = pn.querySelector('.zone'); z.style.left = ((B.zc - B.zw / 2) * 100) + '%'; z.style.width = (B.zw * 100) + '%'; }; B.zone = zone; zone();
+  setMenu([tap], { onBack: null });
+  const tick = now => {
+    if (BAR !== B) return; const dt = Math.min(0.1, (now - B.last) / 1000); B.last = now;
+    if (B.lock > 0) { B.lock -= dt; if (B.lock <= 0) { if (B.i >= n) { BAR = null; clearUI(); G.mode = 'map'; o.onDone && o.onDone(B.res); return; } B.speed += 0.22; B.zw = Math.max(0.14, B.zw - 0.03); B.zc = 0.25 + Math.random() * 0.5; zone(); $('#barRes').textContent = 'Round ' + (B.i + 1) + ' of ' + n; } }
+    else { B.pos += B.dir * B.speed * dt; if (B.pos > 1) { B.pos = 1; B.dir = -1; } if (B.pos < 0) { B.pos = 0; B.dir = 1; } pn.querySelector('.mark').style.left = (B.pos * 100) + '%'; }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+function barPress() {
+  const B = BAR; if (!B || B.lock > 0) return;
+  const d = Math.abs(B.pos - B.zc), res = d < B.zw * 0.15 ? 'perfect' : d < B.zw / 2 ? 'good' : 'miss', said = B.o.said || {};
+  B.res.push(res); B.el.querySelectorAll('.rep')[B.i].classList.add(res);
+  $('#barRes').textContent = said[res] || (res === 'perfect' ? 'Perfect!' : res === 'good' ? 'Nice one!' : 'Just missed.');
+  sfx(res === 'miss' ? 'bad' : 'good'); B.o.onRound && B.o.onRound(res, B.i); B.i++; B.lock = 1.3;
+}
+
+/* ---------------- Port Macquarie: koalas, a lighthouse and a wall of painted rocks ---------------- */
+const PM = HOL.pm;
+function makeKoala() {
+  const g = new THREE.Group(), body = grp(g), K = '#a9a9b8', k2 = '#e9e6ee', F = { noShadow: true };
+  mk(G_HEAD, K, [0.34, 0.36, 0.3], [0, 0.2, 0], body); mk(G_HEAD, k2, [0.22, 0.24, 0.12], [0, 0.17, 0.1], body);
+  [-1, 1].forEach(s => { mk(capsule(0.05, 0.2), K, null, [s * 0.14, 0.26, 0.12], body).rotation.set(1.2, 0, s * 0.5); mk(capsule(0.05, 0.16), K, null, [s * 0.13, 0.08, 0.12], body).rotation.x = 1.2; });
+  const head = grp(body, 0, 0.47, 0.03);
+  mk(G_HEAD, K, [0.36, 0.3, 0.3], [0, 0, 0], head);
+  const ears = [-1, 1].map(s => { const e = grp(head, s * 0.17, 0.11, -0.01); mk(G_HEAD, K, [0.19, 0.19, 0.1], [0, 0, 0], e); mk(G_SPH, k2, [0.11, 0.11, 0.04], [0, -0.01, 0.045], e, F); return e; });
+  [-1, 1].forEach(s => { mk(G_SPH, INK, [0.04, 0.05, 0.03], [s * 0.075, 0.02, 0.135], head, F); mk(G_SPH, '#ffffff', [0.015, 0.015, 0.01], [s * 0.075 + 0.01, 0.035, 0.15], head, { noShadow: true, glow: true }); });
+  mk(G_SPH, '#3a3148', [0.085, 0.12, 0.07], [0, -0.03, 0.145], head, F);
+  g.userData = { kind: 'koala', body, head, ears };
+  return softSkin(mergeStatic(g));
+}
+function makeWhale() {
+  const g = new THREE.Group(), b = grp(g), D = '#4f6f96', L = '#eef3f8';
+  mk(G_HEAD, D, [0.9, 0.8, 2.3], [0, 0, 0], b); mk(G_HEAD, L, [0.76, 0.6, 1.9], [0, -0.14, 0.1], b);
+  for (let i = 0; i < 4; i++) mk(G_BOX, '#cfd9e6', [0.5, 0.012, 0.03], [0, -0.42 + i * 0.0, 0.5 + i * 0.16], b, { noShadow: true });
+  [-1, 1].forEach(s => { const f = mk(G_HEAD, D, [0.9, 0.1, 0.34], [s * 0.6, -0.12, 0.35], b); f.rotation.set(0, s * 0.5, s * -0.5); const t = mk(G_HEAD, D, [0.62, 0.1, 0.36], [s * 0.28, 0.05, -1.25], b); t.rotation.y = s * 0.6; mk(G_SPH, INK, [0.06, 0.06, 0.04], [s * 0.4, 0.05, 0.75], b, { noShadow: true }); });
+  mk(G_HEAD, D, [0.4, 0.34, 0.7], [0, 0.02, -0.95], b);
+  return softSkin(mergeStatic(g));
+}
+HB['portmac:T'] = () => makeGum(null, 0, 0, 1.2);
+HB['portmac:H'] = w => {
+  const g = new THREE.Group();
+  chalet(g, w, 2, '#fffaf0', '#7cc576'); g.children.filter(c => c.material && c.material.color.getHexString() === 'ffffff').forEach(c => g.remove(c));
+  mk(G_BOX, '#8a6a55', [0.5, 0.85, 0.04], [-0.3, 0.43, 0.91], g); mk(G_BOX, '#bfe6ff', [0.45, 0.4, 0.03], [0.45, 0.7, 0.91], g, { noShadow: true });
+  signPlate(g, 'KOALA HOSPITAL', '#3fae7c', '#ffffff', 1.5, 0.28, 1.34, 0).position.z = 0.96;
+  mk(G_HEART, '#ff7aa8', [0.22, 0.22, 0.22], [0, 1.72, 0.9], g);
+  g.userData.keep = true; return g;
+};
+HB['portmac:L'] = () => {
+  const g = new THREE.Group();
+  mk(G_SPH, '#8fc98a', [2.6, 0.7, 2.4], [0, -0.1, 0], g);
+  mk(lathe('lighthouse', [[0, 0], [0.5, 0], [0.47, 0.3], [0.4, 1.0], [0.34, 1.7], [0.33, 1.85], [0, 1.85]]), '#fffaf0', null, [0, 0.15, 0], g);
+  mk(G_CYL, '#5b8def', [0.95, 0.07, 0.95], [0, 2.02, 0], g); mk(G_CYL, '#fff4b0', [0.5, 0.36, 0.5], [0, 2.24, 0], g, { glow: true }); mk(G_CONE, '#5b8def', [0.72, 0.4, 0.72], [0, 2.62, 0], g); mk(G_SPH, '#ffd166', [0.1, 0.1, 0.1], [0, 2.84, 0], g);
+  mk(G_BOX, '#5b8def', [0.22, 0.42, 0.04], [0, 0.4, 0.49], g); [0.9, 1.4].forEach(y => mk(G_BOX, '#9fd0ff', [0.12, 0.16, 0.04], [0, y, 0.42 - y * 0.05], g, { noShadow: true }));
+  return g;
+};
+HB['portmac:r'] = () => { const g = new THREE.Group(); mk(G_HEAD, '#b8b3c2', [0.8, 0.5, 0.66], [0, 0.2, 0], g); mk(G_SPH, '#a39cb0', [0.4, 0.3, 0.4], [0.32, 0.12, 0.18], g); g.userData.keep = true; return g; };
+MAPS.portmac = {
+  theme: 'portmac', title: 'Holiday: ' + PM.place, sky: 'day', outdoor: true, edge: '#a6dc8f', intro: { x: 7, z: 3, zoom: 0.7 }, ambient: 'water',
+  floor: ['#a6dc8f', '#9bd483'], wet: '#e2c690', wall: ['#fff', '#fff'], water: ['#3f9fd0', '#4aa8d8'],
+  tint: (ch, x, z) => z === 4 || (z === 2 && x >= 12) ? ['#f9e6ba', '#f4dcaa'][(x + z) % 2] : null,
+  rows: ["~~~~~~~~~~~~~LL", "~~~~~~~~~~~~~LL", "~~~~~~~~~~~~...", "_______________", "..r..r..r......", "......A........", "...............", "HH..T...T...T..", "HHn............", "......T...T...T"],
+  start: { x: 8, z: 9, dir: 'up' },
+  npcs: c => c === 'A' ? LOOK.paulo : c === 'n' ? { skin: '#e6b58f', hair: '#8a5a3b', hairStyle: 'bun', top: '#3fae7c', bottom: '#d9c7a8', apron: '#fffaf0' } : null,
+  hints: () => [!F.pmTask && 'n', F.pmKoala && !F.pmWhale && 'L', F.pmKoala && 'A'],
+  decorate(g) {
+    // koalas dozing in five of the six gums: which ones changes every visit
+    const trees = shuffle(W.objs.filter(o => o.ch === 'T')).slice(0, PM.koalas.length);
+    const koalas = trees.map((t, i) => { const k = makeKoala(); k.position.set(t.x + 0.12, 1.02, t.z + 0.2); k.rotation.y = 0.3 - i * 0.2; k.scale.setScalar(0.85); world.add(k); return { k, t, i, found: false }; });
+    const whale = makeWhale(); whale.position.set(5.5, -2.5, 0.6); whale.rotation.y = Math.PI / 2; world.add(whale);
+    const boats = [[2, -5], [9, -6.5]].map(([x, z], i) => { const b = grp(g, x, -0.1, z); mk(G_SPH, '#fffaf0', [1.1, 0.3, 0.4], [0, 0, 0], b); mk(G_CYL, '#8a6a55', [0.04, 1.3, 0.04], [0, 0.7, 0], b); mk(G_CONE, i ? '#7fc8f8' : '#ffffff', [0.8, 1.1, 0.04], [0.22, 0.75, 0], b, { noShadow: true }); b.userData.ph = i * 2; return b; });
+    for (let i = 0; i < 12; i++) mk(G_SPH, '#ffffff', [0.9, 0.05, 0.2], [0.4 + i * 1.02, 0.02, 2.56 + (i % 2) * 0.1], g, { noShadow: true });
+    // the breakwall: a row of rocks along the path, most of them already painted by other visitors
+    for (let i = 0; i < 11; i++) { if (i % 3 === 2 && i < 9) continue; const x = 0.2 + i * 1.0 + hsh(i, 61) * 0.3; mk(G_HEAD, CONFETTI[i % 5], [0.5, 0.34, 0.44], [x, 0.12, 3.62], g); mk(G_SPH, '#ffffff', [0.16, 0.16, 0.05], [x, 0.2, 3.82], g, { noShadow: true }); }
+    for (let i = 0; i < 14; i++) makeFlower(g, 2.5 + hsh(i, 71) * 12, 5.3 + hsh(i, 72) * 4.2, CONFETTI[i % 5]).scale.setScalar(0.8);
+    W.hol = { koalas, whale, boats, breach: null };
+    wkTicker(updatePortmac);
+  },
+  onEnter() {
+    say(["HOLIDAY PACK: " + PM.place + "!", "About four hours up the coast. Town Beach on one side, gum trees on the other.", "Luca is having a sleepover at Mum's. He packed his own bag. It was all toys.", { n: CONFIG.boyfriend, t: "Koala Hospital first. I've been waiting for this all week." }, { n: CONFIG.name, t: CONFIG.catchphrase }]);
+  },
+  act: {
+    n: () => koalaTask(), H: () => koalaTask(),
+    T: (x, z, o) => koalaTree(o),
+    r: (x, z, o) => paintRock(o),
+    L: () => whaleWatch(),
+    '~': () => say("Town Beach. Small, friendly waves and a pelican doing laps."),
+    A: () => !F.pmKoala ? say({ n: CONFIG.boyfriend, t: F.pmTask ? "I count two so far. Maybe. One might be a lump of bark." : "Koalas first! The volunteer at the hospital is waving at us." }) : pmEvening()
+  }
+};
+function koalaTask() {
+  if (F.pmKoala) return say({ n: 'Volunteer', t: "All five accounted for. You two are welcome back any morning." });
+  if (F.pmTask) return say({ n: 'Volunteer', t: "Check the gums out the front. They hide better than you'd think." });
+  F.pmTask = true; refreshHints();
+  say(["The Koala Hospital. They have been patching up koalas here since 1973.", { n: 'Volunteer', t: "Morning! Perfect timing. Five of our regulars are asleep in the gums and I need a head count." }, { n: 'Volunteer', t: "Have a look up each tree and tell me who you find." }, { n: CONFIG.name, t: CONFIG.catchphrase }]);
+}
+function koalaTree(o) {
+  const k = W.hol.koalas.find(k => k.t === o);
+  if (!F.pmTask) return say(k ? "A tall gum. Something round and grey is asleep up there." : "A tall gum, humming with cicadas.");
+  if (!k) return say("Just leaves in this one. And one very loud cicada.");
+  if (k.found) return say(PM.koalas[k.i].n + " is still fast asleep.");
+  k.found = true; k.wave = 1.6; const n = W.hol.koalas.filter(q => q.found).length, K = PM.koalas[k.i];
+  sparkle(o.x, 1.4, o.z, 22); sfx('good'); stat('happy', 3, true); toast('Koala ' + n + ' of ' + PM.koalas.length, true);
+  say(["It's " + K.n + "! " + K.d], () => { if (n < PM.koalas.length) return; F.pmKoala = true; HLOG.koalas = n; earn('koala'); confetti(W.player.g.position.x, 1.3, W.player.g.position.z, 50); say([{ n: 'Volunteer', t: "That's all five! Best head count we've had all month." }, { n: CONFIG.boyfriend, t: "Can we keep one? No? Okay. Lighthouse, then." }], refreshHints); });
+}
+function paintRock(o) {
+  if (F.pmRock) return say("Our rock, drying in the sun with all the others.");
+  pickMenu('The breakwall', 'Every rock here is painted by a visitor. What goes on ours?', PM.rocks, d => {
+    F.pmRock = true; HLOG.rock = d.n; stat('happy', 6, true); sfx('pop');
+    const p = grp(o.g, 0, 0, 0); mk(G_HEAD, d.c, [0.62, 0.36, 0.5], [0, 0.3, 0.1], p); mk(d.k === 'paw' ? G_SPH : d.k === 'star' ? G_STAR : G_HEART, '#ffffff', d.k === 'paw' ? [0.2, 0.16, 0.05] : [0.24, 0.24, 0.1], [0, 0.34, 0.35], p, { noShadow: true });
+    if (d.k === 'paw') [-0.1, 0, 0.1].forEach((x, i) => mk(G_SPH, '#ffffff', [0.07, 0.07, 0.04], [x, 0.46 + (i === 1 ? 0.03 : 0), 0.3], p, { noShadow: true }));
+    popIn(p); confetti(o.x, 0.7, o.z, 30);
+    say([d.say, { n: CONFIG.boyfriend, t: "It'll still be here next time we come up." }]);
+  });
+}
+function whaleWatch() {
+  if (!F.pmKoala) return say(["Tacking Point Lighthouse, standing here since 1879.", "Koalas first, then the big view."]);
+  if (F.pmWhale) return say(["Tacking Point Lighthouse. The whales have moved on up the coast.", "Best seat in town."]);
+  G.mode = 'busy';
+  say(["Tacking Point Lighthouse, standing here since 1879.", { n: CONFIG.boyfriend, t: "Whale season. Watch the water. They come up right off the point." }], () => {
+    W.camHold = true; cam.zoomGoal = 0.85; cam.goal.set(7.5, 0.5, 2.6); // W.camHold stops the camera snapping back to Annette
+    barGame({ title: 'Whale watch', hint: 'Tap There! in the pink zone to catch each breach.', btn: 'There!', rounds: 3,
+      said: { perfect: 'A full breach, right in front of you!', good: 'There she blows!', miss: 'Just a splash. Missed it.' },
+      onRound: res => { if (res !== 'miss') W.hol.breach = { t: 0, big: res === 'perfect' }; },
+      onDone: res => { const n = res.filter(r => r !== 'miss').length; F.pmWhale = true; HLOG.whales = n; W.camHold = false; cam.zoomGoal = 1; stat('happy', 5 + n * 3, true); if (n === 3) earn('whale');
+        say([n === 3 ? "Three breaches from three. The whole headland cheers." : n ? n + " breach" + (n > 1 ? "es" : "") + " spotted. Humpbacks, heading north." : "No luck this time. Just a tail, waving goodbye.", { n: CONFIG.name, t: n ? "Did you SEE that?" : "Next time." }], refreshHints); } });
+  });
+}
+function updatePortmac(dt, t) {
+  const k = W && W.hol; if (!k || !k.koalas) return;
+  k.boats.forEach(b => { b.rotation.z = Math.sin(t * 0.9 + b.userData.ph) * 0.06; b.position.y = -0.1 + Math.sin(t * 1.3 + b.userData.ph) * 0.04; });
+  k.koalas.forEach(q => { const u = q.k.userData; u.ears.forEach((e, i) => e.rotation.z = Math.sin(t * 1.5 + q.i + i) * 0.08); if (q.wave > 0) { q.wave -= dt; q.k.position.y = 1.02 + Math.abs(Math.sin(q.wave * 7)) * 0.1; u.head.rotation.z = Math.sin(q.wave * 9) * 0.25; } else { q.k.position.y = 1.02; u.head.rotation.z = Math.sin(t * 0.7 + q.i) * 0.05; } });
+  const w = k.whale, b = k.breach;
+  if (b) { b.t += dt; const q = Math.min(1, b.t / 1.5), h = b.big ? 2.7 : 2.0; w.position.y = -1.3 + Math.sin(q * Math.PI) * h; w.rotation.z = (0.5 - q) * 1.5; w.position.x = 5.5 + q * 1.5; if (!SET.calm && (q < 0.15 || q > 0.85)) FX.emit(w.position.x, 0.1, 0.6, ['#ffffff', '#bfe9ff'], 5, 3, { g: 6, life: 0.7 }); if (q >= 1) { k.breach = null; sfx('pop'); } }
+  else w.position.y = -2.5;
+}
+function pmEvening() {
+  pickMenu('This arvo', 'The sun is out and the afternoon is free.', PM.arvo, m => {
+    HLOG.arvo = m.n; stat('happy', 8, true);
+    const after = /camel/i.test(m.n) ? "A slow, swaying walk along Lighthouse Beach. The camel is called Barry and he has opinions." : /coastal/i.test(m.n) ? "Nine kilometres of headlands and little beaches, one after another. Shoes off for half of it." : "A boardwalk through the treetops. Cool, green and loud with birds.";
+    say([{ n: CONFIG.name, t: m.n + "." }, after, { n: CONFIG.boyfriend, t: "Okay. Dinner. I'm thinking seafood." }], () => pickMenu('Dinner in ' + PM.place, 'The river goes gold as the sun drops.', PM.dinner, d => {
+      HLOG.dinner = d.n; stat('energy', 15, true);
+      say([{ n: CONFIG.boyfriend, t: d.n + ". Yes please." }, "Pelicans on the lamp posts, boats coming in, nowhere to be.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(holidayEnd));
+    }, false));
+  });
+}
+
 /* ---------------- memories card ---------------- */
 function holidayEnd() {
-  const qt = G.holiday === 'qt', bt = G.holiday === 'bt';
+  const qt = G.holiday === 'qt', bt = G.holiday === 'bt', pm = G.holiday === 'pm';
   clearWorld(); clearUI(); G.scene = 'hend'; G.mode = 'busy'; clearCheckpoint(); showHUD(false); setChapter('Holiday memories');
   W = { id: 'hend', objs: [], npcs: [], hearts: [], markers: [], anim: [], dispose: [], walls: [], decor: [] };
   setSky(qt ? 'night' : 'dusk'); fitSun(0, 0, 8); G.clock = SCENE_TIME.hend;
-  const ground = qt ? '#f4f8fc' : bt ? '#fff4e2' : '#b8d98a';
+  const ground = qt ? '#f4f8fc' : bt ? '#fff4e2' : pm ? '#a6dc8f' : '#b8d98a';
   makeIslandBase(world, 8, 6, ground, 0, 0); mk(G_BOX, ground, [8, 0.2, 6], [0, -0.1, 0], world);
   if (qt) { const far = grp(world, 0, -0.2, -6); for (let i = 0; i < 6; i++) makeMountain(far, -9 + i * 3.6, hsh(i, 3), 3.4, 3.5 + hsh(i, 4) * 3); makePine(world, -3.2, -1.5, 1.2, true); makePine(world, 3.2, -1.2, 1, true); makeSnowman(world, 2.6, 1.6); }
   else if (bt) { makePine(world, -3.2, -1.4, 1.2, false); makePine(world, 3.3, -1.0, 1, false); const u = HB['thirroul:u'](); u.position.set(-2.5, 0, 1.3); world.add(u); const sb = mk(G_SPH, '#ffd166', [0.42, 1.7, 0.08], [2.6, 0.8, 1.2], world); sb.rotation.z = -0.18; mk(G_BOX, '#ff7aa8', [0.05, 1.5, 0.085], [2.6, 0.8, 1.2], world, { noShadow: true }).rotation.z = -0.18; const sea = mk(G_BOX, '#7fe0d8', [8, 0.06, 1.6], [0, 0.01, -2.2], world, { noShadow: true }); for (let i = 0; i < 9; i++) mk(G_SPH, '#ffffff', [0.9, 0.06, 0.22], [-3.6 + i * 0.9, 0.04, -1.42 + (i % 2) * 0.08], world, { noShadow: true }); for (let i = 0; i < 5; i++) { const s = mk(G_CONE, ['#ffc2d6', '#fff4c9'][i % 2], [0.22, 0.1, 0.2], [-2.6 + i * 1.3, 0.05, 1.9 + (i % 2) * 0.3], world); s.rotation.x = -0.4; } }
+  else if (pm) { makeGum(world, -3.1, -1.3, 1.25); makeGum(world, 3.2, 1.3, 1); const k = makeKoala(); k.position.set(-2.98, 1.05, -1.1); k.scale.setScalar(0.9); world.add(k); const lh = HB['portmac:L'](); lh.scale.setScalar(0.62); lh.position.set(2.7, 0, -1.7); world.add(lh); [['#ff7aa8', -1.9], ['#7fc8f8', -1.3], ['#ffd166', 1.6], ['#b9a3ff', 2.2]].forEach(([c, x]) => mk(G_HEAD, c, [0.44, 0.3, 0.38], [x, 0.1, 1.9], world)); }
   else { for (let r = 0; r < 2; r++) { const v = HB['hunter:v'](6, 1); v.position.set(0, 0, -2.2 + r * 0.9); world.add(v); } makeGum(world, -3.3, 1.4, 1); makeWineBottle(world, 0.1, 0.62, 0.35, '#6b1e3a'); }
   const tbl = grp(world, 0, 0, 0.35); mk(G_CYL, '#c89f7a', [1.1, 0.06, 0.8], [0, 0.6, 0], tbl); mk(G_CYL, '#6b4a32', [0.08, 0.6, 0.08], [0, 0.3, 0], tbl);
   makeGlass(tbl, -0.25, 0.63, 0.1, qt ? '#8a4a2a' : '#6b1e3a'); makeGlass(tbl, 0.25, 0.63, 0.1, qt ? '#8a4a2a' : '#6b1e3a');
@@ -837,16 +1043,23 @@ function holidayEnd() {
     ['On the sand', HLOG.castle || 'Towels, books and naps'],
     ['Arvo', HLOG.arvo || 'Doing absolutely nothing'],
     ['Dinner', HLOG.dinner || 'Something delicious']
+  ] : pm ? [
+    ['The trip', HOL.pm.place + ', up the north coast'],
+    ['Koala count', (HLOG.koalas || 5) + ' of ' + HOL.pm.koalas.length + ' found in the gums'],
+    ['Whale watch', HLOG.whales == null ? 'Saved for next time' : HLOG.whales + ' of 3 breaches from the lighthouse'],
+    ['Our rock', HLOG.rock || 'Still to be painted'],
+    ['Arvo', HLOG.arvo || 'Doing absolutely nothing'],
+    ['Dinner', HLOG.dinner || 'Something delicious']
   ] : [
     ['The trip', 'The Hunter Valley'],
     ['Blind tasting', HLOG.score + ' of ' + HOL.hv.wines.length + ' guessed right'],
     ['In the boot', (HLOG.fav || 'Semillon') + ', a few bottles'],
     ['Cheese shop', HLOG.cheese || 'Next time!'],
-    ['Morning', HLOG.morning || 'A lazy one'],
+    ['Morning', (HLOG.morning || 'A lazy one') + (HLOG.burns != null ? ', ' + HLOG.burns + ' of 3 clean burns' : '')],
     ['Dinner', HLOG.dinner || 'Something delicious']
   ];
   if (qt && HLOG.lugeWin != null) rows.splice(5, 0, ['Skyline luge', HLOG.lugeWin ? 'Beat Paulo to the bottom' : 'Paulo won. Rematch pending']);
-  memoriesCard(qt ? 'holiday-qt' : bt ? 'holiday-bt' : 'holiday-hv', { title: 'What a trip, ' + CONFIG.name + '!', sub: qt ? 'Snow, lakes and one cheeky kiwi' : bt ? 'Salt, sand and one very bold seagull' : 'Vines, wine and golden hour', head: qt ? 'Queenstown memories' : bt ? HOL.bt.place + ' memories' : 'Hunter Valley memories', rows }, [makeBtn('Another holiday', () => fade(startHoliday), 'big alt'), makeBtn('Back to title', () => fade(titleScreen), 'big')]);
+  memoriesCard(qt ? 'holiday-qt' : bt ? 'holiday-bt' : pm ? 'holiday-pm' : 'holiday-hv', { title: 'What a trip, ' + CONFIG.name + '!', sub: qt ? 'Snow, lakes and one cheeky kiwi' : bt ? 'Salt, sand and one very bold seagull' : pm ? 'Five koalas, one lighthouse, one painted rock' : 'Vines, wine and golden hour', head: qt ? 'Queenstown memories' : bt ? HOL.bt.place + ' memories' : pm ? HOL.pm.place + ' memories' : 'Hunter Valley memories', rows }, [makeBtn('Another holiday', () => fade(startHoliday), 'big alt'), makeBtn('Back to title', () => fade(titleScreen), 'big')]);
 }
 
 /* ---------------- QA jumps ---------------- */
@@ -870,5 +1083,10 @@ Object.assign(QA_EXTRA, {
   surf: () => holQA('bt', 'thirroul', () => surfGame(HOL.bt.boards[0])),
   gull: () => holQA('bt', 'thirroul', () => { Object.assign(W.player, { x: 11, z: 6, tx: 11, tz: 6 }); placeEntity(W.player, 1); F.btSurf = true; gullAttack(); }),
   btend: () => { resetHoliday(); G.holiday = 'bt'; Object.assign(HLOG, { waves: 3, board: 'Longboard', lunch: 'Fish and chips', gull: true, castle: 'Sand Luca', arvo: 'Sea Cliff Bridge', dinner: 'Fish and chips on the grass' }); holidayEnd(); },
+  portmac: () => holQA('pm', 'portmac'),
+  koalas: () => holQA('pm', 'portmac', () => { F.pmTask = true; W.hol.koalas.slice(0, 3).forEach(k => { k.found = true; k.wave = 9; }); refreshHints(); }),
+  whale: () => holQA('pm', 'portmac', () => { F.pmTask = F.pmKoala = true; whaleWatch(); }),
+  balloon: () => holQA('hv', 'hunter', () => { F.hvTaste = true; balloonFlight(() => {}); }),
+  pmend: () => { resetHoliday(); G.holiday = 'pm'; Object.assign(HLOG, { koalas: 5, whales: 3, rock: "Luca's paw print", arvo: 'Camel ride', dinner: 'Oysters by the river' }); holidayEnd(); },
   hvend: () => { resetHoliday(); G.holiday = 'hv'; Object.assign(HLOG, { score: 3, fav: 'Semillon', cheese: 'Triple cream brie', morning: 'Hot air balloon at sunrise', dinner: 'Degustation at a winery' }); holidayEnd(); }
 });

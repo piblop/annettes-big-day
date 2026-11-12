@@ -31,7 +31,8 @@ const SCRIPT = `(async () => {
   W.def.act.C(); for (let r = 0; r < 4; r++) { await sleep(150); const b = [...document.querySelectorAll('#ui button')][r % 4]; b.click(); await sleep(900); }
   await flush(12); await pick(/Shiraz/); await sleep(200); await flush(); if (!F.hvTaste || HLOG.fav !== 'Shiraz') throw new Error('tasting not done');
   W.def.act.c(); await sleep(200); await pick(/brie/i); await sleep(200); await flush();
-  W.def.act.A(); await sleep(200); await pick(/balloon/i); await sleep(200); await flush(); await pick(/Degustation/); await sleep(200); await flush(12);
+  const bar = async () => { await waitFor(() => !!BAR, 20000); if (!BAR) throw new Error('no bar game'); for (let i = 0; i < 3; i++) { await waitFor(() => BAR && BAR.lock <= 0 && BAR.i === i, 20000); BAR.pos = BAR.zc; await pick(/Burn|There/); } await waitFor(() => !BAR, 20000); await flush(12); };
+  W.def.act.A(); await sleep(200); await pick(/balloon/i); await sleep(200); await flush(); await bar(); if (HLOG.burns !== 3 || !G.badges.pilot) throw new Error('balloon flight: ' + HLOG.burns); await pick(/Degustation/); await sleep(200); await flush(12);
   await waitFor(() => G.scene === 'hend'); step('hv-end'); if (G.scene !== 'hend') throw new Error('no hv end, at ' + G.scene);
   window.__hv = JSON.stringify(HLOG);
   step('bt-start'); await sleep(800); await pick(/Another holiday/); await sleep(1500); await pick(/Thirroul/); await sleep(300); await flush(12); await waitFor(() => G.scene === 'drive'); step('bt-drive'); await sleep(800); if (D) { D.paused = false; D.t = D.dur; } await sleep(600); await flush(12); await waitFor(() => G.mapId === 'thirroul' && G.scene === 'map'); await sleep(1000); await flush(12);
@@ -50,8 +51,20 @@ const SCRIPT = `(async () => {
   if (G.mode !== 'map') throw new Error('stuck after the seagull: ' + G.mode);
   W.def.act.A(); await sleep(200); await pick(/Sea Cliff/); await sleep(200); await flush(); await pick(/on the grass/); await sleep(200); await flush(12);
   await waitFor(() => G.scene === 'hend'); step('bt-end'); if (G.scene !== 'hend') throw new Error('no bt end, at ' + G.scene);
+  window.__bt = JSON.stringify(HLOG);
+  step('pm-start'); await sleep(800); await pick(/Another holiday/); await sleep(1500); await pick(/Port Macquarie/); await sleep(300); await flush(12); await waitFor(() => G.scene === 'drive'); step('pm-drive'); await sleep(800); if (D) { D.paused = false; D.t = D.dur; } await sleep(600); await flush(12); await waitFor(() => G.mapId === 'portmac' && G.scene === 'map'); await sleep(1000); await flush(12);
+  step('portmac'); if (G.mapId !== 'portmac') throw new Error('no portmac, at ' + G.scene);
+  W.def.act.L(); await flush(); if (BAR || F.pmWhale) throw new Error('whales before koalas');
+  W.def.act.n(); await flush(); if (!F.pmTask) throw new Error('no koala task');
+  for (const o of W.objs.filter(o => o.ch === 'T')) { W.def.act.T(o.x, o.z, o); await flush(); }
+  await flush(12); if (!F.pmKoala || !G.badges.koala) throw new Error('koalas not all found');
+  step('whales'); W.def.act.L(); await flush(); await bar(); if (!F.pmWhale || HLOG.whales !== 3 || !G.badges.whale) throw new Error('whale watch: ' + HLOG.whales);
+  const rock = W.objs.find(o => o.ch === 'r'); W.def.act.r(rock.x, rock.z, rock); await sleep(200); await pick(/paw print/); await sleep(200); await flush(); if (!F.pmRock) throw new Error('rock not painted');
+  if (G.mode !== 'map') throw new Error('stuck after the rock: ' + G.mode);
+  W.def.act.A(); await sleep(200); await pick(/Camel/); await sleep(200); await flush(); await pick(/Oysters/); await sleep(200); await flush(12);
+  await waitFor(() => G.scene === 'hend'); step('pm-end'); if (G.scene !== 'hend') throw new Error('no pm end, at ' + G.scene);
   await sleep(1200);
-  return JSON.stringify({ log, qt: JSON.parse(window.__qt), hv: JSON.parse(window.__hv), bt: HLOG });
+  return JSON.stringify({ log, qt: JSON.parse(window.__qt), hv: JSON.parse(window.__hv), bt: JSON.parse(window.__bt), pm: HLOG });
 })()`;
 (async () => {
   const prof = fs.mkdtempSync(path.join(os.tmpdir(), 'abd2h-'));

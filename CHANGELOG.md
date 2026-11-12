@@ -4,6 +4,11 @@
 
 Everything here is in `v2/` (the 3D diorama edition). The original pixel game at the repo root is unchanged.
 
+### Holiday Pack: Port Macquarie, and more to do on the other trips
+- **Port Macquarie** is a fourth holiday: count five koalas hiding in the gums for the Koala Hospital, catch whale breaches from Tacking Point Lighthouse, paint a rock for the breakwall, then pick an arvo and a dinner. New memories card and two badges (Koala counter, Whale spotter).
+- **Hunter Valley**: the sunrise hot air balloon is now a playable flight (badge: Balloon pilot).
+- **Queenstown, New Zealand**: a Milford Sound day trip joins the rest day options.
+
 ### Holiday Pack: Thirroul beach trip
 - A third holiday: the Grand Pacific Drive down to Thirroul, hire a board and catch three waves, defend lunch from The Chip Thief, build a sandcastle, explore the rock pool, dip in the ocean pool, then pick an arvo (Sea Cliff Bridge, Sublime Point or stargazing) and a dinner. New memories card, two new badges (Surf's up, Chip defender).
 - Content lives in `CONFIG.holiday.bt` in `v2/src/09-holiday.js`.

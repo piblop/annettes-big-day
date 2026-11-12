@@ -140,7 +140,7 @@ function frame(now) {
   try {
     if (G.mode === 'map' && G.scene === 'map') G.clock += dt * TUNE.minutesPerTick / TUNE.tick;
     const c = fmtClock(G.clock); if (c !== clockShown) { clockShown = c; $('#clock').textContent = c; }
-    if (G.scene === 'map') { updatePlayer(dt); updateWorld(dt, t); updateLift(dt); updateBattle(dt, t); updatePet(dt, t); if (W && W.introUntil && G.t >= W.introUntil) { W.introUntil = 0; cam.zoomGoal = 1; } if (W && W.player && !PET && !W.introUntil) { const p = W.player.g.position; if (!G.b && !G.lift) cam.goal.set(p.x, 0.5, p.z - 0.3); } updateBuddy(dt, t); }
+    if (G.scene === 'map') { updatePlayer(dt); updateWorld(dt, t); updateLift(dt); updateBattle(dt, t); updatePet(dt, t); if (W && W.introUntil && G.t >= W.introUntil) { W.introUntil = 0; cam.zoomGoal = 1; } if (W && W.player && !PET && !W.introUntil) { const p = W.player.g.position; if (!G.b && !G.lift && !W.camHold) cam.goal.set(p.x, 0.5, p.z - 0.3); } updateBuddy(dt, t); }
     else if (G.scene === 'lunch') { updateWorld(dt, t); if (W && W.steam && Math.random() < dt * 8) FX.emit(3 + (Math.random() - 0.5) * 0.3, 1, 2, ['#ffffff', '#f5eef8'], 1, 0.4, { g: -0.8, life: 1.4 }); }
     else if (G.scene === 'drive') updateDrive(dt);
     else if (G.scene === 'snow') updateSnow(dt);
