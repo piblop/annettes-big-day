@@ -1,8 +1,9 @@
 /* =========================================================
    HOLIDAY PACK: go on holiday with Paulo. Pick a trip:
-   Queenstown ski trip (NZ, from our real Aug 2026 itinerary) or a Hunter Valley wine weekend.
+   Queenstown ski trip (NZ, from our real Aug 2026 itinerary), a Hunter Valley wine weekend or a Jervis Bay beach trip.
    Queenstown: lake town > Greentoad gear > ski bus > snowboard run > rest day > farewell dinner > memories.
    Hunter Valley: vineyard > blind tasting at the cellar door > cheese > morning adventure > dinner > memories.
+   Jervis Bay: white sand > surf hire and three waves > kiosk lunch (mind the seagull) > an arvo out > dinner > memories.
    Luca stays home with Mum for these (he is having a sleepover).
    ========================================================= */
 
@@ -96,12 +97,50 @@ CONFIG.holiday = {
       { n: "Wood-fired pizza among the vines", d: "Fairy lights and a bottle of red" },
       { n: "Long lunch cheese board", d: "Stretched all the way to dinner" }
     ]
+  },
+  // the beach trip: a few days down the south coast
+  bt: {
+    place: "Jervis Bay", beach: "Hyams Beach", town: "Huskisson", stay: "a cabin by the bay",
+    boards: [
+      { n: "Longboard", d: "Long, floaty and forgiving", c: '#ffd166' },
+      { n: "Bodyboard", d: "Belly down, big grin", c: '#ff7aa8' },
+      { n: "Stand-up paddle board", d: "Technically surfing. Technically.", c: '#7fd6b4' }
+    ],
+    bag: [
+      { n: "Read my Kobo", d: "One chapter. Okay, four." },
+      { n: "Sunscreen top-up", d: "SPF 50, every two hours" },
+      { n: "Beach nap", d: "Hat over face, toes in sand" }
+    ],
+    lunch: [
+      { n: "Fish and chips", d: "Flake, chips, lemon, chicken salt" },
+      { n: "Prawn roll", d: "Soft roll, cold prawns, lots of sauce" },
+      { n: "Mango smoothie", d: "Basically a holiday in a cup" },
+      { n: "Ice cream cone", d: "Melting faster than you can eat it" }
+    ],
+    castles: [
+      { n: "Classic castle", d: "Four towers and a moat", k: 'castle' },
+      { n: "Sand Luca", d: "A sculpture of the goodest boy", k: 'luca' },
+      { n: "Tiny Harbour Bridge", d: "So we can ignore it here too", k: 'bridge' }
+    ],
+    pool: ["A sea star the colour of a mandarin, holding on tight.", "A tiny crab doing a sideways moonwalk under a rock.", "A shy little octopus, no bigger than a fifty cent coin. It waves one arm."],
+    arvo: [
+      { n: "Dolphin cruise", d: "Out of Huskisson, bow riders guaranteed" },
+      { n: "White sand walk", d: "Along the bay to Hyams Beach" },
+      { n: "Stargazing on the sand", d: "A rug, a thermos and the whole Milky Way" }
+    ],
+    dinner: [
+      { n: "Fish and chips on the wharf", d: "Feet dangling over the water" },
+      { n: "Prawns at the pub", d: "A cold drink and a sea breeze" },
+      { n: "Barbecue at the cabin", d: "Paulo on the tongs, apron and all" }
+    ]
   }
 };
 const HOL = CONFIG.holiday;
 let HLOG = {};
-Object.assign(SCENE_TIME, { qtown: 13 * 60 + 50, hunter: 11 * 60, hstart: 7 * 60, snow: 9 * 60 + 15, hend: 22 * 60 });
-Object.assign(NPC_CHARS, { qtown: 'A', hunter: 'A' });
+Object.assign(SCENE_TIME, { qtown: 13 * 60 + 50, hunter: 11 * 60, jervis: 10 * 60 + 30, hstart: 7 * 60, snow: 9 * 60 + 15, hend: 22 * 60 });
+Object.assign(NPC_CHARS, { qtown: 'A', hunter: 'A', jervis: 'A' });
+OUTFITS.beachy = { name: "Sundress", style: "dress", note: "Coral sundress, salty hair", top: '#ff8a6b', bottom: '#ff8a6b' };
+LOOK.pauloBeach = Object.assign({}, LOOK.paulo, { top: '#fff4e8', bottom: '#5fb8d9', shoe: '#c89f7a' });
 OUTFITS.winter = { name: "Cosy knit", style: "pants", note: "Cream knit, jeans and a beanie", top: '#f3e2c7', bottom: '#3f6fb0', beanie: '#ff7aa8' };
 OUTFITS.snow = { name: "Snow gear", style: "pants", note: "Greentoad jacket, pants and a helmet", top: '#ff7aa8', bottom: '#3a3148', beanie: '#ffffff' };
 LOOK.pauloSnow = Object.assign({}, LOOK.paulo, { top: '#3f6fb0', bottom: '#2b2d42', beanie: '#ffd166' });
@@ -109,13 +148,20 @@ Object.assign(BADGES, {
   powder: { n: 'Powder hound', how: 'Ride a green, blue, red and black run', pack: true },
   black: { n: 'Black diamond', how: 'Make it down a black run', pack: true },
   somm: { n: 'Sommelier', how: 'Guess all four wines at the cellar door', pack: true },
-  luge: { n: 'Luge legend', how: 'Beat Paulo down the Skyline luge', pack: true }
+  luge: { n: 'Luge legend', how: 'Beat Paulo down the Skyline luge', pack: true },
+  surf: { n: "Surf's up", how: 'Catch three clean waves at Jervis Bay', pack: true },
+  chips: { n: 'Chip defender', how: 'See off the seagull at the kiosk', pack: true }
 });
 DRIVE_THEMES.hunter = { sky: 'golden', ground: '#b8d98a', side: 'gum', label: 'Up the M1 to the Hunter' };
-const HOL_FLAGS = ['qtGear', 'qtSki', 'qtRest', 'qtLuge', 'hvTaste', 'hvCheese', 'hvMorning'];
+DRIVE_THEMES.jervis = { sky: 'day', ground: '#ffe9b8', side: 'palm', label: 'Down the coast to Jervis Bay' };
+const HOL_FLAGS = ['qtGear', 'qtSki', 'qtRest', 'qtLuge', 'hvTaste', 'hvCheese', 'hvMorning', 'btSurf', 'btLunch', 'btGull', 'btCastle', 'btBag', 'btPool'];
 
 // pictures and moments for the holiday choices (checked before the everyday ones)
 ICONS.unshift(
+  [/jervis bay/i, '🏖️', 'trip'], [/longboard/i, '🏄', 'surf'], [/bodyboard/i, '🌊', 'surf'], [/paddle board/i, '🛶', 'surf'],
+  [/sunscreen/i, '🧴', 'adventure'], [/beach nap/i, '😴', 'adventure'], [/fish and chips/i, '🍟', 'dine'], [/prawn/i, '🍤', 'dine'], [/smoothie/i, '🥭', 'drink'], [/ice cream/i, '🍦', 'picnic'],
+  [/classic castle/i, '🏰', 'adventure'], [/sand luca/i, '🐶', 'adventure'], [/tiny harbour bridge/i, '🌉', 'adventure'],
+  [/dolphin/i, '🐬', 'adventure'], [/white sand walk/i, '👣', 'adventure'], [/stargazing/i, '🌌', 'adventure'], [/barbecue/i, '🍖', 'dine'],
   [/queenstown/i, '🏂', 'trip'], [/hunter valley gardens/i, '🌷', 'adventure'], [/hunter valley/i, '🍇', 'trip'],
   [/^snowboard$/i, '🏂', 'snow'], [/^skis$/i, '⛷️', 'snow'], [/shell|puffer|parka|snow jacket|macpac/i, '🧥', 'outfit'],
   [/homeward|footrot|big easy/i, '🟢', 'snow'], [/alta blue|captain's basin|^m1$/i, '🔵', 'snow'], [/shadow basin|valley view|greengates/i, '🔴', 'snow'], [/alta chutes|arcadia chutes|shirt front/i, '⚫', 'snow'],
@@ -127,8 +173,8 @@ ICONS.unshift(
   [/hot air balloon/i, '🎈', 'adventure'], [/spa morning/i, '🧖', 'adventure'], [/fudge/i, '🍫', 'picnic'],
   [/degustation/i, '🍽️', 'dine'], [/brie|cheddar|blue cheese|cheese board/i, '🧀', 'picnic']
 );
-Object.assign(MOMENT_LINES, { trip: 'Bags packed, off we go', snow: 'Send it!', adventure: 'Best rest day ever' });
-Object.assign(MOMENT_PROPS, { trip: ['☁️', '✈️', '☁️'], snow: ['❄️', '❄️', '❄️'], adventure: ['✨', '🎉', '✨'] });
+Object.assign(MOMENT_LINES, { trip: 'Bags packed, off we go', snow: 'Send it!', adventure: 'Best rest day ever', surf: 'Wax on' });
+Object.assign(MOMENT_PROPS, { trip: ['☁️', '✈️', '☁️'], snow: ['❄️', '❄️', '❄️'], adventure: ['✨', '🎉', '✨'], surf: ['🌊', '☀️', '🌊'] });
 
 /* ---------------- holiday art ---------------- */
 function makePine(parent, x, z, s, snowy) {
@@ -236,7 +282,7 @@ HB['hunter:b'] = w => { const g = new THREE.Group(); for (let i = 0; i < w; i++)
 HB['hunter:t'] = () => makeGum(null, 0, 0, 1.1);
 
 /* ---------------- maps ---------------- */
-const npcPauloHol = c => c === 'A' ? (G.holiday === 'qt' ? LOOK.pauloSnow : LOOK.paulo) : null;
+const npcPauloHol = c => c === 'A' ? (G.holiday === 'qt' ? LOOK.pauloSnow : G.holiday === 'bt' ? LOOK.pauloBeach : LOOK.paulo) : null;
 MAPS.qtown = {
   theme: 'qtown', title: 'Holiday: Queenstown', outdoor: true, edge: '#eef4fa',
   get sky() { return F.qtSki ? 'evening' : 'day'; },
@@ -336,11 +382,11 @@ function startHoliday() {
   cam.base = 11; cam.pitch = 0.5; cam.zoomGoal = 1.5; cam.zoom = 1.5; cam.goal.set(0.4, 0.8, 0.3); cam.target.copy(cam.goal); cam.orbit = SET.calm ? 0.02 : 0.05;
   wkTicker((dt, t) => { updateWorld(dt, t); W.cast.forEach((g, i) => animatePerson(g, false, dt, t + i)); });
   const pn = panel('Go on holiday', 'Bags are packed. Where are we off to?', 'grid2'); pn.classList.add('low');
-  const trips = [{ n: 'Queenstown ski trip', d: 'New Zealand snow, ' + HOL.qt.dates, k: 'qt' }, { n: 'Hunter Valley', d: 'Wine, cheese and hot air balloons', k: 'hv' }];
+  const trips = [{ n: 'Queenstown ski trip', d: 'New Zealand snow, ' + HOL.qt.dates, k: 'qt' }, { n: 'Hunter Valley', d: 'Wine, cheese and hot air balloons', k: 'hv' }, { n: HOL.bt.place + ' beach trip', d: 'White sand, surfboards and dolphins', k: 'bt' }];
   const btns = trips.map(tr => makeBtn(`<span>${esc(tr.n)}</span><small>${esc(tr.d)}</small>`, () => {
-    clearUI(); moment(tr.n, { line: tr.k === 'qt' ? 'SYD to ZQN, window seat' : 'Road trip up the M1', ms: 1900 }, () => {
-      G.holiday = tr.k; HLOG.trip = tr.n; G.outfit = tr.k === 'qt' ? 'winter' : 'sunny';
-      say([{ n: 'Mum', t: "Go! Luca and I will be fine. Send photos." }, { n: CONFIG.name, t: CONFIG.catchphrase }], () => tr.k === 'qt' ? fade(flightScene) : startDrive('hunter', 'hunter', 'the Hunter Valley'));
+    clearUI(); moment(tr.n, { line: tr.k === 'qt' ? 'SYD to ZQN, window seat' : tr.k === 'bt' ? 'Windows down, down the coast' : 'Road trip up the M1', ms: 1900 }, () => {
+      G.holiday = tr.k; HLOG.trip = tr.n; G.outfit = tr.k === 'qt' ? 'winter' : tr.k === 'bt' ? 'beachy' : 'sunny';
+      say([{ n: 'Mum', t: "Go! Luca and I will be fine. Send photos." }, { n: CONFIG.name, t: CONFIG.catchphrase }], () => tr.k === 'qt' ? fade(flightScene) : tr.k === 'bt' ? startDrive('jervis', 'jervis', HOL.bt.place) : startDrive('hunter', 'hunter', 'the Hunter Valley'));
     });
   }));
   pn.querySelector('.grid2').append(...btns);
@@ -586,20 +632,189 @@ function hvEvening() {
   });
 }
 
+/* ---------------- Jervis Bay: the beach trip ---------------- */
+const BT = HOL.bt;
+HB['jervis:u'] = () => OBJ_BUILDERS['baths:u']();
+HB['jervis:p'] = () => makePalm(null, 0, 0);
+HB['jervis:S'] = w => {
+  const g = new THREE.Group();
+  mk(G_BOX, '#9fe0d6', [w - 0.3, 1.2, 1.5], [0, 0.6, -0.1], g); mk(G_BOX, '#fffaf0', [w - 0.2, 0.1, 1.6], [0, 1.25, -0.1], g);
+  const roof = mk(G_BOX, '#ffd166', [w + 0.1, 0.08, 1.9], [0, 1.5, 0.05], g); roof.rotation.x = 0.16;
+  for (let i = 0; i < 7; i++) mk(G_BOX, i % 2 ? '#ffffff' : '#ff8a6b', [(w - 0.1) / 7, 0.05, 0.5], [-(w - 0.1) / 2 + (i + 0.5) * (w - 0.1) / 7, 1.2, 0.86], g).rotation.x = 0.4;
+  mk(G_BOX, '#3a2f4a', [1.3, 0.55, 0.03], [0.3, 0.8, 0.66], g); mk(G_BOX, '#fffaf0', [1.5, 0.07, 0.3], [0.3, 0.5, 0.76], g);
+  [['#ffd166', -1.15, 0.2], ['#ff7aa8', -0.85, 0.1], ['#7fd6b4', -0.58, 0.16]].forEach(([c, x, r]) => { const b = mk(G_SPH, c, [0.3, 1.35, 0.07], [x, 0.7, 0.74], g); b.rotation.z = r - 0.14; mk(G_BOX, '#ffffff', [0.03, 1.15, 0.075], [x, 0.7, 0.74], g, { noShadow: true }).rotation.z = r - 0.14; });
+  signPlate(g, 'SURF HIRE', '#ff8a6b', '#ffffff', 1.3, 0.3, 1.82, 0).position.z = 0.6;
+  g.userData.keep = true; return g;
+};
+HB['jervis:K'] = w => {
+  const g = new THREE.Group();
+  mk(G_BOX, '#fffaf0', [w - 0.2, 1.15, 1.4], [0, 0.58, -0.1], g);
+  for (let i = 0; i < 5; i++) mk(G_BOX, i % 2 ? '#fffaf0' : '#7fc8f8', [(w - 0.2) / 5, 0.5, 0.02], [-(w - 0.2) / 2 + (i + 0.5) * (w - 0.2) / 5, 0.26, 0.61], g, { noShadow: true });
+  mk(G_BOX, '#3a2f4a', [w - 0.7, 0.42, 0.03], [0, 0.82, 0.6], g); mk(G_BOX, '#c89f7a', [w - 0.3, 0.07, 0.34], [0, 0.56, 0.74], g);
+  for (let i = 0; i < 6; i++) mk(G_BOX, i % 2 ? '#ffffff' : '#7fc8f8', [w / 6, 0.05, 0.6], [-w / 2 + (i + 0.5) * w / 6, 1.22, 0.78], g).rotation.x = 0.4;
+  mk(G_BOX, '#7fc8f8', [w, 0.1, 1.6], [0, 1.22, -0.1], g);
+  mk(G_CONE, '#f3e2b3', [0.16, 0.22, 0.16], [-0.4, 0.7, 0.76], g).rotation.x = Math.PI; for (let i = 0; i < 5; i++) mk(G_BOX, '#ffd166', [0.03, 0.14, 0.03], [-0.44 + i * 0.02, 0.84, 0.76 + (i % 2) * 0.03], g, { noShadow: true }).rotation.z = (i - 2) * 0.12;
+  signPlate(g, 'FISH + CHIPS', '#3f7fbf', '#ffffff', 1.4, 0.3, 1.56, 0).position.z = 0.55;
+  g.userData.keep = true; return g;
+};
+HB['jervis:r'] = w => {
+  const g = new THREE.Group();
+  mk(G_CYL, '#8fd9e6', [w - 0.3, 0.05, 0.8], [0, 0.03, 0], g, { noShadow: true }); mk(G_CYL, '#bff0f2', [w - 0.7, 0.055, 0.5], [0.1, 0.032, 0], g, { noShadow: true });
+  for (let i = 0; i < 10; i++) { const a = i / 10 * TAU; mk(G_SPH, ['#b8b3c2', '#a39cb0', '#c9c4d1'][i % 3], [0.34 + hsh(i, 91) * 0.2, 0.22 + hsh(i, 92) * 0.14, 0.3], [Math.cos(a) * (w / 2 - 0.2), 0.08, Math.sin(a) * 0.42], g); }
+  mk(G_STAR, '#ff9f6b', [0.2, 0.2, 0.1], [-0.2, 0.07, 0.05], g, { noShadow: true }).rotation.x = -Math.PI / 2; mk(G_SPH, '#e2554f', [0.12, 0.07, 0.1], [0.4, 0.07, -0.08], g, { noShadow: true });
+  return g;
+};
+HB['jervis:c'] = () => { const g = new THREE.Group(); mk(G_SPH, '#f3dfb0', [0.7, 0.2, 0.6], [0, 0.06, 0], g); mk(G_CYL, '#ff7aa8', [0.2, 0.22, 0.2], [0.42, 0.11, 0.2], g); const sp = mk(G_BOX, '#7fc8f8', [0.05, 0.4, 0.05], [-0.4, 0.2, 0.15], g); sp.rotation.z = 0.5; g.userData.keep = true; return g; };
+function makeDolphin() {
+  const g = new THREE.Group(), b = grp(g), c = '#8fb3d9';
+  mk(G_SPH, c, [0.32, 0.32, 1.0], [0, 0, 0], b); mk(G_SPH, '#e6f0fa', [0.24, 0.2, 0.7], [0, -0.07, 0.05], b, { noShadow: true });
+  mk(G_SPH, c, [0.14, 0.12, 0.34], [0, -0.02, 0.56], b); const fin = mk(G_CONE, c, [0.1, 0.24, 0.2], [0, 0.22, -0.05], b); fin.rotation.x = -0.5;
+  [-1, 1].forEach(s => { const t = mk(G_SPH, c, [0.26, 0.05, 0.16], [s * 0.12, 0, -0.56], b); t.rotation.y = s * 0.5; mk(G_SPH, INK, [0.04, 0.04, 0.03], [s * 0.13, 0.05, 0.36], b, { noShadow: true }); });
+  return mergeStatic(g);
+}
+MAPS.jervis = {
+  theme: 'jervis', title: 'Holiday: ' + BT.place, sky: 'day', outdoor: true, edge: '#f7e6c2', intro: { x: 7, z: 2, zoom: 0.7 }, ambient: 'water',
+  // sand and sea are kept a shade deeper than they should look: the midday sun brightens everything
+  floor: ['#fbeed2', '#f7e6c2'], wet: '#e6cf9f', wall: ['#fff', '#fff'], water: ['#35bfc4', '#44c9cc'],
+  rows: ["~~~~~~~~~~~~~~~", "~~~~~~~~~~~~~~~", "~~~~~~~~~~~~~~~", "_______________", ".SSS.......KK..", ".SSS..A....KK..", "...............", "..u.....c...rr.", "...............", "p.............p"],
+  start: { x: 7, z: 9, dir: 'up' },
+  npcs: npcPauloHol,
+  hints: () => [!F.btSurf && 'S', F.btSurf && !F.btLunch && 'K', F.btSurf && 'A'],
+  decorate(g) {
+    // green headlands either side of the bay, a couple of sails, and dolphins working the shallows
+    [-1, 1].forEach(s => { for (let i = 0; i < 4; i++) mk(G_SPH, ['#8fc98a', '#7fbd7c', '#9bd396'][i % 3], [5 + hsh(i, 3) * 2, 2 + hsh(i, 4) * 1.4, 3], [7 + s * (10 + i * 1.6), -0.3, -3 - i * 1.4], g, { noShadow: true }); });
+    const boats = [[3, -4.5], [11.5, -6]].map(([x, z], i) => { const b = grp(g, x, -0.1, z); mk(G_SPH, '#fffaf0', [1.1, 0.3, 0.4], [0, 0, 0], b); mk(G_CYL, '#8a6a55', [0.04, 1.3, 0.04], [0, 0.7, 0], b); const s = mk(G_CONE, i ? '#ff8a6b' : '#ffffff', [0.8, 1.1, 0.04], [0.22, 0.75, 0], b, { noShadow: true }); b.userData.ph = i * 2; return b; });
+    const dolphins = [[4, 0.4], [9.5, -0.2], [11, 0.8]].map(([x, z], i) => { const d = makeDolphin(); d.position.set(x, -1, z); d.rotation.y = Math.PI / 2; world.add(d); return { d, x, z, off: i * 2.3 }; });
+    const post = grp(g, 14.3, 0, 3); mk(G_CYL, '#8a6a55', [0.14, 0.9, 0.14], [0, 0.45, 0], post);
+    const pel = makeMagpie(false, { body: '#ffffff', patch: '#3a3148', beak: '#ffb38a', tip: '#ff9f6b', legs: '#ffb347' }); pel.position.set(14.3, 1.08, 3); pel.rotation.y = -1.2; world.add(pel);
+    for (let i = 0; i < 9; i++) { const s = mk(G_CONE, ['#ffc2d6', '#fff4c9', '#d8ccff'][i % 3], [0.2, 0.09, 0.18], [0.6 + hsh(i, 95) * 13.5, 0.05, 6 + hsh(i, 96) * 3.2], g); s.rotation.set(-0.4, hsh(i, 97) * 6, 0); }
+    [['#ff7aa8', 5.2, 8.2], ['#7fc8f8', 10.2, 8.5]].forEach(([c, x, z]) => makeRug(g, x, z, 0.6, 1.0, [c, '#ffffff']));
+    for (let i = 0; i < 12; i++) mk(G_SPH, '#ffffff', [0.9, 0.05, 0.2], [0.4 + i * 1.25, 0.02, 2.56 + (i % 2) * 0.1], g, { noShadow: true });
+    const wave = grp(world, 7, -0.1, 0); mk(G_CYL, '#bff0f2', [0.5, 9, 0.5], [0, 0, 0], wave, { noShadow: true }).rotation.z = Math.PI / 2; mk(G_CYL, '#ffffff', [0.26, 9, 0.3], [0, 0.16, 0.12], wave, { noShadow: true }).rotation.z = Math.PI / 2; wave.visible = false;
+    W.hol = { boats, dolphins, pel, wave, pool: 0 };
+    wkTicker(updateJervis);
+  },
+  onEnter() {
+    say(["HOLIDAY PACK: " + BT.place + "!", "Three hours down the coast. Sand so white it squeaks, water like a swimming pool.", "Luca is having a sleepover at Mum's. He has already stolen her spot on the lounge.", { n: CONFIG.boyfriend, t: "I booked us boards at the surf shack. Three waves each, then lunch?" }, { n: CONFIG.name, t: CONFIG.catchphrase }]);
+  },
+  act: {
+    S: () => F.btSurf ? say(["The surf shack. The boards are drying in the sun.", "The bloke at the counter gives a shaka."]) : pickMenu('Surf hire', 'What are we riding today?', BT.boards, d => { HLOG.board = d.n; say([{ n: CONFIG.name, t: d.n + ". Let's go." }, "Leg rope on. Paddle out past the break."], () => surfGame(d)); }),
+    K: () => kioskLunch(),
+    u: () => pickMenu('Base camp', 'Towels down, umbrella up. Now what?', BT.bag, d => { const first = !F.btBag; F.btBag = true; if (first) stat(/sunscreen/i.test(d.n) ? 'glow' : 'energy', 8, true); say(/kobo/i.test(d.n) ? ["Just one chapter in the shade.", "It was not one chapter."] : /sunscreen/i.test(d.n) ? ["SPF 50, nose to toes.", { n: CONFIG.boyfriend, t: "Do my back?" }] : ["Hat over face. Waves going in and out.", "Twenty perfect minutes."]); }),
+    c: (x, z, o) => F.btCastle ? say("The sandcastle stands proud. The tide has not been told.") : pickMenu('Sandcastle', 'Bucket and spade are ready.', BT.castles, d => buildCastle(o, d)),
+    r: () => { const k = W.hol, i = k.pool++; say(["A rock pool, still as glass.", BT.pool[i % BT.pool.length]], () => { if (i === BT.pool.length - 1) { F.btPool = true; stat('happy', 5, true); toast('Rock pool explorer!', true); } }); },
+    p: () => say("A palm leaning over the sand, doing its best postcard impression."),
+    '~': () => say("Clear to the bottom. A stingray glides past like it owns the place."),
+    A: () => !F.btSurf ? say({ n: CONFIG.boyfriend, t: "Shack first! Bet I catch more waves than you." }) : btEvening()
+  }
+};
+function buildCastle(o, d) {
+  F.btCastle = true; HLOG.castle = d.n; stat('happy', 6, true); sfx('pop');
+  const g = grp(o.g, -0.05, 0.1, -0.05), S = '#f3dfb0', S2 = '#e8cf98';
+  if (d.k === 'luca') { mk(G_SPH, S, [0.34, 0.28, 0.46], [0, 0.14, 0], g); mk(G_SPH, S, [0.3, 0.28, 0.28], [0, 0.36, 0.2], g); [-1, 1].forEach(s => { mk(G_SPH, S2, [0.09, 0.24, 0.14], [s * 0.15, 0.32, 0.18], g); mk(G_SPH, INK, [0.035, 0.035, 0.02], [s * 0.06, 0.4, 0.33], g, { noShadow: true }); }); mk(G_SPH, INK, [0.05, 0.04, 0.03], [0, 0.34, 0.35], g, { noShadow: true }); mk(G_SPH, S2, [0.1, 0.2, 0.1], [0, 0.3, -0.24], g); }
+  else if (d.k === 'bridge') { const a = mk(geo('sandarch', () => new THREE.TorusGeometry(0.5, 0.07, 6, 20, Math.PI)), S, [0.9, 0.6, 1], [0, 0.1, 0], g); mk(G_BOX, S2, [1.0, 0.05, 0.16], [0, 0.2, 0], g); [-0.5, 0.5].forEach(x => mk(G_BOX, S, [0.14, 0.34, 0.2], [x, 0.17, 0], g)); for (let i = -2; i <= 2; i++) mk(G_BOX, S2, [0.02, 0.2 - Math.abs(i) * 0.05, 0.02], [i * 0.15, 0.3 - Math.abs(i) * 0.025, 0], g, { noShadow: true }); }
+  else { mk(G_BOX, S, [0.6, 0.26, 0.5], [0, 0.13, 0], g); [[-0.3, -0.25], [0.3, -0.25], [-0.3, 0.25], [0.3, 0.25]].forEach(([x, z]) => { mk(G_CYL, S, [0.2, 0.42, 0.2], [x, 0.21, z], g); mk(G_CONE, S2, [0.24, 0.16, 0.24], [x, 0.5, z], g); }); mk(G_CYL, S2, [0.26, 0.3, 0.26], [0, 0.4, 0], g); mk(G_CONE, '#ff7aa8', [0.14, 0.12, 0.02], [0.06, 0.72, 0], g, { noShadow: true }).rotation.z = -Math.PI / 2; mk(G_CYL, '#8a6a55', [0.015, 0.3, 0.015], [0, 0.66, 0], g, { noShadow: true }); }
+  popIn(g); confetti(o.x, 0.6, o.z, 30);
+  say(d.k === 'luca' ? ["A sand Luca, ears and all.", { n: CONFIG.boyfriend, t: "Send that to your mum. He'll want royalties." }] : d.k === 'bridge' ? ["A tiny Harbour Bridge, arch and all.", { n: CONFIG.name, t: "Perfect. Now let's ignore it." }] : ["Four towers, a moat and a flag made from a chip fork.", "Architectural digest, here we come."]);
+}
+
+/* ---------------- surf: three waves on a timing bar ---------------- */
+let SURF = null;
+function surfGame(board) {
+  const p = W.player, k = W.hol;
+  const S = SURF = { n: 0, pos: 0, dir: 1, speed: 0.85, zc: 0.5, zw: 0.24, res: [], ride: null };
+  const b = S.board = grp(p.g, 0, 0.02, 0); mk(G_SPH, board.c, [0.42, 0.07, 1.25], [0, 0, 0], b); mk(G_BOX, '#ffffff', [0.04, 0.075, 1.1], [0, 0, 0], b, { noShadow: true });
+  p.path = []; p.pending = null; p.dir = 'right'; p.g.position.set(3.5, -0.06, 1.3); k.wave.visible = true;
+  const pn = panel('Catch a wave', 'Tap Paddle! (or press A) in the pink zone. Dead centre is a perfect take-off.');
+  pn.insertAdjacentHTML('beforeend', '<div class="bar"><div class="zone"></div><div class="mark"></div></div><p class="sub" id="surfRes" style="text-align:center;margin:4px 0">Wave 1 of 3</p><div class="reps">' + '<span class="rep"></span>'.repeat(3) + '</div>');
+  const tap = makeBtn('Paddle!', surfPress, 'big'); tap.style.width = '100%'; pn.append(tap); pn.classList.add('low'); S.el = pn;
+  setMenu([tap], { onBack: null }); surfZone(); cam.zoomGoal = 1.25;
+}
+function surfZone() { const S = SURF, z = S.el.querySelector('.zone'); z.style.left = ((S.zc - S.zw / 2) * 100) + '%'; z.style.width = (S.zw * 100) + '%'; }
+function surfPress() {
+  const S = SURF; if (!S || S.ride) return;
+  const d = Math.abs(S.pos - S.zc), res = d < S.zw * 0.15 ? 'perfect' : d < S.zw / 2 ? 'good' : 'miss';
+  S.res.push(res); S.el.querySelectorAll('.rep')[S.n].classList.add(res);
+  $('#surfRes').textContent = res === 'perfect' ? 'Perfect take-off!' : res === 'good' ? 'Up and riding!' : 'Wipeout! Salt water up the nose.';
+  sfx(res === 'miss' ? 'bad' : 'good'); S.ride = { t: 0, ok: res !== 'miss', perfect: res === 'perfect' }; S.n++;
+}
+function surfDone() {
+  const S = SURF, p = W.player; SURF = null; clearUI(); p.g.remove(S.board); p.g.rotation.z = 0; p.dir = 'down'; placeEntity(p, 1); W.hol.wave.visible = false; cam.zoomGoal = 1;
+  const clean = S.res.filter(r => r !== 'miss').length; F.btSurf = true; HLOG.waves = clean; stat('happy', 6 + clean * 3, true); stat('energy', -8, true);
+  if (clean === 3) earn('surf'); confetti(p.x, 1.2, p.z, 40); G.mode = 'map';
+  say([clean === 3 ? "Three from three. The whole beach saw that last one." : clean ? clean + " clean wave" + (clean > 1 ? "s" : "") + " and some very stylish wipeouts." : "Zero waves, three wipeouts, one enormous grin.", { n: CONFIG.boyfriend, t: clean >= 2 ? "Okay, show-off. I got one. One!" : "The ocean won today. Lunch will fix it." }, "The kiosk smells like hot chips."], refreshHints);
+}
+function updateJervis(dt, t) {
+  const k = W && W.hol; if (!k || !k.dolphins) return;
+  k.boats.forEach(b => { b.rotation.z = Math.sin(t * 0.9 + b.userData.ph) * 0.06; b.position.y = -0.1 + Math.sin(t * 1.3 + b.userData.ph) * 0.04; });
+  k.dolphins.forEach(o => { const c = ((t + o.off) % 6.5) / 1.3, d = o.d; if (c < 1) { const was = d.position.y; d.position.set(o.x + c * 1.6, -0.35 + Math.sin(c * Math.PI) * 1.0, o.z); d.rotation.z = (0.5 - c) * 1.6; if (!SET.calm && (was < -0.3) !== (d.position.y < -0.3)) FX.emit(d.position.x, 0, o.z, ['#ffffff', '#bff0f2'], 8, 1.6, { g: 5, life: 0.6 }); } else d.position.y = -1; });
+  k.pel.userData.body.rotation.z = Math.sin(t * 0.8) * 0.06; k.pel.userData.wings.forEach((w, i) => w.rotation.z = (i ? 1 : -1) * Math.max(0, Math.sin(t * 0.7) - 0.8) * 2.5);
+  if (G.b && G.b.kind === 'seagull' && G.b.foe) G.b.foe.userData.wings.forEach((w, i) => w.rotation.z = (i ? 1 : -1) * (0.5 + Math.sin(t * 16) * 0.6));
+  const S = SURF; if (!S) return;
+  const g = W.player.g;
+  if (S.ride) {
+    const r = S.ride; r.t += dt; const q = Math.min(1, r.t / 1.5);
+    if (r.ok) { g.position.set(lerp(3.5, 10.5, q * q * (3 - 2 * q)), -0.06 + Math.sin(q * Math.PI) * 0.28, 1.3 + Math.sin(q * Math.PI) * 0.5); g.rotation.z = Math.sin(q * Math.PI * 2) * 0.12; if (!SET.calm && Math.random() < dt * 30) FX.emit(g.position.x - 0.5, 0.05, g.position.z, r.perfect ? ['#ffffff', '#fff4c9', '#bff0f2'] : ['#ffffff', '#bff0f2'], 2, 1.6, { g: 4, life: 0.5 }); }
+    else { g.rotation.z = Math.sin(q * Math.PI) * 1.3; g.position.y = -0.06 - Math.sin(q * Math.PI) * 0.3; if (!SET.calm && r.t < 0.3) FX.emit(g.position.x, 0.1, g.position.z, ['#ffffff', '#bff0f2'], 4, 2.6, { g: 6, life: 0.7 }); }
+    k.wave.position.z = lerp(k.wave.position.z, 2.3, dt * 2);
+    if (q >= 1) { S.ride = null; g.rotation.z = 0; if (S.n >= 3) return surfDone(); g.position.set(3.5, -0.06, 1.3); S.speed += 0.22; S.zw = Math.max(0.14, S.zw - 0.03); S.zc = 0.25 + Math.random() * 0.5; surfZone(); $('#surfRes').textContent = 'Wave ' + (S.n + 1) + ' of 3'; }
+    return;
+  }
+  S.pos += S.dir * S.speed * dt; if (S.pos > 1) { S.pos = 1; S.dir = -1; } if (S.pos < 0) { S.pos = 0; S.dir = 1; }
+  S.el.querySelector('.mark').style.left = (S.pos * 100) + '%';
+  g.position.y = -0.06 + Math.sin(t * 2.4) * 0.03; k.wave.position.z = -1.6 + (1 - Math.abs(S.pos - S.zc)) * 2.2; k.wave.position.y = -0.14 + (1 - Math.abs(S.pos - S.zc)) * 0.12;
+}
+
+/* ---------------- the kiosk: lunch, and one very bold seagull ---------------- */
+const GULL = { body: '#ffffff', patch: '#b8c4d6', beak: '#ffb347', tip: '#e2554f', legs: '#ffb347' };
+const makeFoeHol = makeFoe;
+makeFoe = function (kind) { return kind === 'seagull' ? makeMagpie(true, GULL) : makeFoeHol(kind); };
+ENEMIES.seagull = {
+  name: 'The Chip Thief', lv: 'Bold', hp: 80, intro: "One seagull. Zero shame. It wants the chips.",
+  attacks: [["Dive bomb", 10], ["Screech", 8], ["Calls its mates", 12]],
+  moves: [
+    { n: 'Guard the chips', d: 'Big damage', f: b => hit(b, 30) },
+    { n: 'Towel flap', d: 'Damage, next hit +10', f: b => { const m = hit(b, 18); b.bonus += 10; return m + ' Whoosh.'; } },
+    { n: 'Eat a chip', d: 'Restore HP', f: b => heal(b, 25) },
+    { n: 'Stern look', d: 'Next hit doubles', f: b => { b.mult = 2; sfx('good'); return 'The seagull hesitates. Next hit doubles!'; } }
+  ],
+  win() { F.btGull = true; HLOG.gull = true; earn('chips'); stat('happy', 6, true); say(["The seagull retreats to the kiosk roof to plot.", { n: CONFIG.boyfriend, t: "My hero. It got one chip. I'm calling that a win." }, { n: CONFIG.name, t: CONFIG.catchphrase }], refreshHints); }
+};
+function gullAttack() { W.player.dir = 'left'; sfx('caw'); sting('Chip thief!', 'One seagull, zero shame', () => startBattle('seagull')); }
+function kioskLunch() {
+  if (F.btLunch) return say(F.btGull ? "The kiosk. The seagull watches from the roof, plotting." : "The kiosk. Still smells amazing.");
+  if (!F.btSurf) return say(["The kiosk: fish and chips, prawn rolls, cold drinks.", "Surf first. Nobody paddles well on a full stomach."]);
+  pickMenu('Beach kiosk', 'Sandy feet welcome. What are we having?', BT.lunch, d => {
+    F.btLunch = true; HLOG.lunch = d.n; stat('energy', 18, true); G.mode = 'busy';
+    say([{ n: CONFIG.name, t: d.n + ", please." }, "Wrapped in paper, eaten on the sand. Perfect.", "A shadow passes overhead. Then it circles back."], gullAttack);
+  });
+}
+function btEvening() {
+  pickMenu('This arvo', 'Salty, sandy and nowhere to be.', BT.arvo, m => {
+    HLOG.arvo = m.n; stat('happy', 8, true);
+    const after = /dolphin/i.test(m.n) ? "Out past the heads, a whole pod surfs the bow wave. One looks right at you." : /walk/i.test(m.n) ? "Sand like icing sugar all the way to " + BT.beach + ". It squeaks with every step." : "No street lights for miles. The Milky Way runs right down to the water.";
+    say([{ n: CONFIG.name, t: m.n + "." }, after, { n: CONFIG.boyfriend, t: "Dinner? I'm starving again." }], () => pickMenu('Dinner by the bay', BT.town + ', as the sky goes pink.', BT.dinner, d => {
+      HLOG.dinner = d.n; stat('energy', 15, true);
+      say([{ n: CONFIG.boyfriend, t: d.n + ". Yes." }, "Sunburnt noses, sandy car, full hearts.", { n: CONFIG.name, t: CONFIG.catchphrase }], () => fade(holidayEnd));
+    }, false));
+  });
+}
+
 /* ---------------- memories card ---------------- */
 function holidayEnd() {
-  const qt = G.holiday === 'qt';
+  const qt = G.holiday === 'qt', bt = G.holiday === 'bt';
   clearWorld(); clearUI(); G.scene = 'hend'; G.mode = 'busy'; clearCheckpoint(); showHUD(false); setChapter('Holiday memories');
   W = { id: 'hend', objs: [], npcs: [], hearts: [], markers: [], anim: [], dispose: [], walls: [], decor: [] };
   setSky(qt ? 'night' : 'dusk'); fitSun(0, 0, 8); G.clock = SCENE_TIME.hend;
-  const ground = qt ? '#f4f8fc' : '#b8d98a';
+  const ground = qt ? '#f4f8fc' : bt ? '#fff4e2' : '#b8d98a';
   makeIslandBase(world, 8, 6, ground, 0, 0); mk(G_BOX, ground, [8, 0.2, 6], [0, -0.1, 0], world);
   if (qt) { const far = grp(world, 0, -0.2, -6); for (let i = 0; i < 6; i++) makeMountain(far, -9 + i * 3.6, hsh(i, 3), 3.4, 3.5 + hsh(i, 4) * 3); makePine(world, -3.2, -1.5, 1.2, true); makePine(world, 3.2, -1.2, 1, true); makeSnowman(world, 2.6, 1.6); }
+  else if (bt) { makePalm(world, -3.2, -1.4); makePalm(world, 3.3, -1.0); const u = HB['jervis:u'](); u.position.set(-2.5, 0, 1.3); world.add(u); const sb = mk(G_SPH, '#ffd166', [0.42, 1.7, 0.08], [2.6, 0.8, 1.2], world); sb.rotation.z = -0.18; mk(G_BOX, '#ff7aa8', [0.05, 1.5, 0.085], [2.6, 0.8, 1.2], world, { noShadow: true }).rotation.z = -0.18; const sea = mk(G_BOX, '#7fe0d8', [8, 0.06, 1.6], [0, 0.01, -2.2], world, { noShadow: true }); for (let i = 0; i < 9; i++) mk(G_SPH, '#ffffff', [0.9, 0.06, 0.22], [-3.6 + i * 0.9, 0.04, -1.42 + (i % 2) * 0.08], world, { noShadow: true }); for (let i = 0; i < 5; i++) { const s = mk(G_CONE, ['#ffc2d6', '#fff4c9'][i % 2], [0.22, 0.1, 0.2], [-2.6 + i * 1.3, 0.05, 1.9 + (i % 2) * 0.3], world); s.rotation.x = -0.4; } }
   else { for (let r = 0; r < 2; r++) { const v = HB['hunter:v'](6, 1); v.position.set(0, 0, -2.2 + r * 0.9); world.add(v); } makeGum(world, -3.3, 1.4, 1); makeWineBottle(world, 0.1, 0.62, 0.35, '#6b1e3a'); }
   const tbl = grp(world, 0, 0, 0.35); mk(G_CYL, '#c89f7a', [1.1, 0.06, 0.8], [0, 0.6, 0], tbl); mk(G_CYL, '#6b4a32', [0.08, 0.6, 0.08], [0, 0.3, 0], tbl);
   makeGlass(tbl, -0.25, 0.63, 0.1, qt ? '#8a4a2a' : '#6b1e3a'); makeGlass(tbl, 0.25, 0.63, 0.1, qt ? '#8a4a2a' : '#6b1e3a');
   makeFairyLights(world, -3, -2.8, 3, -2.8, 2.2, 22);
-  const a = qt ? makeAnnette('snow') : makeAnnette('sunny'), p = qt ? makePerson(LOOK.pauloSnow) : makePerson(LOOK.paulo);
+  const a = makeAnnette(qt ? 'snow' : bt ? 'beachy' : 'sunny'), p = makePerson(qt ? LOOK.pauloSnow : bt ? LOOK.pauloBeach : LOOK.paulo);
   a.position.set(-0.9, 0, 0.35); a.rotation.y = 0.7; p.position.set(0.9, 0, 0.35); p.rotation.y = -0.7; world.add(a, p); W.cast = [a, p];
   for (let i = 0; i < 6; i++) makeCloud(world, -20 + i * 7, -5 + hsh(i, 1) * 1.5, -8 + hsh(i, 2) * 16, 1.3);
   cam.base = 11; cam.pitch = 0.55; cam.zoomGoal = 1.4; cam.zoom = 1.4; cam.goal.set(0, 1.1, -0.2); cam.target.copy(cam.goal); cam.orbit = SET.calm ? 0.02 : 0.05;
@@ -613,6 +828,14 @@ function holidayEnd() {
     ['Fuel', HLOG.snack || 'Fergburger, obviously'],
     ['Rest day', HLOG.rest || 'Sleeping in'],
     ['Farewell dinner', HLOG.dinner || 'Something delicious']
+  ] : bt ? [
+    ['The trip', HOL.bt.place + ', down the south coast'],
+    ['Home base', HOL.bt.stay],
+    ['Surf check', (HLOG.waves == null ? 'Some' : HLOG.waves + ' of 3') + ' clean waves on the ' + (HLOG.board || 'board').toLowerCase()],
+    ['Lunch', (HLOG.lunch || 'Something salty') + (HLOG.gull ? ', defended from a seagull' : '')],
+    ['On the sand', HLOG.castle || 'Towels, books and naps'],
+    ['Arvo', HLOG.arvo || 'Doing absolutely nothing'],
+    ['Dinner', HLOG.dinner || 'Something delicious']
   ] : [
     ['The trip', 'The Hunter Valley'],
     ['Blind tasting', HLOG.score + ' of ' + HOL.hv.wines.length + ' guessed right'],
@@ -622,11 +845,11 @@ function holidayEnd() {
     ['Dinner', HLOG.dinner || 'Something delicious']
   ];
   if (qt && HLOG.lugeWin != null) rows.splice(5, 0, ['Skyline luge', HLOG.lugeWin ? 'Beat Paulo to the bottom' : 'Paulo won. Rematch pending']);
-  memoriesCard(qt ? 'holiday-qt' : 'holiday-hv', { title: 'What a trip, ' + CONFIG.name + '!', sub: qt ? 'Snow, lakes and one cheeky kiwi' : 'Vines, wine and golden hour', head: qt ? 'Queenstown memories' : 'Hunter Valley memories', rows }, [makeBtn('Another holiday', () => fade(startHoliday), 'big alt'), makeBtn('Back to title', () => fade(titleScreen), 'big')]);
+  memoriesCard(qt ? 'holiday-qt' : bt ? 'holiday-bt' : 'holiday-hv', { title: 'What a trip, ' + CONFIG.name + '!', sub: qt ? 'Snow, lakes and one cheeky kiwi' : bt ? 'Salt, sand and one very bold seagull' : 'Vines, wine and golden hour', head: qt ? 'Queenstown memories' : bt ? HOL.bt.place + ' memories' : 'Hunter Valley memories', rows }, [makeBtn('Another holiday', () => fade(startHoliday), 'big alt'), makeBtn('Back to title', () => fade(titleScreen), 'big')]);
 }
 
 /* ---------------- QA jumps ---------------- */
-function holQA(kind, map, fn) { G.campaign = 'holiday'; resetHoliday(); G.holiday = kind; G.outfit = kind === 'qt' ? 'winter' : 'sunny'; loadMap(map); if (fn) setTimeout(() => { if (DLG) { DLG.q = []; nextLine(); } fn(); }, 950); }
+function holQA(kind, map, fn) { G.campaign = 'holiday'; resetHoliday(); G.holiday = kind; G.outfit = kind === 'qt' ? 'winter' : kind === 'bt' ? 'beachy' : 'sunny'; loadMap(map); if (fn) setTimeout(() => { if (DLG) { DLG.q = []; nextLine(); } fn(); }, 950); }
 Object.assign(QA_EXTRA, {
   holiday: () => startHoliday(),
   qtown: () => holQA('qt', 'qtown'),
@@ -642,5 +865,9 @@ Object.assign(QA_EXTRA, {
   hunter: () => holQA('hv', 'hunter'),
   tasting: () => holQA('hv', 'hunter', tastingGame),
   holend: () => { resetHoliday(); G.holiday = 'qt'; Object.assign(HLOG, { field: 'The Remarkables', run: 'Alta Blue', jacket: "Macpac jacket", ride: 'Skis', flakes: 14, snack: 'Big Al burger', rest: 'Onsen Hot Pools', dinner: 'Botswana Butchery' }); holidayEnd(); },
+  jervis: () => holQA('bt', 'jervis'),
+  surf: () => holQA('bt', 'jervis', () => surfGame(HOL.bt.boards[0])),
+  gull: () => holQA('bt', 'jervis', () => { Object.assign(W.player, { x: 11, z: 6, tx: 11, tz: 6 }); placeEntity(W.player, 1); F.btSurf = true; gullAttack(); }),
+  btend: () => { resetHoliday(); G.holiday = 'bt'; Object.assign(HLOG, { waves: 3, board: 'Longboard', lunch: 'Fish and chips', gull: true, castle: 'Sand Luca', arvo: 'Dolphin cruise', dinner: 'Fish and chips on the wharf' }); holidayEnd(); },
   hvend: () => { resetHoliday(); G.holiday = 'hv'; Object.assign(HLOG, { score: 3, fav: 'Semillon', cheese: 'Triple cream brie', morning: 'Hot air balloon at sunrise', dinner: 'Degustation at a winery' }); holidayEnd(); }
 });

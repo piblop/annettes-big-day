@@ -4,6 +4,10 @@
 
 Everything here is in `v2/` (the 3D diorama edition). The original pixel game at the repo root is unchanged.
 
+### Holiday Pack: Jervis Bay beach trip
+- A third holiday: drive down the south coast, hire a board and catch three waves, defend lunch from The Chip Thief, build a sandcastle, explore the rock pool, then pick an arvo and a dinner. New memories card, two new badges (Surf's up, Chip defender).
+- Content lives in `CONFIG.holiday.bt` in `v2/src/09-holiday.js`.
+
 ### Side quests
 - **Around the block**: a morning lap of Edmondson St, North Ryde with Luca, started from his lead by the bedroom door. A new 21 by 15 street map with the Ryrie St corner, the Blenheim Rd coffee cart and the gate to Blenheim Park. Five quests: the lap, Luca's sniff report, the lemon tree parcel (plot twist included), Biscuit the cat, and a battle with the Ryrie St magpie. Luca keeps his BIRTHDAY SECURITY bandana afterwards.
 - **The cake caper**: an office whodunnit with four suspects and one icing-covered sleeve.
@@ -17,6 +21,7 @@ Everything here is in `v2/` (the 3D diorama edition). The original pixel game at
 - Sky friends (sun, moon, rainbow, hot-air balloon), napping clouds, toadstools, vines, crystals and waterfalls on every island, butterflies, drifting petals and fireflies, footstep puffs, a soft edge glow.
 
 ### Fixes
+- Water tiles were hidden under the island's top layer, so the sea at the beach and the pool at Greenwich Baths never showed. They do now.
 - Maps now always open square-on after the title screen's slow orbit.
 - A new day restores the bedroom clutter after a resumed save.
 - Walk-on triggers fire as you pass, not only when you stop.

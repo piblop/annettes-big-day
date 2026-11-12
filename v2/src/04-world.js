@@ -93,8 +93,9 @@ function buildMap(id) {
   let nf = 0, nw = 0;
   for (let z = 0; z < H; z++) for (let x = 0; x < Wd; x++) {
     const ch = grid[z][x];
+    // water sits just under the sand, but above the island's top layer (at -0.1) so the sea actually shows
     const isWall = !W.outdoor && (z === 0 || x === 0 || x === Wd - 1 || z === H - 1) && ch !== 'D';
-    if (ch === '~') { dm.position.set(x, -0.12, z); dm.scale.set(1, 1, 1); dm.updateMatrix(); water.setMatrixAt(nw, dm.matrix); water.setColorAt(nw++, col.set(def.water ? def.water[(x + z) % 2] : (x + z) % 2 ? '#8fd3f0' : '#9fdcf5')); continue; }
+    if (ch === '~') { dm.position.set(x, -0.05, z); dm.scale.set(1, 1, 1); dm.updateMatrix(); water.setMatrixAt(nw, dm.matrix); water.setColorAt(nw++, col.set(def.water ? def.water[(x + z) % 2] : (x + z) % 2 ? '#8fd3f0' : '#9fdcf5')); continue; }
     dm.position.set(x, 0, z); dm.scale.set(1, 1, 1); dm.updateMatrix(); floor.setMatrixAt(nf, dm.matrix);
     const c = (def.tint && def.tint(ch, x, z)) || (ch === '_' ? def.wet : (isWall ? def.floor[1] : def.floor[(x + z) % 2]));
     floor.setColorAt(nf++, col.set(c));

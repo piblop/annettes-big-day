@@ -33,7 +33,8 @@ Arrows/WASD walk, Space/Enter/Z = A, Esc/X = B, Q/E rotate the diorama, B opens 
 "Go on holiday" on the title screen and credits. Pick a trip:
 - **Queenstown ski trip** (from the real Aug 2026 itinerary): Lomond Lodge, Fergburger, a winter-jacket pick (Arc'teryx, Patagonia, ALDI, Kathmandu, Macpac), board or skis at Greentoad, then Cardrona, The Remarkables or a Coronet Peak night ski. Remarkables runs come from its trail map (Homeward Run, Alta Blue, Shadow Basin, Alta Chutes, graded green/blue/red/black). The snowboard run has a chairlift and a cheeky kiwi. Then a rest day, a farewell dinner and a memories card.
 - **Hunter Valley**: blind tasting at the cellar door, cheese shop, a morning adventure and dinner in the vines.
-Travel scenes: a flight over the Southern Alps to Queenstown, a drive up the M1 to the Hunter. The Queenstown rest day can be a playable Skyline luge race against Paulo. Best scores per run are kept on the device. Content lives in `CONFIG.holiday` in `src/09-holiday.js`. Test: `node v2/tools/play-holiday.js`. QA scenes: holiday, flight, luge, qtown, qtjacket, qtfield, snowrun, skirun, nightrun, qtnight, hunter, tasting, holend, hvend.
+- **Jervis Bay beach trip**: a drive down the south coast to white sand and clear water. Hire a board at the surf shack and catch three waves on a timing bar, then lunch from the kiosk (a seagull has other ideas), a sandcastle, a rock pool, base camp under the umbrella, an arvo out (dolphin cruise from Huskisson, the walk to Hyams Beach or stargazing) and dinner by the bay. Dolphins jump in the shallows and a pelican keeps watch from its post.
+Travel scenes: a flight over the Southern Alps to Queenstown, a drive up the M1 to the Hunter. The Queenstown rest day can be a playable Skyline luge race against Paulo. Best scores per run are kept on the device. Content lives in `CONFIG.holiday` in `src/09-holiday.js`. Test: `node v2/tools/play-holiday.js`. QA scenes: holiday, flight, luge, qtown, qtjacket, qtfield, snowrun, skirun, nightrun, qtnight, hunter, tasting, jervis, surf, gull, holend, hvend, btend.
 
 ## Weekend Adventure
 Greenwich Baths > ALDI grocery grab > dog park fetch > home (movie, then chess or a picnic) > night out > end card. Luca tags along everywhere except inside ALDI, where he waits in the car.
@@ -41,7 +42,7 @@ Greenwich Baths > ALDI grocery grab > dog park fetch > home (movie, then chess o
 ## Saves, album and badges
 - Each campaign (birthday, weekend, holiday) has its own save slot; Continue asks which one when there are several.
 - Every ending saves a page to the memories album (title screen: Album). Endings also offer Save photo, a snapshot of the 3D scene.
-- Pack badges (Powder hound, Black diamond, Sommelier, Luge legend, Centre aisle victim) persist across playthroughs.
+- Pack badges (Powder hound, Black diamond, Sommelier, Luge legend, Surf's up, Chip defender, Centre aisle victim) persist across playthroughs.
 
 ## Performance
 Characters and static props are merged per material with vertex colours (`mergeStatic` in `src/02-engine.js`); Luca is built once and cloned. Keep animated parts in their own groups so they survive merging.

@@ -33,8 +33,25 @@ const SCRIPT = `(async () => {
   W.def.act.c(); await sleep(200); await pick(/brie/i); await sleep(200); await flush();
   W.def.act.A(); await sleep(200); await pick(/balloon/i); await sleep(200); await flush(); await pick(/Degustation/); await sleep(200); await flush(12);
   await waitFor(() => G.scene === 'hend'); step('hv-end'); if (G.scene !== 'hend') throw new Error('no hv end, at ' + G.scene);
+  window.__hv = JSON.stringify(HLOG);
+  step('bt-start'); await sleep(800); await pick(/Another holiday/); await sleep(1500); await pick(/Jervis Bay/); await sleep(300); await flush(12); await waitFor(() => G.scene === 'drive'); step('bt-drive'); await sleep(800); if (D) { D.paused = false; D.t = D.dur; } await sleep(600); await flush(12); await waitFor(() => G.mapId === 'jervis' && G.scene === 'map'); await sleep(1000); await flush(12);
+  step('jervis'); if (G.mapId !== 'jervis') throw new Error('no jervis, at ' + G.scene);
+  W.def.act.K(); await flush(); if (F.btLunch) throw new Error('lunch before surf');
+  W.def.act.S(); await sleep(200); await pick(/Longboard/); await sleep(200); await flush();
+  step('surf'); if (!SURF) throw new Error('no surf game');
+  for (let i = 0; i < 3; i++) { await waitFor(() => SURF && !SURF.ride); SURF.pos = SURF.zc; await pick(/Paddle/); await waitFor(() => !SURF || !SURF.ride, 20000); }
+  await waitFor(() => !SURF, 20000); await flush(12); if (!F.btSurf || HLOG.waves !== 3 || !G.badges.surf) throw new Error('surf not done: ' + HLOG.waves);
+  W.def.act.u(); await sleep(200); await pick(/Kobo/); await sleep(200); await flush();
+  W.def.act.c(8, 7, W.objs.find(o => o.ch === 'c')); await sleep(200); await pick(/Sand Luca/); await sleep(200); await flush();
+  for (let i = 0; i < 3; i++) { W.def.act.r(); await flush(); } if (!F.btPool) throw new Error('rock pool not explored');
+  step('gull'); W.def.act.K(); await sleep(200); await pick(/Fish and chips/); await sleep(200); await flush(); await waitFor(() => !!G.b);
+  for (let i = 0; i < 300 && G.b; i++) { if (G.mode === 'bmsg') bAdvance(); else if (G.mode === 'bmenu') MENU.b[0].click(); await sleep(40); } await flush();
+  if (!F.btGull || !G.badges.chips) throw new Error('seagull not seen off');
+  if (G.mode !== 'map') throw new Error('stuck after the seagull: ' + G.mode);
+  W.def.act.A(); await sleep(200); await pick(/Dolphin/); await sleep(200); await flush(); await pick(/wharf/); await sleep(200); await flush(12);
+  await waitFor(() => G.scene === 'hend'); step('bt-end'); if (G.scene !== 'hend') throw new Error('no bt end, at ' + G.scene);
   await sleep(1200);
-  return JSON.stringify({ log, qt: JSON.parse(window.__qt), hv: HLOG });
+  return JSON.stringify({ log, qt: JSON.parse(window.__qt), hv: JSON.parse(window.__hv), bt: HLOG });
 })()`;
 (async () => {
   const prof = fs.mkdtempSync(path.join(os.tmpdir(), 'abd2h-'));

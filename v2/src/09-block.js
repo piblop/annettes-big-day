@@ -81,13 +81,13 @@ function makeCat() {
   g.userData = { kind: 'cat', body, head, tail };
   return mergeStatic(g);
 }
-function makeMagpie(foe) {
-  const g = new THREE.Group(), outer = grp(g), body = grp(outer), K = '#2b2733', Wt = '#ffffff'; body.scale.setScalar(foe ? 2.1 : 1);
+function makeMagpie(foe, pal) {
+  pal = pal || {}; const g = new THREE.Group(), outer = grp(g), body = grp(outer), K = pal.body || '#2b2733', Wt = pal.patch || '#ffffff'; body.scale.setScalar(foe ? 2.1 : 1);
   mk(G_SPH, K, [0.34, 0.32, 0.46], [0, 0, 0], body); mk(G_SPH, Wt, [0.26, 0.14, 0.24], [0, 0.11, -0.06], body, { noShadow: true }); mk(G_SPH, Wt, [0.2, 0.1, 0.16], [0, 0.02, -0.19], body, { noShadow: true });
   mk(G_SPH, K, [0.26, 0.24, 0.26], [0, 0.2, 0.2], body);
-  const beak = mk(G_CONE, '#cfd6e6', [0.08, 0.22, 0.08], [0, 0.17, 0.4], body); beak.rotation.x = Math.PI / 2; mk(G_SPH, K, [0.05, 0.05, 0.05], [0, 0.17, 0.5], body, { noShadow: true });
+  const beak = mk(G_CONE, pal.beak || '#cfd6e6', [0.08, 0.22, 0.08], [0, 0.17, 0.4], body); beak.rotation.x = Math.PI / 2; mk(G_SPH, pal.tip || K, [0.05, 0.05, 0.05], [0, 0.17, 0.5], body, { noShadow: true });
   const wings = [-1, 1].map(s => { const w = grp(body, s * 0.15, 0.06, -0.02); mk(G_SPH, K, [0.09, 0.22, 0.42], [s * 0.04, -0.04, -0.02], w); mk(G_SPH, Wt, [0.06, 0.1, 0.2], [s * 0.075, -0.02, 0.02], w, { noShadow: true }); return w; });
-  mk(G_BOX, K, [0.14, 0.03, 0.26], [0, -0.03, -0.32], body); [-0.06, 0.06].forEach(x => mk(G_CYL, '#6b6f82', [0.02, 0.14, 0.02], [x, -0.2, 0.02], body, { noShadow: true }));
+  mk(G_BOX, K, [0.14, 0.03, 0.26], [0, -0.03, -0.32], body); [-0.06, 0.06].forEach(x => mk(G_CYL, pal.legs || '#6b6f82', [0.02, 0.14, 0.02], [x, -0.2, 0.02], body, { noShadow: true }));
   if (foe) googly(body, 0, 0.25, 0.31, 0.62);
   else [-1, 1].forEach(s => { mk(G_SPH, '#c2553a', [0.05, 0.05, 0.03], [s * 0.09, 0.23, 0.3], body, { noShadow: true }); mk(G_SPH, Wt, [0.018, 0.018, 0.01], [s * 0.09 + 0.01, 0.245, 0.315], body, { noShadow: true, glow: true }); });
   g.userData = { kind: 'foe', body: outer, wings };
