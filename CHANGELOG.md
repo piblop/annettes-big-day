@@ -4,8 +4,8 @@
 
 Everything here is in `v2/` (the 3D diorama edition). The original pixel game at the repo root is unchanged.
 
-### Holiday Pack: Jervis Bay beach trip
-- A third holiday: drive down the south coast, hire a board and catch three waves, defend lunch from The Chip Thief, build a sandcastle, explore the rock pool, then pick an arvo and a dinner. New memories card, two new badges (Surf's up, Chip defender).
+### Holiday Pack: Thirroul beach trip
+- A third holiday: the Grand Pacific Drive down to Thirroul, hire a board and catch three waves, defend lunch from The Chip Thief, build a sandcastle, explore the rock pool, dip in the ocean pool, then pick an arvo (Sea Cliff Bridge, Sublime Point or stargazing) and a dinner. New memories card, two new badges (Surf's up, Chip defender).
 - Content lives in `CONFIG.holiday.bt` in `v2/src/09-holiday.js`.
 
 ### Characters redrawn from scratch
