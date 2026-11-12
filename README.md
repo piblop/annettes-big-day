@@ -4,6 +4,8 @@ A cozy handheld-style pixel RPG covering one big day in Annette's life, made wit
 
 **Play it now:** https://piblop.github.io/annettes-big-day/
 
+**Play v2, the 3D whimsical edition:** https://piblop.github.io/annettes-big-day/v2/ (side quests, the Weekend Adventure and the Holiday Pack; see `v2/README.md`)
+
 ## The day
 
 Wake up in North Ryde with Luca the cavoodle > gym (lift mini-game, battle The Last Set) > office (report sprint, battle Inbox Overload) > lunch > golden-hour beach > dinner and cake at The Botanist, Kirribilli > fireworks finale over the bridge.
