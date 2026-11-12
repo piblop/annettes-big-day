@@ -41,8 +41,8 @@ const GEO = {};
 function geo(key, make) { return GEO[key] || (GEO[key] = make()); }
 const G_BOX = geo('box', () => new THREE.BoxGeometry(1, 1, 1));
 const G_SPH = geo('sph', () => new THREE.SphereGeometry(0.5, 20, 14));
-const G_CYL = geo('cyl', () => new THREE.CylinderGeometry(0.5, 0.5, 1, 18));
-const G_CONE = geo('cone', () => new THREE.ConeGeometry(0.5, 1, 18));
+const G_CYL = geo('cyl', () => new THREE.CylinderGeometry(0.5, 0.5, 1, 28));
+const G_CONE = geo('cone', () => new THREE.ConeGeometry(0.5, 1, 24));
 const MATS = {};
 function M(color, o) {
   const k = color + (o ? JSON.stringify(o) : '');

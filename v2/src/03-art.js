@@ -7,22 +7,41 @@ const heartShape = (() => { const s = new THREE.Shape(); s.moveTo(0, -0.5); s.be
 const G_HEART = geo('heart', () => { const g = new THREE.ExtrudeGeometry(heartShape, { depth: 0.18, bevelEnabled: true, bevelSize: 0.06, bevelThickness: 0.06, bevelSegments: 3, curveSegments: 12 }); g.center(); return g; });
 const starShape = (() => { const s = new THREE.Shape(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 0.22 : 0.5, a = i / 10 * TAU + Math.PI / 2; const x = Math.cos(a) * r, y = Math.sin(a) * r; i ? s.lineTo(x, y) : s.moveTo(x, y); } return s; })();
 const G_STAR = geo('star', () => { const g = new THREE.ExtrudeGeometry(starShape, { depth: 0.12, bevelEnabled: true, bevelSize: 0.04, bevelThickness: 0.04, bevelSegments: 2 }); g.center(); return g; });
-const G_TORSO = geo('torso', () => new THREE.CylinderGeometry(0.13, 0.17, 0.3, 16));
-const G_SKIRT = geo('skirt', () => new THREE.CylinderGeometry(0.12, 0.25, 0.36, 18));
+// Character bodies are turned on a lathe from smooth curves, so there are no flat facets or hard rims
+function lathe(key, pts, seg) {
+  return geo(key, () => { const c = new THREE.SplineCurve(pts.map(p => new THREE.Vector2(p[0], p[1]))), g = new THREE.LatheGeometry(c.getPoints(pts.length * 5).map(v => (v.x = Math.max(0, v.x), v)), seg || 32); g.computeVertexNormals(); return g; });
+}
+function capsule(r, len) {
+  return geo('cap' + r + ':' + len, () => { const p = [], h = len / 2 - r; for (let i = 0; i <= 8; i++) { const a = -Math.PI / 2 + i / 8 * Math.PI / 2; p.push(new THREE.Vector2(Math.cos(a) * r, -h + Math.sin(a) * r)); } for (let i = 0; i <= 8; i++) { const a = i / 8 * Math.PI / 2; p.push(new THREE.Vector2(Math.cos(a) * r, h + Math.sin(a) * r)); } p[0].x = 0; p[p.length - 1].x = 0; return new THREE.LatheGeometry(p, 20); });
+}
+const G_TORSO = lathe('torso', [[0, -0.165], [0.09, -0.16], [0.15, -0.13], [0.172, -0.07], [0.165, 0], [0.148, 0.07], [0.12, 0.125], [0.07, 0.16], [0, 0.17]]);
+const G_SKIRT = lathe('skirt', [[0, -0.17], [0.2, -0.185], [0.255, -0.165], [0.235, -0.1], [0.19, -0.02], [0.155, 0.06], [0.13, 0.12], [0.08, 0.17], [0, 0.185]]);
+const G_HEAD = geo('head', () => new THREE.SphereGeometry(0.5, 32, 22)); // heads and hair get a finer sphere: they are the biggest silhouettes
+// Characters are shaded on a smooth ramp and take no cast shadows, so faces and hair never get a hard band across them
+const SOFT_RAMP = (() => { const d = new Uint8Array([150, 180, 206, 228, 244, 255]); const t = new THREE.DataTexture(d, 6, 1, THREE.LuminanceFormat); t.minFilter = t.magFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();
+const SOFT = {};
+function softSkin(g) {
+  g.traverse(o => {
+    if (!o.isMesh) return; o.receiveShadow = false; const m = o.material; if (!m.isMeshToonMaterial || m.gradientMap === SOFT_RAMP) return;
+    const k = (m.vertexColors ? 'vc' : m.color.getHexString()) + ':' + m.opacity;
+    o.material = SOFT[k] || (SOFT[k] = new THREE.MeshToonMaterial({ color: m.vertexColors ? '#ffffff' : m.color, vertexColors: m.vertexColors, gradientMap: SOFT_RAMP, transparent: m.transparent, opacity: m.opacity }));
+  });
+  return g;
+}
 
 /* ---------------- people: chibi proportions, big head, tiny body ---------------- */
 function makePerson(o) {
   const g = new THREE.Group(), body = grp(g);
   const skin = o.skin || '#f9d1b0', hair = o.hair || '#6b4a32', top = o.top || '#7f93b3', bot = o.bottom || top, shoe = o.shoe || '#fdfdfd';
   const legL = grp(body, -0.075, 0.24, 0), legR = grp(body, 0.075, 0.24, 0);
-  [legL, legR].forEach(L => { mk(G_CYL, o.style === 'dress' ? skin : bot, [0.1, 0.22, 0.1], [0, -0.11, 0], L); mk(G_SPH, shoe, [0.13, 0.08, 0.17], [0, -0.21, 0.025], L); });
+  [legL, legR].forEach(L => { mk(capsule(0.056, 0.27), o.style === 'dress' ? skin : bot, null, [0, -0.1, 0], L); mk(G_SPH, shoe, [0.14, 0.09, 0.19], [0, -0.205, 0.03], L); });
   if (o.style === 'dress') mk(G_SKIRT, top, [1, 1, 1], [0, 0.36, 0], body);
-  else if (o.style === 'crop') { mk(G_CYL, skin, [0.27, 0.08, 0.26], [0, 0.32, 0], body); mk(G_TORSO, top, [1, 0.62, 1], [0, 0.42, 0], body); mk(G_CYL, bot, [0.32, 0.1, 0.3], [0, 0.25, 0], body); }
-  else { mk(G_TORSO, top, [1, 1, 1], [0, 0.38, 0], body); mk(G_CYL, bot, [0.33, 0.07, 0.3], [0, 0.245, 0], body); }
-  const armL = grp(body, -0.2, 0.49, 0), armR = grp(body, 0.2, 0.49, 0);
-  [armL, armR].forEach(A => { mk(G_SPH, o.style === 'dress' || o.style === 'crop' ? skin : top, [0.09, 0.2, 0.09], [0, -0.08, 0], A); mk(G_SPH, skin, [0.08, 0.08, 0.08], [0, -0.18, 0.01], A); });
+  else if (o.style === 'crop') { mk(G_TORSO, skin, [0.8, 0.9, 0.8], [0, 0.37, 0], body); mk(G_TORSO, top, [1, 0.62, 1], [0, 0.44, 0], body); mk(G_HEAD, bot, [0.32, 0.18, 0.29], [0, 0.26, 0], body); }
+  else { mk(G_TORSO, top, [1, 1, 1], [0, 0.385, 0], body); mk(G_HEAD, bot, [0.335, 0.17, 0.3], [0, 0.25, 0], body); }
+  const armL = grp(body, -0.185, 0.5, 0), armR = grp(body, 0.185, 0.5, 0);
+  [armL, armR].forEach((A, i) => { const s = grp(A); s.rotation.z = (i ? 1 : -1) * 0.16; mk(capsule(0.047, 0.22), o.style === 'dress' || o.style === 'crop' ? skin : top, null, [0, -0.075, 0], s); mk(G_SPH, skin, [0.088, 0.088, 0.088], [0, -0.19, 0.008], s); });
   const head = grp(body, 0, 0.78, 0);
-  mk(G_SPH, skin, [0.5, 0.47, 0.47], [0, 0, 0], head);
+  mk(G_HEAD, skin, [0.5, 0.47, 0.47], [0, 0, 0], head);
   [-1, 1].forEach(s => {
     mk(G_SPH, o.eye || INK, [0.055, 0.08, 0.03], [s * 0.085, -0.005, 0.222], head, { noShadow: true });
     mk(G_SPH, '#ffffff', [0.022, 0.022, 0.012], [s * 0.085 + 0.013, 0.02, 0.236], head, { noShadow: true });
@@ -38,9 +57,9 @@ function makePerson(o) {
   });
   mk(G_SPH, '#ffffff', [0.16, 0.05, 0.08], [-0.1, 0.24, 0.12], head, { noShadow: true, glow: true, alpha: 0.35 });
   // hair: cap + fringe + style extras
-  mk(G_SPH, hair, [0.53, 0.52, 0.53], [0, 0.06, -0.05], head);
+  mk(G_HEAD, hair, [0.53, 0.52, 0.53], [0, 0.06, -0.05], head);
   mk(G_SPH, hair, [0.44, 0.15, 0.22], [0, 0.14, 0.12], head);
-  if (o.hairStyle === 'long') { mk(G_SPH, hair, [0.5, 0.62, 0.32], [0, -0.13, -0.11], head); [-1, 1].forEach(s => mk(G_SPH, hair, [0.13, 0.36, 0.15], [s * 0.2, -0.13, 0.03], head)); }
+  if (o.hairStyle === 'long') { mk(G_HEAD, hair, [0.5, 0.62, 0.32], [0, -0.13, -0.11], head); [-1, 1].forEach(s => mk(G_SPH, hair, [0.13, 0.36, 0.15], [s * 0.2, -0.13, 0.03], head)); }
   if (o.hairStyle === 'bun') mk(G_SPH, hair, [0.2, 0.2, 0.2], [0, 0.29, -0.06], head);
   if (o.hairStyle === 'bob') [-1, 1].forEach(s => mk(G_SPH, hair, [0.16, 0.3, 0.3], [s * 0.19, -0.07, -0.01], head));
   if (o.hairStyle === 'fluffy') [[-0.1, 0.25, 0.02], [0.08, 0.27, -0.04], [0.16, 0.2, 0.06], [-0.18, 0.18, -0.02]].forEach(p => mk(G_SPH, hair, [0.16, 0.14, 0.16], p, head));
@@ -49,7 +68,7 @@ function makePerson(o) {
   if (o.beanie) { mk(G_SPH, o.beanie, [0.57, 0.36, 0.57], [0, 0.21, -0.04], head); mk(G_CYL, '#ffffff', [0.57, 0.08, 0.57], [0, 0.13, -0.03], head, { noShadow: true }); mk(G_SPH, '#ffffff', [0.15, 0.15, 0.15], [0, 0.4, -0.05], head); }
   if (o.apron) mk(G_BOX, o.apron, [0.24, 0.26, 0.02], [0, 0.34, 0.16], body);
   g.userData = { kind: 'person', body, head, legL, legR, armL, armR, walk: 0, bounce: 0 };
-  return mergeStatic(g);
+  return softSkin(mergeStatic(g));
 }
 const LOOK = {
   annette: o => ({ skin: '#f9d1b0', hair: '#f5d271', brow: '#d9a94a', lashes: true, hairStyle: 'long', eye: '#3d7be0', bow: '#ff7aa8', top: o.top, bottom: o.bottom, style: o.style, shoe: '#ffffff', beanie: o.beanie }),

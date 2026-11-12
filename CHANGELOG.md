@@ -8,6 +8,11 @@ Everything here is in `v2/` (the 3D diorama edition). The original pixel game at
 - A third holiday: drive down the south coast, hire a board and catch three waves, defend lunch from The Chip Thief, build a sandcastle, explore the rock pool, then pick an arvo and a dinner. New memories card, two new badges (Surf's up, Chip defender).
 - Content lives in `CONFIG.holiday.bt` in `v2/src/09-holiday.js`.
 
+### Smoother characters
+- People are no longer stacked cylinders: torsos and dresses are turned from smooth curves, limbs are rounded capsules, and heads and hair use a finer sphere.
+- Characters, the cat and the birds are shaded on a soft ramp instead of hard toon bands, and no longer get shadow lines across their faces.
+- Round props (rugs, tables, cakes, cones) have more sides, so their edges read as curves.
+
 ### Side quests
 - **Around the block**: a morning lap of Edmondson St, North Ryde with Luca, started from his lead by the bedroom door. A new 21 by 15 street map with the Ryrie St corner, the Blenheim Rd coffee cart and the gate to Blenheim Park. Five quests: the lap, Luca's sniff report, the lemon tree parcel (plot twist included), Biscuit the cat, and a battle with the Ryrie St magpie. Luca keeps his BIRTHDAY SECURITY bandana afterwards.
 - **The cake caper**: an office whodunnit with four suspects and one icing-covered sleeve.

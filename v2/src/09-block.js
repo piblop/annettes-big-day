@@ -79,7 +79,7 @@ function makeCat() {
   mk(G_SPH, '#ff8fa3', [0.03, 0.022, 0.02], [0, -0.035, 0.15], head, { noShadow: true });
   const tail = grp(body, 0, 0.26, -0.2); mk(G_CYL, O, [0.06, 0.34, 0.06], [0, 0.17, 0], tail); mk(G_SPH, o2, [0.075, 0.09, 0.075], [0, 0.35, 0], tail);
   g.userData = { kind: 'cat', body, head, tail };
-  return mergeStatic(g);
+  return softSkin(mergeStatic(g));
 }
 function makeMagpie(foe, pal) {
   pal = pal || {}; const g = new THREE.Group(), outer = grp(g), body = grp(outer), K = pal.body || '#2b2733', Wt = pal.patch || '#ffffff'; body.scale.setScalar(foe ? 2.1 : 1);
@@ -91,7 +91,7 @@ function makeMagpie(foe, pal) {
   if (foe) googly(body, 0, 0.25, 0.31, 0.62);
   else [-1, 1].forEach(s => { mk(G_SPH, '#c2553a', [0.05, 0.05, 0.03], [s * 0.09, 0.23, 0.3], body, { noShadow: true }); mk(G_SPH, Wt, [0.018, 0.018, 0.01], [s * 0.09 + 0.01, 0.245, 0.315], body, { noShadow: true, glow: true }); });
   g.userData = { kind: 'foe', body: outer, wings };
-  return g;
+  return softSkin(g);
 }
 // battles build their foe through makeFoe: teach it the magpie
 const makeFoeBase = makeFoe;
