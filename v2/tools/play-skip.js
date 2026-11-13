@@ -13,7 +13,7 @@ const SCRIPT = `(async () => {
   const waitFor = async (fn, ms) => { for (let i = 0; i < (ms || 30000) / 100; i++) { if (fn()) return true; await sleep(100); } return false; };
   const fading = () => document.querySelector('#fade').classList.contains('on');
   // press Skip (the real HUD button) until we reach the wanted place, answering "Skip ahead" when asked
-  const skipTo = async (name, fn) => { for (let i = 0; i < 300 && !fn(); i++) { const b = btn(/^Skip ahead/); if (b) b.click(); else if (!fading()) document.querySelector('#skipBtn').click(); await sleep(250); } if (!fn()) throw new Error('skip never reached ' + name + ' (at ' + G.scene + '/' + G.mapId + '/' + G.mode + ')'); step(name); };
+  const skipTo = async (name, fn) => { for (let i = 0; i < 300 && !fn(); i++) { const b = btn(/^Skip ahead/) || (btn(/^Stay here/) && document.querySelector('#ui .opt')); if (b) b.click(); else if (!fading()) document.querySelector('#skipBtn').click(); await sleep(250); } if (!fn()) throw new Error('skip never reached ' + name + ' (at ' + G.scene + '/' + G.mapId + '/' + G.mode + ')'); step(name); };
   const at = id => () => G.scene === 'map' && G.mapId === id && G.mode !== 'busy' && !fading();
   step('title'); btn(/Start the day|New day/).click(); await waitFor(at('bedroom'));
   // a conversation skips in one press
@@ -23,7 +23,10 @@ const SCRIPT = `(async () => {
   liftGame(); await sleep(300); await skipTo('lift and battle skipped', () => F.gymBattle && !G.b && !G.lift);
   for (const [n, f] of [['office', at('office')], ['lunch', () => G.scene === 'lunch'], ['beach', at('beach')], ['botanist', at('botanist')], ['finale', () => G.scene === 'finale']]) await skipTo(n, f);
   await sleep(600); btn(/Roll credits/).click(); await sleep(600); if (G.scene !== 'credits') throw new Error('no credits');
-  step('weekend'); btn(/Play the weekend/).click(); await waitFor(at('baths'));
+  // the section list jumps more than one section at once
+  step('new day'); fade(startGame); await waitFor(at('bedroom')); for (let i = 0; i < 60 && !btn(/^Golden hour/); i++) { document.querySelector('#skipBtn').click(); await sleep(250); } if (!btn(/^Gym/) || !btn(/^Fireworks/)) throw new Error('section list incomplete'); btn(/^Golden hour/).click(); await waitFor(at('beach')); if (G.mapId !== 'beach' || !F.gymBattle || !F.officeBattle || !G.lunch) throw new Error('jump to beach left sections unfinished'); step('jumped bedroom to beach');
+  fade(titleScreen); await waitFor(() => G.scene === 'title' && !!btn(/Weekend Adventure/)); await sleep(400);
+  step('weekend'); btn(/Weekend Adventure/).click(); await waitFor(at('baths'));
   for (const [n, f] of [['aldi', at('aldi')], ['park', at('park')], ['home', at('home')], ['night', () => G.scene === 'wnight'], ['weekend end', () => G.scene === 'wend']]) await skipTo(n, f);
   for (const trip of ['Queenstown', 'Hunter Valley', 'Thirroul', 'Port Macquarie']) {
     await sleep(600); fade(startHoliday); await waitFor(() => G.scene === 'hstart' && !!btn(new RegExp(trip))); btn(new RegExp(trip)).click();

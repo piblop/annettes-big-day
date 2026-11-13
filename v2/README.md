@@ -27,7 +27,7 @@ Content lives in `CONFIG.block` at the top of `src/09-block.js` (street names, t
 A sleepy sun, a dozing moon, a rainbow and a hot-air balloon live behind every island (parented to the camera, so they frame any zoom or rotation). Half the clouds are napping. Islands grow toadstools, flowering vines, crystals and a little waterfall. Butterflies loop the grassy islands, petals drift by day, gold dust at golden hour and fireflies at night. Footsteps puff, hearts pulse and the screen has a soft pink edge glow.
 
 ## Controls
-**Skip** (top right, or Tab) always moves things along: it skips a whole conversation, finishes a mini-game, battle or drive with a decent result, or offers to jump to the next section when you are walking around. Every conversation box also has its own Skip button. Skipped side quests and hearts stay unfinished.
+**Skip** (top right, or Tab) always moves things along: it skips a whole conversation, finishes a mini-game, battle or drive with a decent result, or opens the section list when you are walking around, so you can jump to any section still ahead (gym, work, lunch, golden hour, dinner, fireworks; the weekend has its own list). Every conversation box also has its own Skip button. Skipped side quests and hearts stay unfinished.
 
 Arrows/WASD walk, Space/Enter/Z = A, Esc/X = B, Q/E rotate the diorama, B opens the collection log. Tap a spot to walk there, or tap a thing to walk up and use it.
 

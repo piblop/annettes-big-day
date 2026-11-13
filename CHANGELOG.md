@@ -5,7 +5,7 @@
 Everything here is in `v2/` (the 3D diorama edition). The original pixel game at the repo root is unchanged.
 
 ### Fast skip
-- A Skip button in the top bar (or Tab): skips a whole conversation, finishes a mini-game, battle or drive, or jumps to the next section. Every conversation box has its own Skip too.
+- A Skip button in the top bar (or Tab): skips a whole conversation, finishes a mini-game, battle or drive, or opens a section list to jump to any section still ahead. Every conversation box has its own Skip too.
 
 ### Holiday Pack: Port Macquarie, and more to do on the other trips
 - **Port Macquarie** is a fourth holiday: count five koalas hiding in the gums for the Koala Hospital, catch whale breaches from Tacking Point Lighthouse, paint a rock for the breakwall, then pick an arvo and a dinner. New memories card and two badges (Koala counter, Whale spotter).
