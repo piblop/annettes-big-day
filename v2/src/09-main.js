@@ -135,8 +135,30 @@ cv.addEventListener('pointerleave', () => { if (PET) PET.last = null; });
 
 /* ---------------- loop: fixed-ish sim, render every frame ---------------- */
 let last = performance.now(), clockShown = '';
+// Adaptive quality: watch real frame times; if the device cannot keep up, lower the pixel ratio a step
+// (sharpness drops a little, smoothness comes back). Steps back up when there is clear headroom.
+const QUAL = { steps: [2, 1.75, 1.5, 1.25, 1], i: 0, acc: 0, n: 0, cool: 3, top: 0 };
+QUAL.max = Math.min(devicePixelRatio || 1, 2); QUAL.i = QUAL.top = Math.max(0, QUAL.steps.findIndex(r => r <= QUAL.max));
+function adaptQuality(frameMs, dt) {
+  if (frameMs > 250 || document.hidden) return; // a tab switch or a load hitch says nothing about steady speed
+  if (QUAL.cool > 0) { QUAL.cool -= dt; QUAL.acc = QUAL.n = 0; return; } // let a change settle before judging it
+  QUAL.acc += frameMs; QUAL.n++;
+  if (QUAL.n < 90) return;
+  const avg = QUAL.acc / QUAL.n; QUAL.acc = QUAL.n = 0;
+  let i = QUAL.i;
+  if (avg > 24 && i < QUAL.steps.length - 1) { i++; QUAL.top = Math.max(QUAL.top, i); } // under ~42 fps: step down, and never climb back to the level that failed
+  else if (avg < 14 && i > QUAL.top) i--;                                                 // lots of headroom: step back up, but only to levels that held
+  if (i === QUAL.i) return;
+  QUAL.i = i; QUAL.cool = 3; renderer.setPixelRatio(QUAL.steps[i]); renderer.setSize(innerWidth, innerHeight);
+  // the slowest step also uses a smaller shadow map
+  const size = i === QUAL.steps.length - 1 ? 1024 : 2048;
+  if (sun.shadow.mapSize.x !== size) { sun.shadow.mapSize.set(size, size); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
+}
+// a new place may be lighter or heavier to draw: forget which level failed, keep the current one
+MAP_HOOKS.push(() => { QUAL.top = Math.max(0, QUAL.steps.findIndex(r => r <= QUAL.max)); });
+
 function frame(now) {
-  const dt = Math.min(0.1, (now - last) / 1000); last = now; G.t += dt; const t = G.t;
+  const raw = now - last, dt = Math.min(0.1, raw / 1000); last = now; G.t += dt; const t = G.t; adaptQuality(raw, dt);
   try {
     if (G.mode === 'map' && G.scene === 'map') G.clock += dt * TUNE.minutesPerTick / TUNE.tick;
     const c = fmtClock(G.clock); if (c !== clockShown) { clockShown = c; $('#clock').textContent = c; }
@@ -179,6 +201,7 @@ saveSettings(); updateHUD(); resize();
     title: () => titleScreen()
   };
   Object.assign(go, QA_EXTRA);
+  if (qa) QUAL.cool = 1e9; // screenshots and tests keep a fixed resolution
   (go[qa] || titleScreen)();
   requestAnimationFrame(frame);
 })();

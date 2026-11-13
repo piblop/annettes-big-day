@@ -4,6 +4,12 @@
 
 Everything here is in `v2/` (the 3D diorama edition). The original pixel game at the repo root is unchanged.
 
+### Smoother animation
+- About half the triangles per scene (for example 536k to 210k on the Edmondson St block) from size-based detail levels; shadow-pass triangles roughly halved too. No visible change at normal or close-up zoom.
+- Adaptive resolution: slow devices step the pixel ratio down until frames are smooth, without bouncing back and forth.
+- Map builds about twice as fast, so the pause behind each fade is shorter.
+- No more per-frame scene searches or garbage from water sparkles.
+
 ### Fast skip
 - A Skip button in the top bar (or Tab): skips a whole conversation, finishes a mini-game, battle or drive, or opens a section list to jump to any section still ahead. Every conversation box has its own Skip too.
 

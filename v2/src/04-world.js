@@ -6,6 +6,7 @@ const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const WALK = new Set(['.', 'h', '_', 'D']);
 const WALL_H = 1.45, WALL_LOW = 0.26;
 let W = null; // the live map
+const TMP_M4 = new THREE.Matrix4(), TMP_V3 = new THREE.Vector3(); // scratch objects, reused so animation makes no garbage
 
 function clearWorld() {
   while (world.children.length) world.remove(world.children[0]);
@@ -363,8 +364,10 @@ function updateWorld(dt, t) {
     if (g.userData.bob) { g.position.y = (g.userData.baseY != null ? g.userData.baseY : (g.userData.baseY = g.position.y)) + Math.sin(t * 1.6 + g.userData.phase) * 0.15; g.rotation.z = Math.sin(t + g.userData.phase) * 0.06; }
     return true;
   });
-  world.traverse(o => { if (o.userData.sway != null) o.rotation.z = SET.calm ? 0 : Math.sin(t * 1.5 + o.userData.sway) * 0.04; if (o.userData.fairy) o.children.forEach(b => b.scale.setScalar(0.09 * (0.8 + 0.35 * Math.sin(t * 4 + b.userData.tw)))); if (o.userData.bob && o.userData.phase != null && !W.anim.includes(o)) o.children[0] && (o.rotation.z = Math.sin(t * 1.4 + o.userData.phase) * 0.08); });
+  // the swaying trees and twinkling fairy lights are found once and cached, not searched for in the whole scene every frame
+  if (!W.swayers || W.swayAt !== world.children.length) { W.swayAt = world.children.length; W.swayers = []; world.traverse(o => { if (o.userData.sway != null || o.userData.fairy || (o.userData.bob && o.userData.phase != null)) W.swayers.push(o); }); }
+  W.swayers.forEach(o => { if (o.userData.sway != null) o.rotation.z = SET.calm ? 0 : Math.sin(t * 1.5 + o.userData.sway) * 0.04; if (o.userData.fairy) o.children.forEach(b => b.scale.setScalar(0.09 * (0.8 + 0.35 * Math.sin(t * 4 + b.userData.tw)))); if (o.userData.bob && o.userData.phase != null && !W.anim.includes(o)) o.children[0] && (o.rotation.z = Math.sin(t * 1.4 + o.userData.phase) * 0.08); });
   if (ring && ring.parent) { ring.userData.t += dt; const k = ring.userData.t; ring.scale.setScalar(1 + k * 1.5); ring.material.opacity = Math.max(0, 0.8 - k * 1.6); if (k > 0.6) world.remove(ring); }
-  if (W.water && !SET.calm && Math.random() < dt * 6) { const i = Math.floor(Math.random() * W.water.count); const m = new THREE.Matrix4(); W.water.getMatrixAt(i, m); const v = new THREE.Vector3().setFromMatrixPosition(m); sparkle(v.x + Math.random() - 0.5, 0.05, v.z + Math.random() - 0.5, 2); }
+  if (W.water && !SET.calm && Math.random() < dt * 6) { const i = Math.floor(Math.random() * W.water.count); const m = TMP_M4; W.water.getMatrixAt(i, m); const v = TMP_V3.setFromMatrixPosition(m); sparkle(v.x + Math.random() - 0.5, 0.05, v.z + Math.random() - 0.5, 2); }
   driftClouds(dt, 30);
 }

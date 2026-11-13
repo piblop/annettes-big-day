@@ -9,14 +9,16 @@ const starShape = (() => { const s = new THREE.Shape(); for (let i = 0; i < 10; 
 const G_STAR = geo('star', () => { const g = new THREE.ExtrudeGeometry(starShape, { depth: 0.12, bevelEnabled: true, bevelSize: 0.04, bevelThickness: 0.04, bevelSegments: 2 }); g.center(); return g; });
 // Character bodies are turned on a lathe from smooth curves, so there are no flat facets or hard rims
 function lathe(key, pts, seg) {
-  return geo(key, () => { const c = new THREE.SplineCurve(pts.map(p => new THREE.Vector2(p[0], p[1]))), g = new THREE.LatheGeometry(c.getPoints(pts.length * 5).map(v => (v.x = Math.max(0, v.x), v)), seg || 32); g.computeVertexNormals(); return g; });
+  return geo(key, () => { const c = new THREE.SplineCurve(pts.map(p => new THREE.Vector2(p[0], p[1]))), g = new THREE.LatheGeometry(c.getPoints(pts.length * 2).map(v => (v.x = Math.max(0, v.x), v)), seg || 24); g.computeVertexNormals(); return g; });
 }
+// limbs are thin, so 12 sides already read as round
 function capsule(r, len) {
-  return geo('cap' + r + ':' + len, () => { const p = [], h = len / 2 - r; for (let i = 0; i <= 8; i++) { const a = -Math.PI / 2 + i / 8 * Math.PI / 2; p.push(new THREE.Vector2(Math.cos(a) * r, -h + Math.sin(a) * r)); } for (let i = 0; i <= 8; i++) { const a = i / 8 * Math.PI / 2; p.push(new THREE.Vector2(Math.cos(a) * r, h + Math.sin(a) * r)); } p[0].x = 0; p[p.length - 1].x = 0; return new THREE.LatheGeometry(p, 20); });
+  return geo('cap' + r + ':' + len, () => { const p = [], h = len / 2 - r; for (let i = 0; i <= 5; i++) { const a = -Math.PI / 2 + i / 5 * Math.PI / 2; p.push(new THREE.Vector2(Math.cos(a) * r, -h + Math.sin(a) * r)); } for (let i = 0; i <= 5; i++) { const a = i / 5 * Math.PI / 2; p.push(new THREE.Vector2(Math.cos(a) * r, h + Math.sin(a) * r)); } p[0].x = 0; p[p.length - 1].x = 0; return new THREE.LatheGeometry(p, 12); });
 }
 const G_TORSO = lathe('torso', [[0, -0.165], [0.09, -0.16], [0.15, -0.13], [0.172, -0.07], [0.165, 0], [0.148, 0.07], [0.12, 0.125], [0.07, 0.16], [0, 0.17]]);
 const G_SKIRT = lathe('skirt', [[0, -0.17], [0.2, -0.185], [0.255, -0.165], [0.235, -0.1], [0.19, -0.02], [0.155, 0.06], [0.13, 0.12], [0.08, 0.17], [0, 0.185]]);
 const G_HEAD = geo('head', () => new THREE.SphereGeometry(0.5, 32, 22)); // heads and hair get a finer sphere: they are the biggest silhouettes
+LOD.set(G_HEAD, [[0.1, lodSph(10, 7)], [0.24, lodSph(16, 11)], [0.6, lodSph(24, 16)]]); // smaller head-sphere shapes (noses, buns, curls) step down
 // Characters are shaded on a smooth ramp and take no cast shadows, so faces and hair never get a hard band across them
 const SOFT_RAMP = (() => { const d = new Uint8Array([150, 180, 206, 228, 244, 255]); const t = new THREE.DataTexture(d, 6, 1, THREE.LuminanceFormat); t.minFilter = t.magFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();
 const SOFT = {};

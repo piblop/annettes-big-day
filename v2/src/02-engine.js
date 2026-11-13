@@ -27,7 +27,7 @@ function buzz(ms) { if (SET.buzz && navigator.vibrate && (!navigator.userActivat
 /* ---------------- renderer + scene ---------------- */
 const view = $('#view');
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: /[?&]qa=/.test(location.search) });
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); // adaptQuality() in 09-main.js lowers this on slow devices
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 view.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
@@ -43,6 +43,20 @@ const G_BOX = geo('box', () => new THREE.BoxGeometry(1, 1, 1));
 const G_SPH = geo('sph', () => new THREE.SphereGeometry(0.5, 20, 14));
 const G_CYL = geo('cyl', () => new THREE.CylinderGeometry(0.5, 0.5, 1, 28));
 const G_CONE = geo('cone', () => new THREE.ConeGeometry(0.5, 1, 24));
+// Level of detail: a shape gets fewer segments the smaller it is built, so a flower petal or an eye is not
+// made of as many triangles as a whole head. Picked once in mk() from the scale, so it costs nothing per frame.
+const LOD = new Map(); // full geometry -> [[max size, lighter geometry], ...] smallest first
+const lodSph = (w, h) => geo('sph' + w + 'x' + h, () => new THREE.SphereGeometry(0.5, w, h));
+LOD.set(G_SPH, [[0.1, lodSph(8, 6)], [0.2, lodSph(12, 8)], [0.42, lodSph(16, 11)]]);
+LOD.set(G_CYL, [[0.16, geo('cyl10', () => new THREE.CylinderGeometry(0.5, 0.5, 1, 10))], [0.5, geo('cyl16', () => new THREE.CylinderGeometry(0.5, 0.5, 1, 16))]]);
+LOD.set(G_CONE, [[0.16, geo('cone8', () => new THREE.ConeGeometry(0.5, 1, 8))], [0.5, geo('cone14', () => new THREE.ConeGeometry(0.5, 1, 14))]]);
+function lodFor(g, s) {
+  const L = LOD.get(g); if (!L || !s) return g;
+  // cylinders and cones only need fewer sides when they are thin; their length does not matter
+  const radial = g === G_CYL || g === G_CONE, size = Math.max(Math.abs(s[0]), Math.abs(s[2]), radial ? 0 : Math.abs(s[1]));
+  for (const [max, lg] of L) if (size <= max) return lg;
+  return g;
+}
 const MATS = {};
 function M(color, o) {
   const k = color + (o ? JSON.stringify(o) : '');
@@ -54,10 +68,11 @@ function M(color, o) {
 }
 // mk(geometry, colour, scale[x,y,z], pos[x,y,z], parent, opts)
 function mk(g, color, s, p, parent, o) {
-  const m = new THREE.Mesh(g, M(color, o && (o.glow || o.alpha) ? { glow: o.glow, alpha: o.alpha } : null));
+  const m = new THREE.Mesh(lodFor(g, s), M(color, o && (o.glow || o.alpha) ? { glow: o.glow, alpha: o.alpha } : null));
   if (s) m.scale.set(s[0], s[1], s[2]);
   if (p) m.position.set(p[0], p[1], p[2]);
-  m.castShadow = !(o && (o.noShadow || o.glow)); m.receiveShadow = true;
+  // tiny pieces (berries, buttons, petals) cast no shadow: the shadow pass would draw them all again for a dot nobody sees
+  m.castShadow = !(o && (o.noShadow || o.glow)) && !(s && Math.max(Math.abs(s[0]), Math.abs(s[1]), Math.abs(s[2])) < 0.07); m.receiveShadow = true;
   if (parent) parent.add(m);
   return m;
 }

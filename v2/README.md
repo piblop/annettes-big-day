@@ -48,4 +48,7 @@ Greenwich Baths > ALDI grocery grab > dog park fetch > home (movie, then chess o
 - Pack badges (Powder hound, Black diamond, Sommelier, Luge legend, Surf's up, Chip defender, Koala counter, Whale spotter, Balloon pilot, Centre aisle victim) persist across playthroughs.
 
 ## Performance
-Characters and static props are merged per material with vertex colours (`mergeStatic` in `src/02-engine.js`); Luca is built once and cloned. Keep animated parts in their own groups so they survive merging.
+- Characters and static props are merged per material with vertex colours (`mergeStatic` in `src/02-engine.js`); Luca is built once and cloned. Keep animated parts in their own groups so they survive merging.
+- Level of detail: `mk()` picks a lighter sphere, cylinder or cone from the size it is built at (`LOD` in `src/02-engine.js`, `G_HEAD` steps in `src/03-art.js`). Pieces smaller than 0.07 cast no shadow.
+- Adaptive quality (`adaptQuality` in `src/09-main.js`): if frames average over about 24 ms, the pixel ratio steps down (2, 1.75, 1.5, 1.25, 1); the last step also halves the shadow map. It never climbs back to a level that failed until a new place loads. `?qa=` runs keep a fixed resolution.
+- The per-frame scene search for swaying trees and fairy lights is cached; animation code reuses scratch vectors instead of allocating.
